@@ -13,5 +13,24 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
 
+    <string name="cause_category_hint">Chọn nguyên nhân</string>
+
+    <string-array name="work_order_cause_categories">
+        <item>Chọn nguyên nhân</item>
+        <item>Linh kiện hao mòn, lão hóa</item>
+        <item>Linh kiện điều khiển điện lỗi</item>
+        <item>Lỗi thao tác</item>
+        <item>Lắp đặt, cài đặt ban đầu</item>
+        <item>Chưa thiết lập, thay đổi cài đặt</item>
+        <item>Lệch vị trí. Lỏng</item>
+        <item>Không rõ nguyên nhân</item>
+        <item>Lý do khác</item>
+    </string-array>
+
+    <string-array name="work_order_entry_status">
+        <item>Chưa hoàn thành</item>
+        <item>Đã thực hiện</item>
+        <item>Quá hạn</item>
+    </string-array>
 
 </resources>

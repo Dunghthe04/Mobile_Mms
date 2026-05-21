@@ -51,6 +51,12 @@
         <activity android:name=".ui.workorder.WorkOrderActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
+        <activity android:name=".ui.workorder.WorkOrderHubActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity android:name=".ui.workorder.WorkOrderDataActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".ui.home.HistoryMachineActivity"
             android:exported="false"

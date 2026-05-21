@@ -445,7 +445,7 @@ public class LoginActivity extends AppCompatActivity {
     // Hàm khi Login sẽ vào ListWorkOrder
     private void proceedLogin() {
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            Intent intent = new Intent(this, com.mkac.meikomms.ui.workorder.ListWorkOrderActivity.class);
+            Intent intent = new Intent(this, com.mkac.meikomms.ui.workorder.WorkOrderHubActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();
