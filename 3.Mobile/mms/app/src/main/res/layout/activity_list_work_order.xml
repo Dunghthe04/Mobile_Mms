@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="10dp">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="W/O Management"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_centerVertical="true"/>
+
+        <!-- Right container -->
+        <LinearLayout
+            android:id="@+id/layout_right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true">
+
+            <!-- Refresh icon -->
+            <ImageView
+                android:id="@+id/update_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/refresh_cw_green"
+                android:layout_marginEnd="16dp"/>
+
+            <!-- Username -->
+            <TextView
+                android:id="@+id/tv_username_display"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Guest"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="8dp"/>
+
+            <!-- Avatar -->
+            <ImageView
+                android:id="@+id/img_user_profile"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:src="@drawable/user_icon" />
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <com.google.android.flexbox.FlexboxLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:flexWrap="wrap"
+            app:justifyContent="space_evenly">
+
+            <LinearLayout
+                android:id="@+id/ln_chua_thuc_hien"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_margin="4dp"
+                android:clickable="true">
+                <CheckBox
+                    android:id="@+id/cb_chua_thuc_hien"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:buttonTint="#ABABAB"
+                    android:checked="true"
+                    android:clickable="false" />
+                <TextView
+                    android:id="@+id/tv_count_chua_thuc_hien"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pending: 0"
+                    android:textColor="@color/black"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ln_qua_han"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_margin="4dp"
+                android:clickable="true">
+                <CheckBox
+                    android:id="@+id/cb_qua_han"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:buttonTint="#FF9800"
+                    android:checked="true"
+                    android:clickable="false" />
+                <TextView
+                    android:id="@+id/tv_count_qua_han"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Overdue: 0"
+                    android:textColor="@color/black"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ln_da_thuc_hien"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_margin="4dp"
+                android:clickable="true">
+                <CheckBox
+                    android:id="@+id/cb_da_thuc_hien"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:buttonTint="#2196F3"
+                    android:checked="true"
+                    android:clickable="false" />
+                <TextView
+                    android:id="@+id/tv_count_da_thuc_hien"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Done: 0"
+                    android:textColor="@color/black"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </com.google.android.flexbox.FlexboxLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_status_progress_track"
+            android:clipToOutline="true"
+            android:padding="1dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:weightSum="100">
+
+                <TextView
+                    android:id="@+id/tv_progress_chua_thuc_hien"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="33.3"
+                    android:background="@drawable/bg_status_progress_pending"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_progress_qua_han"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="33.3"
+                    android:background="@drawable/bg_status_progress_overdue"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_progress_da_thuc_hien"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="33.4"
+                    android:background="@drawable/bg_status_progress_done"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tv_countdown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="01:00"
+                    android:textColor="@color/red"
+                    android:textStyle="bold"
+                    android:textSize="14sp" />
+                <TextView
+                    android:id="@+id/btn_add_wo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/bg_btn_add"
+                    android:gravity="center"
+                    android:paddingHorizontal="14dp"
+                    android:text="+ Add W/O"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+                <ImageView
+                    android:id="@+id/btn_toggle_view"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_filter_reset"
+                    android:padding="10dp"
+                    android:scaleType="centerInside"
+                    android:src="@android:drawable/ic_menu_agenda"
+                    android:tint="#374151"
+                    android:contentDescription="Toggle table or card view" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_filter_right"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_alignParentEnd="true">
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    app:cardCornerRadius="6dp"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="@color/gray"
+                    app:cardElevation="0dp">
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent">
+                        <TextView
+                            android:id="@+id/btn_filter_day"
+                            android:layout_width="56dp"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_filter_segment_unselected"
+                            android:text="Day"
+                            android:gravity="center"
+                            android:textStyle="bold"
+                            android:textSize="12sp" />
+                        <TextView
+                            android:id="@+id/btn_filter_week"
+                            android:layout_width="56dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="4dp"
+                            android:background="@drawable/bg_filter_segment_unselected"
+                            android:text="Week"
+                            android:gravity="center"
+                            android:textStyle="bold"
+                            android:textSize="12sp" />
+                        <TextView
+                            android:id="@+id/btn_filter_month"
+                            android:layout_width="56dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="4dp"
+                            android:background="@drawable/bg_filter_segment_unselected"
+                            android:text="Month"
+                            android:gravity="center"
+                            android:textStyle="bold"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+                <TextView
+                    android:id="@+id/btn_reset_filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_filter_reset"
+                    android:gravity="center"
+                    android:paddingHorizontal="12dp"
+                    android:text="Reset"
+                    android:textColor="#374151"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_start_date"
+                    android:layout_width="96dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_filter_date_field"
+                    android:gravity="center"
+                    android:text="From"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tv_end_date"
+                    android:layout_width="96dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="4dp"
+                    android:background="@drawable/bg_filter_date_field"
+                    android:gravity="center"
+                    android:text="To"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </RelativeLayout>
+    </LinearLayout>
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_layout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:background="@color/white">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="@color/white">
+
+            <LinearLayout
+                android:id="@+id/table_header_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#E8EAED">
+
+                <LinearLayout
+                    android:id="@+id/header_fixed_container"
+                    android:layout_width="170dp"
+                    android:layout_height="44dp"
+                    android:orientation="horizontal"
+                    android:background="@drawable/bg_table_header_sticky" />
+
+                <HorizontalScrollView
+                    android:id="@+id/hsv_table_container"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:fillViewport="true"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/header_scroll_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:background="@drawable/bg_table_header_sticky" />
+                </HorizontalScrollView>
+
+                <LinearLayout
+                    android:id="@+id/header_action_container"
+                    android:layout_width="104dp"
+                    android:layout_height="44dp"
+                    android:gravity="center"
+                    android:background="@drawable/bg_table_header_sticky" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_work_order"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:scrollbars="vertical" />
+
+        </LinearLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</LinearLayout>

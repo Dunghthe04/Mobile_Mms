@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_white_conner_16"
+    android:layout_margin="96dp"
+    >
+
+    <TextView
+        android:id="@+id/txttieude"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:textSize="25sp"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:background="@drawable/bg_blue_conner_16_top_left_top_right"
+        android:text="SELECT DATE">
+
+
+    </TextView>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_white_conner_16"
+
+
+        >
+
+        <RelativeLayout
+            android:id="@+id/a"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:background="@drawable/bg_white_conner_16"
+            >
+
+
+            <TextView
+                android:id="@+id/txtdate_lable"
+                android:layout_width="85dp"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@+id/inputmonth"
+                android:layout_marginRight="18dp"
+                android:padding="12dp"
+                android:textSize="20sp"
+                android:gravity="center"
+                android:text="DAY">
+
+
+            </TextView>
+
+
+            <TextView
+                android:id="@+id/txtmonth_lable"
+                android:layout_width="105dp"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:padding="12dp"
+                android:textSize="20sp"
+                android:gravity="center"
+                android:text="MONTH">
+
+
+            </TextView>
+
+
+            <TextView
+                android:id="@+id/txtyear_lable"
+                android:layout_width="95dp"
+                android:layout_height="wrap_content"
+                android:layout_toRightOf="@+id/inputmonth"
+                android:layout_marginRight="18dp"
+                android:padding="12dp"
+                android:textSize="20sp"
+                android:gravity="center"
+                android:text="YEAR">
+
+
+            </TextView>
+
+
+            <NumberPicker
+                android:id="@+id/inputday"
+                android:layout_width="75dp"
+                android:layout_height="150dp"
+                android:layout_below="@+id/txtdate_lable"
+                android:layout_toLeftOf="@+id/inputmonth"
+                android:layout_marginRight="18dp"
+                android:theme="@style/NumberPickerText"
+                >
+
+            </NumberPicker>
+
+
+            <NumberPicker
+                android:id="@+id/inputmonth"
+                android:layout_width="75dp"
+                android:layout_height="150dp"
+                android:layout_below="@+id/txtmonth_lable"
+                android:layout_centerHorizontal="true"
+                android:layout_marginRight="18dp"
+                android:theme="@style/NumberPickerText"
+                >
+
+            </NumberPicker>
+
+            <NumberPicker
+                android:id="@+id/inputyear"
+                android:layout_width="100dp"
+                android:layout_height="150dp"
+                android:layout_below="@+id/txtmonth_lable"
+                android:layout_toRightOf="@+id/inputmonth"
+                android:layout_marginRight="18dp"
+                android:theme="@style/NumberPickerText"
+                >
+
+            </NumberPicker>
+
+
+
+            <Button
+                android:id="@+id/btncancel"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:layout_below="@+id/inputday"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/cardview_dark_background"
+                android:text="CLOSE"
+                android:textSize="21sp" />
+
+            <Button
+                android:id="@+id/btnOK"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:layout_below="@+id/inputday"
+                android:layout_toEndOf="@+id/btncancel"
+                android:backgroundTint="@color/green"
+                android:text="CONTINUE"
+                android:textColor="@color/white"
+                android:textSize="21sp" />
+
+
+
+        </RelativeLayout>
+
+
+
+
+    </RelativeLayout>
+
+
+</LinearLayout>

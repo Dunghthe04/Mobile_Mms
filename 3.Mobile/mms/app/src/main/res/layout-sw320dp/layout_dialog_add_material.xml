@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/bg_white_conner_8"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="60dp"
+        android:textColor="@color/black"
+        android:text="Thêm vật tư"
+        android:textStyle="bold"
+        android:textSize="18sp"/>
+
+
+    <ImageView
+        android:id="@+id/btn_close"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/close_24"
+        >
+
+    </ImageView>
+
+    <LinearLayout
+        android:id="@+id/lable_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center_vertical"
+        android:layout_below="@+id/btn_close"
+        android:layout_marginTop="10dp"
+        >
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/txtwarehouseinformation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:text="Thông tin xuất kho"
+                android:textStyle="bold"
+                android:layout_marginRight="10dp"
+                android:textSize="16sp"
+                android:layout_centerVertical="true"/>
+
+            <LinearLayout
+                android:id="@+id/btn_show_list"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:gravity="center"
+                >
+                <TextView
+                    android:id="@+id/txt_lable_show_list_infor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thu gọn"
+                    android:textSize="14sp"
+                    android:textColor="#01A789"
+                    >
+                </TextView>
+                <ImageView
+                    android:id="@+id/img_show_list"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:padding="5dp"
+                    android:src="@drawable/uprow_line"
+                    >
+
+                </ImageView>
+            </LinearLayout>
+
+
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/layout_export_material"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/lable_header"
+        >
+
+        <TextView
+            android:id="@+id/txt_lable_warehouse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Chọn kho vật tư"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:textStyle="bold"></TextView>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/txt_lable_warehouse"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/red"
+            android:textSize="14sp"
+            android:text="*"
+            >
+
+        </TextView>
+        <AutoCompleteTextView
+            android:id="@+id/cb_select_warehouse"
+            android:layout_width="135dp"
+            android:layout_height="wrap_content"
+            android:minHeight="50dp"
+            android:layout_below="@+id/txt_lable_date"
+            android:hint="Chọn thông tin"
+            android:background="@drawable/package_box_background"
+            >
+
+        </AutoCompleteTextView>
+        <ImageView
+            android:id="@+id/btn_select_warehouse"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="-8dp"
+            android:layout_alignBottom="@+id/cb_select_warehouse"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:padding="3dp"
+            android:layout_below="@+id/txt_lable_date"
+            android:layout_toEndOf="@+id/cb_select_warehouse"
+            android:src="@drawable/customer_dropdown_icon"
+            android:background="@drawable/layout_radius_topright_bottomright"
+            >
+
+        </ImageView>
+        <TextView
+            android:id="@+id/txt_lable_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/btn_select_warehouse"
+            android:textColor="@color/black"
+            android:textSize="14sp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="10dp"
+            android:text="Ngày yêu cầu hoàn thành"
+            android:textStyle="bold"
+            >
+        </TextView>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/txt_lable_date"
+
+            android:textColor="@color/red"
+            android:textSize="14sp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="16dp"
+            android:text="*"
+            >
+
+        </TextView>
+        <AutoCompleteTextView
+            android:id="@+id/cb_select_date"
+            android:layout_width="220dp"
+            android:layout_height="match_parent"
+            android:layout_alignBottom="@+id/cb_select_warehouse"
+            android:layout_below="@+id/txt_lable_date"
+            android:layout_toEndOf="@+id/btn_select_warehouse"
+            android:layout_marginLeft="15dp"
+            android:hint="dd/MM/yyyy"
+            android:gravity="center_vertical"
+            android:textSize="18sp"
+            android:background="@drawable/package_box_background"
+            >
+
+        </AutoCompleteTextView>
+        <ImageView
+            android:id="@+id/btn_show_datepicker"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="-46dp"
+            android:layout_alignBottom="@+id/cb_select_warehouse"
+            android:padding="3dp"
+            android:layout_below="@+id/txt_lable_date"
+            android:layout_toEndOf="@+id/cb_select_date"
+            android:src="@drawable/customer_dropdown_icon"
+            android:background="@drawable/layout_radius_topright_bottomright"
+            >
+
+        </ImageView>
+        <TextView
+            android:id="@+id/txtlabel_note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/btn_show_datepicker"
+            android:layout_marginRight="12dp"
+            android:layout_marginTop="16dp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:text="Ghi chú" />
+        <EditText
+            android:id="@+id/txt_note_add_material"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="10dp"
+            android:padding="10dp"
+            android:hint="Nhập thông tin ghi chú"
+            android:textStyle="italic"
+            android:text="-"
+            android:layout_below="@+id/txtlabel_note"
+            android:background="@drawable/layout_bg_black"
+            >
+
+        </EditText>
+
+
+
+    </RelativeLayout>
+
+
+
+
+    <TextView
+        android:id="@+id/txt_lable_material"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/layout_export_material"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:layout_marginTop="16dp"
+        android:textStyle="bold"
+        android:text="Chọn vật tư"
+        >
+    </TextView>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/txt_lable_material"
+        android:layout_below="@+id/layout_export_material"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/red"
+        android:textSize="14sp"
+        android:text="*"
+        >
+
+    </TextView>
+    <AutoCompleteTextView
+        android:id="@+id/cb_select_material"
+        android:layout_width="190dp"
+        android:layout_height="wrap_content"
+        android:minHeight="50dp"
+        android:layout_below="@+id/txt_lable_material"
+        android:layout_marginTop="8dp"
+        android:hint="Chọn thông tin"
+        android:background="@drawable/package_box_background"
+        >
+
+    </AutoCompleteTextView>
+    <ImageView
+        android:id="@+id/btn_select_material"
+        android:layout_width="50dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="-46dp"
+        android:layout_alignBottom="@+id/cb_select_material"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:padding="3dp"
+        android:layout_below="@+id/txt_lable_material"
+        android:layout_toEndOf="@+id/cb_select_material"
+        android:src="@drawable/customer_dropdown_icon"
+        android:background="@drawable/layout_radius_topright_bottomright"
+        >
+
+    </ImageView>
+
+
+    <TextView
+        android:id="@+id/txt_lable_material_qty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/layout_export_material"
+        android:layout_toEndOf="@+id/btn_select_material"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="16dp"
+        android:textStyle="bold"
+        android:text="Số lượng"
+        >
+    </TextView>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/txt_lable_material_qty"
+        android:layout_below="@+id/layout_export_material"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/red"
+        android:textSize="14sp"
+        android:text="*"
+        >
+
+    </TextView>
+
+
+    <EditText
+        android:id="@+id/txt_material_qty"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
+        android:gravity="center"
+        android:layout_below="@+id/txt_lable_material_qty"
+        android:layout_toEndOf="@+id/btn_select_material"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:layout_marginTop="9dp"
+        android:layout_marginLeft="16dp"
+        android:inputType="number"
+        android:text=""
+        android:background="@drawable/layout_bg_black"
+        >
+    </EditText>
+
+
+    <ImageView
+        android:id="@+id/btn_add_material"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_below="@+id/txt_lable_material_qty"
+        android:layout_toEndOf="@+id/txt_material_qty"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/plus_border"
+        android:layout_marginLeft="16dp"
+        >
+
+    </ImageView>
+
+
+    <TextView
+        android:id="@+id/txt_lable_table_material"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/cb_select_material"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:text="Danh sách vật tư"
+        >
+    </TextView>
+
+
+    <com.google.android.flexbox.FlexboxLayout
+        android:id="@+id/rcv_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txt_lable_table_material"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp"
+        android:background="#D1CFCF">
+
+        <!-- Machine Code -->
+        <TextView
+            android:id="@+id/txt_no"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="No."
+            android:textStyle="bold"
+            android:layout_marginLeft="1dp"
+            android:layout_marginTop="1dp"
+            android:background="#EFEFEF"
+            app:layout_flexBasisPercent="10%"
+            android:textColor="@color/black" />
+
+        <!-- Machine Code -->
+        <TextView
+            android:id="@+id/materialCode"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="Mã vật tư"
+            android:textStyle="bold"
+            android:layout_marginLeft="1dp"
+            android:layout_marginTop="1dp"
+            android:background="#EFEFEF"
+            app:layout_flexBasisPercent="20%"
+            android:textColor="@color/black" />
+
+
+        <!-- Maintenance Name -->
+        <TextView
+            android:id="@+id/materialName"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            app:layout_flexBasisPercent="52.5%"
+            android:textStyle="bold"
+            android:layout_marginLeft="1dp"
+            android:layout_marginTop="1dp"
+            android:textColor="@color/black"
+            android:background="#EFEFEF"
+            android:text="Tên vật tư"/>
+
+        <TextView
+            android:id="@+id/material_qty"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="Số lượng"
+            android:textStyle="bold"
+            android:layout_marginLeft="1dp"
+            android:layout_marginTop="1dp"
+            android:textColor="@color/black"
+            android:background="#EFEFEF"
+            app:layout_flexBasisPercent="13.75%"
+            />
+
+
+        <TextView
+            android:id="@+id/materialUnit"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="Xóa"
+            android:textStyle="bold"
+            android:layout_marginLeft="1dp"
+            android:layout_marginTop="1dp"
+            android:layout_marginRight="1dp"
+            android:textColor="@color/black"
+            android:background="#EFEFEF"
+            app:layout_flexBasisPercent="13.75%"/>
+
+    </com.google.android.flexbox.FlexboxLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rcv_list_add_material"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_below="@+id/rcv_header"
+        android:background="@drawable/table_border"
+        >
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="right"
+        android:layout_below="@+id/rcv_list_add_material"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:id="@+id/btnclose"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:text="Hủy"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textColor="@color/red"
+            android:background="@drawable/layout_bg_red"/>
+
+        <TextView
+            android:id="@+id/btnsave"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:layout_toEndOf="@+id/btn_creat_material_export"
+            android:text="Lưu"
+            android:textStyle="bold"
+            android:layout_marginLeft="8dp"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:visibility="visible"
+            android:background="@drawable/lay_out_conner_4_green_fill"/>
+
+
+        <TextView
+            android:id="@+id/btn_creat_material_export"
+            android:layout_width="152dp"
+            android:layout_height="40dp"
+            android:layout_toEndOf="@+id/btnclose"
+            android:text="Yêu cầu xuất kho"
+            android:textStyle="bold"
+            android:layout_marginLeft="8dp"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:background="@drawable/lay_out_conner_4_green_fill"/>
+
+
+
+    </RelativeLayout>
+
+
+
+
+</RelativeLayout>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowNoTitle">true</item>
+        <!-- Customize other attributes if needed -->
+        <!--        <item name="colorAccent">@color/btn_blue</item>-->
+    </style>
+
+    <style name="TransparentDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
+
+    <style name="MyBottomNavigationView" parent="Widget.MaterialComponents.BottomNavigationView">
+
+        <item name="itemTextAppearanceActive">@style/MyBottomNavigationView.TextAppearance</item>
+        <item name="itemTextAppearanceInactive">@style/MyBottomNavigationView.TextAppearance</item>
+    </style>
+
+
+    <style name="MyBottomNavigationView.TextAppearance" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">18sp</item>
+
+    </style>
+
+    <style name="CustomTextStyle">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@android:color/holo_blue_dark</item>
+        <item name="android:typeface">serif</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="TransparentDialogTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsFloating">true</item>
+    </style>
+
+    <style name="NumberPickerText">
+        <item name="android:textSize">33sp</item>
+        <item name="android:fontFamily">@font/bebas_neue</item>
+        <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="android:colorControlNormal">@color/system_accent2_200</item>
+    </style>
+
+
+</resources>

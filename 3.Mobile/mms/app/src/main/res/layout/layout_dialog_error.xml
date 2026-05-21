@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_white_conner_8"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="60dp"
+        android:textColor="@color/black"
+        android:text="Tittle"
+        android:textStyle="bold"
+        android:textSize="18sp"/>
+
+
+    <ImageView
+        android:id="@+id/btn_close"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentRight="true"
+        android:layout_above="@+id/txtnoidung"
+        android:src="@drawable/close_24"
+        >
+
+    </ImageView>
+
+    <TextView
+        android:id="@+id/txtnoidung"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tvTitle"
+        android:layout_marginTop="8dp"
+        android:text="Content" />
+
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="right"
+        android:layout_below="@+id/txtnoidung"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:id="@+id/btnclose"
+            android:layout_width="152dp"
+            android:layout_height="40dp"
+            android:text="Đóng"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textColor="@color/red"
+            android:background="@drawable/layout_bg_red"/>
+
+    </RelativeLayout>
+</RelativeLayout>

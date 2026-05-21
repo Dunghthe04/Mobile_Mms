@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_white_conner_8"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="60dp"
+        android:textColor="@color/black"
+        android:text="Tittle"
+        android:textStyle="bold"
+        android:textSize="18sp"/>
+
+
+    <ImageView
+        android:id="@+id/btn_close"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentRight="true"
+        android:layout_above="@+id/app_rove_select"
+        android:src="@drawable/close_24"
+        >
+
+    </ImageView>
+
+   <RadioGroup
+       android:id="@+id/app_rove_select"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:orientation="horizontal"
+       android:gravity="center"
+       android:layout_below="@+id/tvTitle"
+       >
+
+       <RadioButton
+           android:id="@+id/rb_OK"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="Đạt yêu cầu"
+           >
+
+       </RadioButton>
+
+
+       <RadioButton
+           android:id="@+id/rb_NG"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_marginLeft="16dp"
+           android:text="Chưa đạt yêu cầu"
+           >
+
+       </RadioButton>
+
+   </RadioGroup>
+
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="right"
+        android:layout_below="@+id/app_rove_select"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:id="@+id/btnclose"
+            android:layout_width="152dp"
+            android:layout_height="40dp"
+            android:text="Hủy"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textColor="@color/red"
+            android:background="@drawable/layout_bg_red"/>
+
+        <TextView
+            android:id="@+id/btnsaveapp_rove"
+            android:layout_width="152dp"
+            android:layout_height="40dp"
+            android:layout_toEndOf="@+id/btnclose"
+            android:text="Xác nhận"
+            android:textStyle="bold"
+            android:layout_marginLeft="8dp"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:background="@drawable/lay_out_conner_4_green_fill"/>
+    </RelativeLayout>
+</RelativeLayout>

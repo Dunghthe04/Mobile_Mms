@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="#000000"
+    android:weightSum="10">
+    <TextView
+        android:id="@+id/tv_c0"
+        style="@style/TableCellStyle"
+        android:text="1" />
+
+    <TextView
+        android:id="@+id/tv_c1"
+        style="@style/TableCellStyle" />
+
+    <TextView
+        android:id="@+id/tv_c2"
+        style="@style/TableCellStyle" />
+
+    <TextView
+        android:id="@+id/tv_c3"
+        style="@style/TableCellStyle" />
+
+    <TextView
+        android:id="@+id/tv_c4"
+        style="@style/TableCellStyle" />
+
+    <TextView
+        android:id="@+id/tv_c5"
+        style="@style/TableCellStyle" />
+
+    <TextView
+        android:id="@+id/tv_c6"
+        style="@style/TableCellStyle" />
+
+    <TextView
+        android:id="@+id/tv_c7"
+        style="@style/TableCellStyle" />
+
+    <TextView
+        android:id="@+id/tv_c8"
+        style="@style/TableCellStyle" />
+
+    <TextView
+        android:id="@+id/tv_c9"
+        style="@style/TableCellStyle" />
+
+</LinearLayout>

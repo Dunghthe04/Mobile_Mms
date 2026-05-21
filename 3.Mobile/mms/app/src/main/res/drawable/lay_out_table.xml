@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Background color layer -->
+    <item>
+        <shape>
+            <solid android:color="@color/gray" />
+        </shape>
+    </item>
+
+    <!-- Top border layer -->
+    <item
+        android:top="2dp"
+        android:bottom="2dp"
+        android:left="2dp"
+        android:right="2dp" > <!-- Set the top border width here -->
+        <shape>
+            <solid android:color="@color/white" />
+        </shape>
+    </item>
+
+
+
+</layer-list>

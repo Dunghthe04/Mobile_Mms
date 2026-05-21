@@ -1,0 +1,75 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white">
+
+
+    <TextView
+        android:id="@+id/txt_step_number"
+        android:layout_width="37dp"
+        android:layout_height="37dp"
+        android:textStyle="bold"
+        android:textColor="@color/green"
+        android:text="01"
+        android:gravity="center"
+        android:background="@drawable/txt_number_bg"
+
+
+        >
+
+    </TextView>
+
+
+    <TextView
+        android:id="@+id/txtlabel_intruction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_toEndOf="@+id/txt_step_number"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:text="Chuẩn bị trước khi bảo trì" />
+
+
+
+    <ImageView
+        android:id="@+id/img_arrow"
+        android:layout_width="14dp"
+        android:layout_height="65dp"
+        android:layout_marginLeft="11dp"
+        android:layout_below="@+id/txt_step_number"
+        android:layout_alignParentBottom="true"
+        android:src="@drawable/arrow_down"
+        >
+
+
+    </ImageView>
+
+
+    <com.google.android.flexbox.FlexboxLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@+id/txt_step_number"
+        android:layout_below="@+id/txtlabel_intruction"
+        android:layout_marginLeft="12dp"
+        >
+
+        <TextView
+            android:id="@+id/txt_connten_intruction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:text="Xác định lịch bảo trì : Kiểm tra lịch bảo trì định kỳ hoặc bảo trì đột xuất nếu máy gặp sự cố.\nThông báo kế hoạch:Kiểm tra lịch bảo trì định kỳ hoặc bảo trì đột xuất nếu máy gặp sự cố."
+            >
+
+        </TextView>
+
+
+    </com.google.android.flexbox.FlexboxLayout>
+
+
+
+
+</RelativeLayout>

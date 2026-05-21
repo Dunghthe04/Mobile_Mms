@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="24dp"
+    tools:context=".MainActivity">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/white"
+        android:layout_alignParentTop="true">
+
+        <com.google.android.flexbox.FlexboxLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@color/white"
+            android:orientation="horizontal">
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_flexBasisPercent="15%"
+                android:background="@color/white">
+                <ImageView
+                    android:id="@+id/btn_menu"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:padding="10dp"
+                    android:layout_centerHorizontal="true"
+                    android:src="@drawable/menu_24" />
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/lable_screen_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:layout_marginVertical="4dp"
+                android:text="HỆ THỐNG QUẢN LÝ BẢO TRÌ"
+                app:layout_flexBasisPercent="70%"
+                android:textColor="@color/black"
+                android:textSize="27sp" />
+
+            <RelativeLayout
+                android:id="@+id/btn_menu_user"
+                android:layout_width="48dp"
+                android:layout_height="wrap_content"
+                app:layout_alignSelf="center"
+                app:layout_flexBasisPercent="15%"
+                android:background="@color/white">
+                <ImageView
+                    android:id="@+id/user_icon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/user_icon"
+                    android:layout_centerHorizontal="true" />
+                <TextView
+                    android:id="@+id/user_id_login"
+                    android:layout_width="64dp"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/user_icon"
+                    android:layout_centerHorizontal="true"
+                    android:gravity="center"
+                    android:text="suachua"
+                    android:textSize="13sp" />
+            </RelativeLayout>
+        </com.google.android.flexbox.FlexboxLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bot_nav_view"
+        android:layout_below="@+id/card_view" />
+
+    <!-- FOOTER SECTION - Đã fix thêm Checksheet và dùng WeightSum để chia đều 3 nút -->
+    <LinearLayout
+        android:id="@+id/bot_nav_view"
+        android:layout_width="match_parent"
+        android:layout_height="63dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="@color/white"
+        android:gravity="center"
+        android:layout_marginBottom="55dp"
+        android:weightSum="3">
+
+        <RelativeLayout
+            android:id="@+id/menu_home"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center">
+            <ImageView
+                android:id="@+id/icon_menu_home"
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="12dp"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/icon_home_select" />
+            <TextView
+                android:id="@+id/menu_home_lable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trang chủ"
+                android:textColor="@color/black"
+                android:layout_below="@+id/icon_menu_home"
+                android:layout_centerHorizontal="true" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/menu_checksheet"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center">
+            <ImageView
+                android:id="@+id/icon_menu_checksheet"
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="12dp"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/list_check" />
+            <TextView
+                android:id="@+id/menu_checksheet_lable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bảng báo cáo sự cố"
+                android:textColor="@color/black"
+                android:layout_below="@+id/icon_menu_checksheet"
+                android:layout_centerHorizontal="true" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/menu_setting"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center">
+            <ImageView
+                android:id="@+id/icon_menu_setting"
+                android:layout_width="64dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="12dp"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/ic_settings_unselected" />
+            <TextView
+                android:id="@+id/menu_setting_lable"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cài đặt hệ thống"
+                android:textColor="@color/black"
+                android:layout_below="@+id/icon_menu_setting"
+                android:layout_centerHorizontal="true" />
+        </RelativeLayout>
+    </LinearLayout>
+</RelativeLayout>

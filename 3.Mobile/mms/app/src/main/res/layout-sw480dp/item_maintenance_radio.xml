@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"  android:padding="18dp"
+    android:background="@drawable/layout_bg_black"
+    android:layout_marginTop="8dp"
+    >
+
+
+    <TextView
+        android:id="@+id/tv_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="7dp"
+        android:layout_weight="0.7"
+        android:maxLines="5"
+        android:scrollHorizontally="false"
+        android:breakStrategy="simple"
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:text="-" />
+
+    <RadioGroup
+        android:id="@+id/radio_group"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.3"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radio_ok"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:button="@null"
+            android:clickable="true"
+            android:enabled="true"
+            android:background="@drawable/check_box_bg"
+            android:text="" />
+
+        <TextView
+            android:id="@+id/tv_OK"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:textColor="#000000"
+            android:maxLines="1"
+            android:textSize="16sp"
+            android:text="OK" />
+
+        <RadioButton
+            android:id="@+id/radio_ng"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:button="@null"
+            android:clickable="true"
+            android:enabled="true"
+            android:layout_marginLeft="15dp"
+            android:background="@drawable/check_box_bg_red"
+            android:text="" />
+
+        <TextView
+            android:id="@+id/tv_NG"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="7dp"
+            android:textColor="#000000"
+            android:maxLines="1"
+            android:textSize="16sp"
+            android:text="NG" />
+
+
+    </RadioGroup>
+
+
+</LinearLayout>
+

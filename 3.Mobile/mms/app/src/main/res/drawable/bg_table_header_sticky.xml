@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Shadow/Border layer for depth -->
+    <item>
+        <shape>
+            <solid android:color="#E8EAED" />
+        </shape>
+    </item>
+    <!-- Main background layer -->
+    <item android:bottom="1dp">
+        <shape>
+            <solid android:color="#2F5597" />
+        </shape>
+    </item>
+    <!-- Padding for inner content -->
+    <item 
+        android:left="6dp"
+        android:top="8dp"
+        android:right="6dp"
+        android:bottom="8dp">
+        <shape>
+            <solid android:color="#2F5597" />
+        </shape>
+    </item>
+</layer-list>

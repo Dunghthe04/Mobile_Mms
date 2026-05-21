@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/bg_white_conner_16"
+    android:layout_margin="15dp">
+
+
+
+    <TextView
+        android:id="@+id/txttieude"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:background="@drawable/bg_blue_conner_16_top_left_top_right"
+        android:text="SERVER INFORMATION">
+
+
+    </TextView>
+
+    <com.google.android.flexbox.FlexboxLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:alignContent="center"
+        app:alignItems="center"
+        app:layout_flexBasisPercent="10%">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="10dp"
+            >
+
+            <TextView
+                android:id="@+id/txtview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:text="IP SERVER"
+                android:textStyle="bold"
+                android:textSize="25sp"
+
+                >
+
+            </TextView>
+
+            <EditText
+                android:id="@+id/txt_ip"
+                android:layout_width="match_parent"
+                android:layout_height="55dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginLeft="20dp"
+                android:maxLength="15"
+                android:padding="10dp"
+                android:layout_toEndOf="@+id/txtview"
+                android:background="@drawable/lay_out_table"
+                android:textSize="25dp"
+
+                >
+
+            </EditText>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        </RelativeLayout>
+
+
+
+
+    </com.google.android.flexbox.FlexboxLayout>
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+
+
+        >
+
+
+        <RelativeLayout
+            android:id="@+id/a"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+
+            >
+
+            <Button
+                android:id="@+id/btncancel"
+                android:layout_width="250dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="20dp"
+                android:layout_centerHorizontal="true"
+                android:text="CANCEL"
+                android:backgroundTint="@color/cardview_dark_background"
+                android:textSize="21sp" />
+
+            <Button
+                android:id="@+id/btnOK"
+                android:layout_width="250dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="20dp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/btncancel"
+                android:backgroundTint="@color/green"
+                android:text="SAVE"
+                android:textColor="@color/white"
+                android:textSize="21sp" />
+
+
+            <Button
+                android:id="@+id/btnreset"
+                android:layout_width="250dp"
+                android:layout_height="60dp"
+                android:layout_marginTop="20dp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/btnOK"
+                android:backgroundTint="@color/green"
+                android:text="Default"
+                android:textColor="@color/white"
+                android:textSize="21sp" />
+
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
+
+
+</LinearLayout>

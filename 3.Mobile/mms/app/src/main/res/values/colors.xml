@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="holo_pink">#FF4081</color>
+    <color name="btn_blue">#2F5597</color>
+    <color name="btn_pink">#FF6699</color>
+    <color name="form_background">#9DC3E6</color>
+    <color name="line_color">#2E75B6</color>
+    <color name="filter_header">#D9E1F2</color>
+    <color name="rowBackground">#FFFFFFFF</color>
+    <color name="yellow">#FFCC05</color>
+    <color name="green">#03BD57</color>
+    <color name="blue">#3059A0</color>
+    <color name="grey">#727272</color>
+    <color name="red">#ff6347</color>
+    <color name="w3blue">#1e90ff</color>
+    <color name="w3blueLight">#7DBFFF</color>
+    <color name="colorPrimary">#2196F3</color>
+    <color name="w3grey">#CCCCCC</color>
+    <color name="gray">#A5A5A5</color>
+    <color name="system_accent2_200">#B5CAD7</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="light_blue_900">#FF01579B</color>
+    <color name="light_blue_A200">#FF40C4FF</color>
+    <color name="light_blue_A400">#FF00B0FF</color>
+    <color name="black_overlay">#66000000</color>
+    <color name="table_border_light">#D0D0D0</color>
+    <color name="black_30">#4D000000</color>  <!-- đen 30% -->
+    <color name="black_70">#B3000000</color>
+
+</resources>

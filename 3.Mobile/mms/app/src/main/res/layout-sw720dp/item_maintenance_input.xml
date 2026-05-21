@@ -1,0 +1,58 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:padding="8dp"
+    android:background="@drawable/layout_bg_black"
+    android:layout_marginTop="8dp"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Nội dung bước bảo trì -->
+        <TextView
+            android:id="@+id/tv_content"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.6"
+            android:layout_marginStart="8dp"
+            android:text="-"
+            android:textColor="#000000"
+            android:ellipsize="end"
+            android:textSize="16sp"
+            android:maxLines="1" />
+
+        <!-- Text hiển thị khoảng min/max -->
+        <TextView
+            android:id="@+id/tv_range"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.2"
+            android:text="~"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:gravity="center" />
+
+        <!-- Ô nhập giá trị -->
+        <EditText
+            android:id="@+id/et_value"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.2"
+            android:inputType="numberDecimal"
+            android:hint="Nhập giá trị"
+            android:gravity="center"
+            android:maxLines="1"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:padding="13dp"
+            android:background="@drawable/layout_bg_black" />
+
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>

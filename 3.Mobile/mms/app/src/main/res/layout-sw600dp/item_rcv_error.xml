@@ -1,0 +1,91 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    >
+
+    <com.google.android.flexbox.FlexboxLayout
+        android:id="@+id/rcv_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#D1CFCF">
+
+        <!-- Error Code -->
+        <TextView
+            android:id="@+id/error_Code"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="Mã lỗi"
+            android:layout_marginLeft="2dp"
+            android:layout_marginTop="1dp"
+            android:layout_marginBottom="1dp"
+            android:background="#FFFFFF"
+            app:layout_flexBasisPercent="15%"
+            android:textColor="@color/black" />
+
+        <!-- Machine Code -->
+        <TextView
+            android:id="@+id/machineCode"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="Mã máy"
+            android:layout_marginLeft="2dp"
+            android:layout_marginTop="1dp"
+            android:layout_marginBottom="1dp"
+            android:background="#FFFFFF"
+            app:layout_flexBasisPercent="15%"
+            android:textColor="@color/black" />
+
+        <!-- Type Code -->
+        <TextView
+            android:id="@+id/typeCode"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text="Loại lỗi"
+            android:layout_marginLeft="2dp"
+            android:layout_marginTop="1dp"
+            android:layout_marginBottom="1dp"
+            android:background="#FFFFFF"
+            app:layout_flexBasisPercent="15%"
+            android:textColor="@color/black" />
+
+        <!-- Error content -->
+        <TextView
+            android:id="@+id/contentError"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            app:layout_flexBasisPercent="45%"
+            android:layout_marginLeft="2dp"
+            android:layout_marginTop="1dp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="1dp"
+            android:background="#FFFFFF"
+            android:text="Nội dung lỗi"/>
+
+
+        <ImageView
+            android:id="@+id/btn_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:text=""
+            android:textStyle="bold"
+            android:layout_marginLeft="2dp"
+            android:layout_marginTop="1dp"
+            android:layout_marginRight="1dp"
+            android:layout_marginBottom="1dp"
+            android:background="#FFFFFF"
+            android:src="@drawable/squre_delete_24"
+            app:layout_flexBasisPercent="10%"/>
+
+    </com.google.android.flexbox.FlexboxLayout>
+
+
+
+</RelativeLayout>

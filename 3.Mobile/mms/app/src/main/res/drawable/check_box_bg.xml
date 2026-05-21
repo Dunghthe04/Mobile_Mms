@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Trạng thái khi checkbox được chọn -->
+    <item android:state_checked="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <size android:width="14dp" android:height="14dp" />
+                    <solid android:color="#2DB9A3" />
+                    <corners android:radius="4dp" />
+                </shape>
+            </item>
+            <item>
+                <inset
+                    android:drawable="@drawable/ic_check_white"
+                    android:inset="4dp" />
+            </item>
+        </layer-list>
+    </item>
+    <!-- Trạng thái khi checkbox không được chọn -->
+    <item android:state_checked="false">
+        <shape android:shape="rectangle">
+            <size android:width="14dp" android:height="14dp" />
+            <stroke android:width="2dp" android:color="#2DB9A3" />
+            <corners android:radius="4dp" />
+        </shape>
+    </item>
+</selector>

@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F0F2F5">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="650dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="12dp"
+        app:strokeColor="#DDDDDD"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- HEADER -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFF"
+                android:padding="20dp">
+                <TextView
+                    android:id="@+id/tv_work_order_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add Work Order"
+                    android:textColor="#1A1A1B"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+                <ImageView
+                    android:id="@+id/btn_close_activity"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:src="@android:drawable/ic_menu_close_clear_cancel"
+                    app:tint="#999999" />
+            </RelativeLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="32dp">
+
+                <!-- TABS -->
+
+
+                <ViewFlipper
+                    android:id="@+id/view_flipper"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <!-- SECTION INFO -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <GridLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:columnCount="2"
+                            android:alignmentMode="alignBounds">
+
+                            <!-- Mã W/O -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+                                <TextView
+                                    android:id="@+id/tv_label_wo_code"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="W/O Code"
+                                    android:textStyle="bold"
+                                    android:textColor="#303133"
+                                    android:layout_marginBottom="8dp"/>
+                                <EditText
+                                    android:id="@+id/edt_wo_code"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:background="@drawable/bg_input_field_disabled"
+                                    android:enabled="false"
+                                    android:paddingHorizontal="12dp"
+                                    android:hint="W/O Code"
+                                    android:text="..."/>
+                            </LinearLayout>
+
+                            <!-- Ngày yêu cầu -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:layout_marginBottom="8dp">
+                                    <TextView
+                                        android:id="@+id/tv_label_request_date"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Request Date"
+                                        android:textStyle="bold"
+                                        android:textColor="#303133"/>
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text=" *"
+                                        android:textColor="#F56C6C"/>
+                                </LinearLayout>
+                                <EditText
+                                    android:id="@+id/edt_request_date"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:background="@drawable/bg_input_field"
+                                    android:hint="mm/dd/yyyy --:-- --"
+                                    android:paddingHorizontal="12dp"
+                                    android:drawableEnd="@android:drawable/ic_menu_my_calendar"
+                                    android:focusable="false"/>
+                            </LinearLayout>
+
+                            <!-- Máy -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:layout_marginBottom="8dp">
+                                    <TextView
+                                        android:id="@+id/tv_label_machine"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Machine"
+                                        android:textStyle="bold"
+                                        android:textColor="#303133"/>
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text=" *"
+                                        android:textColor="#F56C6C"/>
+                                </LinearLayout>
+                                <RelativeLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:background="@drawable/bg_input_field">
+                                    <AutoCompleteTextView
+                                        android:id="@+id/auto_machine"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:background="@null"
+                                        android:paddingHorizontal="12dp"
+                                        android:hint="Select an item"
+                                        android:inputType="text" />
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_alignParentEnd="true"
+                                        android:layout_centerVertical="true"
+                                        android:layout_marginEnd="12dp"
+                                        android:src="@android:drawable/arrow_down_float"
+                                        app:tint="#C0C4CC"/>
+                                </RelativeLayout>
+                            </LinearLayout>
+
+                            <!-- Process -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+                                <TextView
+                                    android:id="@+id/tv_label_process"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Process"
+                                    android:textStyle="bold"
+                                    android:textColor="#303133"
+                                    android:layout_marginBottom="8dp"/>
+                                <EditText
+                                    android:id="@+id/edt_process"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:background="@drawable/bg_input_field"
+                                    android:paddingHorizontal="12dp"
+                                    android:hint="Enter process"/>
+                            </LinearLayout>
+
+                            <!-- Loại hình -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:layout_marginBottom="8dp">
+                                    <TextView
+                                        android:id="@+id/tv_label_type"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Type"
+                                        android:textStyle="bold"
+                                        android:textColor="#303133"/>
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text=" *"
+                                        android:textColor="#F56C6C"/>
+                                </LinearLayout>
+                                <RelativeLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:background="@drawable/bg_input_field">
+                                    <AutoCompleteTextView
+                                        android:id="@+id/auto_loai_hinh"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:background="@null"
+                                        android:paddingHorizontal="12dp"
+                                        android:hint="Select type"
+                                        android:inputType="none" />
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_alignParentEnd="true"
+                                        android:layout_centerVertical="true"
+                                        android:layout_marginEnd="12dp"
+                                        android:src="@android:drawable/arrow_down_float"
+                                        app:tint="#C0C4CC"/>
+                                </RelativeLayout>
+                            </LinearLayout>
+
+                            <!-- Người yêu cầu -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:layout_marginBottom="8dp">
+                                    <TextView
+                                        android:id="@+id/tv_label_requester"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Requester"
+                                        android:textStyle="bold"
+                                        android:textColor="#303133"/>
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text=" *"
+                                        android:textColor="#F56C6C"/>
+                                </LinearLayout>
+                                <RelativeLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:background="@drawable/bg_input_field">
+                                    <AutoCompleteTextView
+                                        android:id="@+id/auto_requester"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:background="@null"
+                                        android:paddingHorizontal="12dp"
+                                        android:hint="Requester"
+                                        android:inputType="text" />
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_alignParentEnd="true"
+                                        android:layout_centerVertical="true"
+                                        android:layout_marginEnd="12dp"
+                                        android:src="@android:drawable/arrow_down_float"
+                                        app:tint="#C0C4CC"/>
+                                </RelativeLayout>
+                            </LinearLayout>
+
+
+
+                            <!-- Ngày trải qua -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+                                <TextView
+                                    android:id="@+id/tv_label_passed_date"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Passed Date"
+                                    android:textStyle="bold"
+                                    android:textColor="#303133"
+                                    android:layout_marginBottom="8dp"/>
+                                <EditText
+                                    android:id="@+id/edt_passed_date"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:background="@drawable/bg_input_field"
+                                    android:paddingHorizontal="12dp"
+                                    android:hint="Enter passed date"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/tv_label_mes_lock"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Is there a device lock feature on the MES system?"
+                                    android:textStyle="bold"
+                                    android:textColor="#303133"
+                                    android:layout_marginBottom="8dp"/>
+
+                                <RadioGroup
+                                    android:id="@+id/radio_group_mes_lock"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal">
+
+                                    <RadioButton
+                                        android:id="@+id/radio_mes_lock_yes"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Yes"
+                                        android:textColor="#303133"
+                                        android:buttonTint="#00A680"/>
+
+                                    <RadioButton
+                                        android:id="@+id/radio_mes_lock_no"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="24dp"
+                                        android:text="No"
+                                        android:textColor="#303133"
+                                        android:buttonTint="#00A680"/>
+                                </RadioGroup>
+
+                            </LinearLayout>
+
+                            <!-- Deadline -->
+<!--                            <LinearLayout-->
+<!--                                android:layout_width="0dp"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:layout_columnWeight="1"-->
+<!--                                android:layout_margin="8dp"-->
+<!--                                android:orientation="vertical">-->
+<!--                                <TextView-->
+<!--                                    android:id="@+id/tv_label_deadline"-->
+<!--                                    android:layout_width="wrap_content"-->
+<!--                                    android:layout_height="wrap_content"-->
+<!--                                    android:text="Deadline"-->
+<!--                                    android:textStyle="bold"-->
+<!--                                    android:textColor="#303133"-->
+<!--                                    android:layout_marginBottom="8dp"/>-->
+<!--                                <EditText-->
+<!--                                    android:id="@+id/edt_deadline"-->
+<!--                                    android:layout_width="match_parent"-->
+<!--                                    android:layout_height="48dp"-->
+<!--                                    android:background="@drawable/bg_input_field"-->
+<!--                                    android:hint="mm/dd/yyyy &#45;&#45;:&#45;&#45; &#45;&#45;"-->
+<!--                                    android:paddingHorizontal="12dp"-->
+<!--                                    android:drawableEnd="@android:drawable/ic_menu_my_calendar"-->
+<!--                                    android:focusable="false"/>-->
+<!--                            </LinearLayout>-->
+
+                            <!-- Lý do yêu cầu -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnSpan="2"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="horizontal"
+                                    android:layout_marginBottom="8dp">
+                                    <TextView
+                                        android:id="@+id/tv_label_request_reason"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Work Order Content"
+                                        android:textStyle="bold"
+                                        android:textColor="#303133"/>
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text=" *"
+                                        android:textColor="#F56C6C"/>
+                                </LinearLayout>
+                                <EditText
+                                    android:id="@+id/edt_reason"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="100dp"
+                                    android:background="@drawable/bg_input_field"
+                                    android:gravity="top"
+                                    android:padding="12dp"
+                                    android:hint="Enter work order content"/>
+                            </LinearLayout>
+
+                            <!-- Trạng thái MA báo -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_columnSpan="2"
+                                android:layout_columnWeight="1"
+                                android:layout_margin="8dp"
+                                android:orientation="vertical">
+                                <TextView
+                                    android:id="@+id/tv_label_ma_status"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="MA Status"
+                                    android:textStyle="bold"
+                                    android:textColor="#303133"
+                                    android:layout_marginBottom="8dp"/>
+                                <RelativeLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="48dp"
+                                    android:background="@drawable/bg_input_field">
+                                    <AutoCompleteTextView
+                                        android:id="@+id/auto_ma_status"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="match_parent"
+                                        android:background="@null"
+                                        android:paddingHorizontal="12dp"
+                                        android:hint="Select an item"
+                                        android:inputType="none" />
+                                    <ImageView
+                                        android:layout_width="20dp"
+                                        android:layout_height="20dp"
+                                        android:layout_alignParentEnd="true"
+                                        android:layout_centerVertical="true"
+                                        android:layout_marginEnd="12dp"
+                                        android:src="@android:drawable/arrow_down_float"
+                                        app:tint="#C0C4CC"/>
+                                </RelativeLayout>
+                            </LinearLayout>
+                        </GridLayout>
+                    </LinearLayout>
+                </ViewFlipper>
+
+                <!-- FOOTER -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:orientation="horizontal">
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_add"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="50dp"
+                        android:layout_marginEnd="16dp"
+                        android:backgroundTint="#00A680"
+                        android:text="Add"
+                        android:textAllCaps="false"
+                        android:textSize="16sp"
+                        app:cornerRadius="6dp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

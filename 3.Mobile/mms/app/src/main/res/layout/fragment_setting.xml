@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#C9F0EDED"
+    tools:context=".ui.setting.SettingFragment">
+
+    <TextView
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="10dp"
+        android:id="@+id/alarmSettingLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="16sp"
+        android:layout_marginTop="16dp"/>
+
+    <FrameLayout
+        android:layout_below="@id/alarmSettingLabel"
+        android:id="@+id/alarmSettingContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/custom_text_input_background"
+        android:paddingVertical="14dp">
+
+        <Spinner
+            android:id="@+id/deviceinformation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
+
+    </FrameLayout>
+
+    <TextView
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:layout_marginBottom="10dp"
+        android:id="@+id/languageSettingLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:text=""
+        android:textSize="16sp"
+        android:layout_below="@id/alarmSettingContainer"
+        android:layout_marginTop="16dp"/>
+
+    <FrameLayout
+        android:id="@+id/languageSettingContainer"
+        android:layout_below="@id/languageSettingLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/custom_text_input_background"
+        android:paddingVertical="14dp">
+
+        <Spinner
+            android:id="@+id/languageSetting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="18sp" />
+
+    </FrameLayout>
+
+    <TextView
+        android:layout_marginTop="16dp"
+        android:id="@+id/versionSettingLabel"
+        android:textColor="@color/black"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_below="@id/languageSettingContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="16sp"
+        android:textStyle="bold"
+        />
+
+    <FrameLayout
+        android:id="@+id/versionSettingContainer"
+        android:layout_below="@id/versionSettingLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/custom_text_input_background"
+        android:paddingVertical="14dp">
+
+        >
+        <TextView
+            android:paddingHorizontal="8dp"
+            android:background="@drawable/white_border_background"
+            android:id="@+id/versionSetting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="16sp" />
+
+
+
+
+
+
+
+
+    </FrameLayout>
+
+
+
+
+    <TextView
+        android:layout_marginTop="16dp"
+        android:id="@+id/serverSettingLabel"
+        android:textColor="@color/black"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_below="@id/versionSettingContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="16sp"
+        android:textStyle="bold"
+        />
+
+
+    <FrameLayout
+        android:id="@+id/serverSettingContainer"
+        android:layout_below="@id/serverSettingLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@drawable/custom_text_input_background"
+        android:paddingVertical="14dp">
+
+        >
+        <TextView
+            android:paddingHorizontal="8dp"
+            android:background="@drawable/white_border_background"
+            android:id="@+id/serverSetting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:text="http://192.84.100.68:9100/home"
+            android:textSize="16sp" />
+
+    </FrameLayout>
+
+
+    <TextView
+        android:id="@+id/btn_logout"
+        android:layout_width="152dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/serverSettingContainer"
+        android:layout_marginTop="40dp"
+        android:layout_marginRight="10dp"
+        android:text="Đăng xuất"
+        android:gravity="center"
+        android:textColor="@color/red"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/layout_bg_red"
+        >
+
+    </TextView>
+
+
+    <RelativeLayout
+        android:id="@+id/btn_update_app"
+        android:layout_width="152dp"
+        android:layout_height="47dp"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/languageSettingContainer"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="51dp"
+        android:background="@drawable/lay_out_conner_4_green_white">
+
+        <ImageView
+            android:id="@+id/endworkicon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="7dp"
+            android:src="@drawable/refresh_cw"></ImageView>
+
+
+        <TextView
+            android:id="@+id/btn_endwork_lable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dp"
+            android:layout_toEndOf="@+id/endworkicon"
+            android:text="Cập nhật"
+            android:textAlignment="center"
+            android:textColor="#009688"
+            android:textSize="16sp">
+
+        </TextView>
+
+
+    </RelativeLayout>
+
+
+
+
+</RelativeLayout>

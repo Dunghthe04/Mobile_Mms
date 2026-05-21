@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/dashboard_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:justifyContent="space_evenly">
+
+                <LinearLayout android:id="@+id/ln_ma" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_margin="4dp" android:clickable="true">
+                    <CheckBox android:id="@+id/cb_ma_bao_su_co" android:layout_width="48dp" android:layout_height="48dp" android:buttonTint="#FF99FF" android:checked="true" android:padding="0dp" android:clickable="false" />
+                    <TextView android:id="@+id/tv_count_ma" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="MA: 0" android:textColor="@color/black" android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/ln_fe_tiep_nhan" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_margin="4dp" android:clickable="true">
+                    <CheckBox android:id="@+id/cb_fe_tiep_nhan" android:layout_width="48dp" android:layout_height="48dp" android:buttonTint="#FEFE9A" android:checked="true" android:padding="0dp" android:clickable="false" />
+                    <TextView android:id="@+id/tv_count_fe_tiep_nhan" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="FE tiếp: 0" android:textColor="@color/black" android:textSize="11sp" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/ln_fe_phan_cong" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_margin="4dp" android:clickable="true">
+                    <CheckBox android:id="@+id/cb_fe_phan_cong" android:layout_width="48dp" android:layout_height="48dp" android:buttonTint="#98FE69" android:checked="true" android:padding="0dp" android:clickable="false" />
+                    <TextView android:id="@+id/tv_count_fe_phan_cong" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="FE phân: 0" android:textColor="@color/black" android:textSize="11sp" />
+                </LinearLayout>
+            </com.google.android.flexbox.FlexboxLayout>
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                app:flexWrap="wrap"
+                app:justifyContent="space_evenly">
+                <LinearLayout android:id="@+id/ln_fe_hoan_tat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_margin="4dp" android:clickable="true">
+                    <CheckBox android:id="@+id/cb_fe_hoan_tat" android:layout_width="48dp" android:layout_height="48dp" android:buttonTint="#66CCFD" android:checked="true" android:padding="0dp" android:clickable="false" />
+                    <TextView android:id="@+id/tv_count_fe_hoan_tat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="FE xong: 0" android:textColor="@color/black" android:textSize="11sp" />
+                </LinearLayout>
+                <LinearLayout android:id="@+id/ln_huy" android:layout_width="wrap_content" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_margin="4dp" android:clickable="true">
+                    <CheckBox android:id="@+id/cb_huy" android:layout_width="48dp" android:layout_height="48dp" android:buttonTint="#ABABAB" android:checked="true" android:padding="0dp" android:clickable="false" />
+                    <TextView android:id="@+id/tv_count_huy" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="Hủy: 0" android:textColor="@color/black" android:textSize="11sp" />
+                </LinearLayout>
+            </com.google.android.flexbox.FlexboxLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_marginTop="12dp"
+            android:background="@color/white"
+            android:orientation="horizontal"
+            android:padding="0.5dp"
+            android:weightSum="100">
+            <TextView android:id="@+id/tv_progress_ma" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="20" android:background="#FF99FF" android:gravity="center" android:textColor="@color/black" android:textSize="9sp" />
+            <TextView android:id="@+id/tv_progress_fe_tiep_nhan" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="20" android:background="#FEFE9A" android:gravity="center" android:textColor="@color/black" android:textSize="9sp" />
+            <TextView android:id="@+id/tv_progress_fe_phan_cong" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="20" android:background="#98FE69" android:gravity="center" android:textColor="@color/black" android:textSize="9sp" />
+            <TextView android:id="@+id/tv_progress_fe_hoan_tat" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="20" android:background="#66CCFD" android:gravity="center" android:textColor="@color/black" android:textSize="9sp" />
+            <TextView android:id="@+id/tv_progress_huy" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="20" android:background="#ABABAB" android:gravity="center" android:textColor="@color/black" android:textSize="9sp" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp">
+
+            <LinearLayout
+                android:id="@+id/ln_countdown"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tv_countdown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="01:00"
+                    android:textColor="@color/red"
+                    android:textStyle="bold"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/btn_list_wo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="12dp"
+                    android:background="#00A680"
+                    android:gravity="center"
+                    android:paddingHorizontal="12dp"
+                    android:text="+ Work Order"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <com.google.android.material.card.MaterialCardView android:layout_width="wrap_content" android:layout_height="32dp" app:cardCornerRadius="6dp" app:strokeWidth="1dp" app:strokeColor="@color/gray" app:cardElevation="0dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="match_parent">
+                        <TextView android:id="@+id/btn_filter_day" android:layout_width="45dp" android:layout_height="match_parent" android:text="Ngày" android:gravity="center" android:textSize="10sp" />
+                        <TextView android:id="@+id/btn_filter_week" android:layout_width="45dp" android:layout_height="match_parent" android:text="Tuần" android:gravity="center" android:textSize="10sp" />
+                        <TextView android:id="@+id/btn_filter_month" android:layout_width="45dp" android:layout_height="match_parent" android:text="Tháng" android:gravity="center" android:textSize="10sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView android:layout_width="85dp" android:layout_height="32dp" android:layout_marginStart="8dp" app:cardCornerRadius="6dp" app:strokeWidth="1dp" app:strokeColor="@color/gray" app:cardElevation="0dp">
+                    <TextView android:id="@+id/tv_start_date" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="Từ" android:textSize="10sp" />
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView android:layout_width="85dp" android:layout_height="32dp" android:layout_marginStart="4dp" app:cardCornerRadius="6dp" app:strokeWidth="1dp" app:strokeColor="@color/gray" app:cardElevation="0dp">
+                    <TextView android:id="@+id/tv_end_date" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="Đến" android:textSize="10sp" />
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+        </RelativeLayout>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:scrollbars="none">
+            <TableLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/black"
+                android:padding="0.5dp">
+                <TableRow android:background="@color/filter_header">
+                    <TextView android:text="STT" android:layout_margin="0.5dp" android:padding="8dp" android:gravity="center" android:textStyle="bold" android:textColor="@color/black" />
+                    <TextView android:text="Mã hệ thống" android:layout_margin="0.5dp" android:padding="8dp" android:gravity="center" android:textStyle="bold" android:textColor="@color/black" />
+                    <TextView android:text="Tên máy" android:layout_margin="0.5dp" android:padding="8dp" android:gravity="center" android:textStyle="bold" android:textColor="@color/black" />
+                    <TextView android:text="Trạng thái" android:layout_margin="0.5dp" android:padding="8dp" android:gravity="center" android:textStyle="bold" android:textColor="@color/black" />
+                </TableRow>
+            </TableLayout>
+        </HorizontalScrollView>
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TableLayout
+                android:id="@+id/table_checksheet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/black"
+                android:padding="0.5dp">
+            </TableLayout>
+        </HorizontalScrollView>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

@@ -1,0 +1,79 @@
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="44dp">
+
+    <LinearLayout
+        android:id="@+id/layout_foreground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:minHeight="44dp">
+
+        <LinearLayout
+            android:id="@+id/fixed_columns_container"
+            android:layout_width="170dp"
+            android:layout_height="match_parent"
+            android:minHeight="44dp"
+            android:orientation="horizontal"/>
+
+        <HorizontalScrollView
+            android:id="@+id/row_scroll_view"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/row_content_container"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:minHeight="44dp"
+                android:orientation="horizontal"/>
+        </HorizontalScrollView>
+
+        <LinearLayout
+            android:id="@+id/action_container"
+            android:layout_width="104dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/bg_table_action_container"
+            android:paddingHorizontal="3dp"
+            android:minHeight="44dp">
+
+            <ImageView
+                android:id="@+id/btn_edit"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_action_icon_edit"
+                android:src="@drawable/ic_pencil"
+                android:padding="6dp"
+                android:tint="@android:color/transparent"
+                android:scaleType="centerInside"/>
+
+            <View
+                android:layout_width="0.5dp"
+                android:layout_height="24dp"
+                android:layout_marginHorizontal="2dp"
+                android:background="#D0D5DD" />
+
+            <ImageView
+                android:id="@+id/btn_delete"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_action_icon_delete"
+                android:src="@drawable/ic_trash"
+                android:padding="6dp"
+                android:tint="@android:color/transparent"
+                android:scaleType="centerInside"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

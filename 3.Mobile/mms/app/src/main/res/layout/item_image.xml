@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"> <!-- Bo góc CardView -->
+
+    <ImageView
+        android:id="@+id/imageViewItem"
+        android:layout_width="114dp"
+        android:layout_height="114dp"
+        android:scaleType="centerCrop"/>
+
+
+
+    <ImageView
+        android:id="@+id/btn_delete_image"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginLeft="85dp"
+        android:layout_marginTop="5dp"
+        android:src="@drawable/close_black_24"
+        >
+    </ImageView>
+
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        >
+
+
+    </androidx.core.widget.ContentLoadingProgressBar>
+
+
+</androidx.cardview.widget.CardView>
