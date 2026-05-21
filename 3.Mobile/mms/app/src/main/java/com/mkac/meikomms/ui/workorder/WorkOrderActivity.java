@@ -1274,6 +1274,9 @@ public class WorkOrderActivity extends AppCompatActivity {
         if (s.isEmpty() || "null".equalsIgnoreCase(s)) return "";
 
         SimpleDateFormat output = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+        output.setTimeZone(java.util.TimeZone.getDefault());
+
+        boolean isUtc = s.endsWith("Z") || s.contains("+00") || s.contains("-00");
 
         String[] patterns = new String[]{
                 "yyyy-MM-dd'T'HH:mm:ss.SSSX",
@@ -1288,7 +1291,14 @@ public class WorkOrderActivity extends AppCompatActivity {
             try {
                 SimpleDateFormat input = new SimpleDateFormat(p, Locale.getDefault());
                 input.setLenient(false);
-                Date d = input.parse(s);
+                if (isUtc && !p.contains("X")) {
+                    input.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                }
+                String cleanS = s;
+                if (!p.contains("X") && cleanS.endsWith("Z")) {
+                    cleanS = cleanS.substring(0, cleanS.length() - 1);
+                }
+                Date d = input.parse(cleanS);
                 if (d != null) return output.format(d);
             } catch (Exception ignored) {
             }
@@ -1304,6 +1314,9 @@ public class WorkOrderActivity extends AppCompatActivity {
             }
             SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
             input.setLenient(false);
+            if (isUtc) {
+                input.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+            }
             Date d = input.parse(normalized);
             if (d != null) return output.format(d);
         } catch (Exception ignored) {

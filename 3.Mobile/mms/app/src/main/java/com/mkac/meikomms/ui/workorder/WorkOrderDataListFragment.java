@@ -24,6 +24,7 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -199,17 +200,36 @@ public class WorkOrderDataListFragment extends Fragment {
 
         private static String safeGet(JSONObject obj, String key) {
             if (obj == null) return "";
-            return obj.optString(key, "").trim();
+            String val = obj.optString(key, "").trim();
+            return "null".equalsIgnoreCase(val) ? "" : val;
         }
 
         private static String formatDate(String raw) {
-            if (raw == null || raw.isEmpty()) return "";
+            if (raw == null || raw.isEmpty() || "null".equalsIgnoreCase(raw)) return "";
             try {
+                String clean = raw;
+                if (clean.contains("T") && clean.length() >= 19) {
+                    clean = clean.substring(0, 19);
+                }
                 SimpleDateFormat in = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                in.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                
                 SimpleDateFormat out = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                return out.format(in.parse(raw.replace("Z", "")));
+                out.setTimeZone(java.util.TimeZone.getDefault());
+                
+                Date parsed = in.parse(clean);
+                return parsed != null ? out.format(parsed) : raw;
             } catch (Exception e) {
-                return raw;
+                try {
+                    SimpleDateFormat inShort = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                    inShort.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
+                    SimpleDateFormat out = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                    out.setTimeZone(java.util.TimeZone.getDefault());
+                    Date parsed = inShort.parse(raw);
+                    return parsed != null ? out.format(parsed) : raw;
+                } catch (Exception ex) {
+                    return raw;
+                }
             }
         }
     }

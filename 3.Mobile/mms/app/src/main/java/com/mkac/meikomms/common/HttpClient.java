@@ -87,6 +87,48 @@ public class HttpClient
         // Gửi request không đồng bộ
         return executeRequest(request);
     }
+    public static APIReturn uploadWorkOrderFile(Context context, String server_url, String taskId, Uri fileUri) {
+        PreferenceHandler handler = new PreferenceHandler(context);
+        token = handler.getString("api_key");
+        try {
+            String finalUrl = server_url;
+            if (finalUrl.contains("://")) {
+                String protocol = finalUrl.split("://")[0];
+                String addressWithPort = finalUrl.split("://")[1];
+                if (addressWithPort.contains(":")) {
+                    finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+                } else {
+                    finalUrl = protocol + "://" + addressWithPort;
+                }
+            }
+            if (finalUrl.endsWith("/")) {
+                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+            }
+            finalUrl = finalUrl + ":9101/api/v1/mms_file-img/upload-file-task";
+
+            MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+            builder.addFormDataPart("taskId", taskId);
+
+            String fileName = getFileNameFromUri(fileUri, context);
+            byte[] fileBytes = readFileFromUri(fileUri, context);
+            if (fileBytes != null) {
+                builder.addFormDataPart("files", fileName,
+                        RequestBody.create(MediaType.parse(getMimeType(fileName)), fileBytes));
+            }
+
+            RequestBody requestBody = builder.build();
+            Request request = new Request.Builder()
+                    .url(finalUrl)
+                    .header("Authorization", "Bearer " + token)
+                    .post(requestBody)
+                    .build();
+
+            return executeRequest(request);
+        } catch (Exception e) {
+            Log.e("Exception", e.getMessage());
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
 
     public static APIReturn postNoAuth(String url, String json) {
         RequestBody body = RequestBody.create(json, JSON);
@@ -870,8 +912,20 @@ public class HttpClient
 
         // Tạo yêu cầu xuất kho
         try {
-
-            String EndPoint = "/api/v1/wms_fe/import";
+            String finalUrl = server_url;
+            if (finalUrl.contains("://")) {
+                String protocol = finalUrl.split("://")[0];
+                String addressWithPort = finalUrl.split("://")[1];
+                if (addressWithPort.contains(":")) {
+                    finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+                } else {
+                    finalUrl = protocol + "://" + addressWithPort;
+                }
+            }
+            if (finalUrl.endsWith("/")) {
+                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+            }
+            finalUrl = finalUrl + ":3500/api/v1/WMS_FE/import";
 
             String bodyRequest = "{\n" +
                     "\"Type\": \"Add\", "+
@@ -888,7 +942,7 @@ public class HttpClient
 
             HttpClient httpClient = new HttpClient();
             String response = null;
-            HttpClient.APIReturn apiReturn = httpClient.post(server_url+EndPoint, bodyRequest);
+            HttpClient.APIReturn apiReturn = httpClient.post(finalUrl, bodyRequest);
             return apiReturn;
         }
         catch (Exception e)

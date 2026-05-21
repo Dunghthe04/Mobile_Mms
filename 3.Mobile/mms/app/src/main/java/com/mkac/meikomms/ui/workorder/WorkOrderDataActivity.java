@@ -107,4 +107,10 @@ public class WorkOrderDataActivity extends AppCompatActivity {
             workOrderListFragment.reloadData();
         }
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        WorkOrderEntryDialogHelper.onActivityResult(requestCode, resultCode, data);
+    }
 }

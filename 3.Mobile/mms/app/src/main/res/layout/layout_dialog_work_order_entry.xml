@@ -17,281 +17,557 @@
         android:textSize="16sp"
         android:textStyle="bold" />
 
-    <ScrollView
+    <!-- Tabs Header -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="480dp">
+        android:orientation="horizontal"
+        android:layout_marginBottom="12dp">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/btn_tab_info"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_tab_active"
+            android:gravity="center"
+            android:text="1.Thông tin"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btn_tab_materials"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_tab_inactive"
+            android:gravity="center"
+            android:text="2.Vật tư"
+            android:textColor="@color/black"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Tab 1 Container (Information and Attachments) -->
+    <LinearLayout
+        android:id="@+id/layout_tab_info_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:maxHeight="420dp">
 
-            <!-- Thời gian phát sinh -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="150dp"
+                <!-- Thời gian phát sinh -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Thời gian phát sinh:"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:id="@+id/tv_occurrence_time"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey"
+                    android:layout_marginBottom="10dp"
                     android:gravity="center_vertical"
-                    android:paddingHorizontal="10dp"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    android:orientation="horizontal">
 
-            <!-- Thời gian bắt đầu -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Thời gian phát sinh:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
 
-                <TextView
-                    android:layout_width="150dp"
+                    <TextView
+                        android:id="@+id/tv_occurrence_time"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="10dp"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Thời gian bắt đầu -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Thời gian bắt đầu thực hiện:"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/et_start_time"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey"
-                    android:clickable="true"
-                    android:focusable="false"
-                    android:hint="dd/mm/yyyy --:-- --"
-                    android:paddingHorizontal="10dp"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Thời gian bắt đầu thực hiện:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
 
-            <!-- Thời gian kết thúc -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                    <EditText
+                        android:id="@+id/et_start_time"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey"
+                        android:clickable="true"
+                        android:focusable="false"
+                        android:hint="dd/mm/yyyy --:-- --"
+                        android:paddingHorizontal="10dp"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="150dp"
+                <!-- Thời gian kết thúc -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Thời gian kết thúc thực hiện:"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/et_end_time"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey"
-                    android:clickable="true"
-                    android:focusable="false"
-                    android:hint="dd/mm/yyyy --:-- --"
-                    android:paddingHorizontal="10dp"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Thời gian kết thúc thực hiện:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
 
-            <!-- Hiện trạng -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                    <EditText
+                        android:id="@+id/et_end_time"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey"
+                        android:clickable="true"
+                        android:focusable="false"
+                        android:hint="dd/mm/yyyy --:-- --"
+                        android:paddingHorizontal="10dp"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="150dp"
+                <!-- Hiện trạng -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Hiện trạng:"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/et_current_status"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey"
-                    android:paddingHorizontal="10dp"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Hiện trạng:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
 
-            <!-- Phân loại nguyên nhân -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                    <EditText
+                        android:id="@+id/et_current_status"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey"
+                        android:paddingHorizontal="10dp"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="150dp"
+                <!-- Phân loại nguyên nhân -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Phân loại nguyên nhân:"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <Spinner
-                    android:id="@+id/spinner_cause_category"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Phân loại nguyên nhân:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
 
-            <!-- Nguyên nhân -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                    <Spinner
+                        android:id="@+id/spinner_cause_category"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="150dp"
+                <!-- Nguyên nhân -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Nguyên nhân:"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/et_cause"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey"
-                    android:paddingHorizontal="10dp"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Nguyên nhân:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
 
-            <!-- Ảnh hưởng -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                    <EditText
+                        android:id="@+id/et_cause"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey"
+                        android:paddingHorizontal="10dp"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="150dp"
+                <!-- Ảnh hưởng -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Ảnh hưởng (Sản phẩm/Thiết bị):"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/et_impact"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey"
-                    android:paddingHorizontal="10dp"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Ảnh hưởng (Sản phẩm/Thiết bị):"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
 
-            <!-- Nội dung xử lý -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:orientation="horizontal">
+                    <EditText
+                        android:id="@+id/et_impact"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey"
+                        android:paddingHorizontal="10dp"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
 
-                <TextView
-                    android:layout_width="150dp"
+                <!-- Nội dung xử lý -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Nội dung xử lý yêu cầu:"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
+                    android:layout_marginBottom="10dp"
+                    android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/et_process_content"
-                    android:layout_width="0dp"
-                    android:layout_height="80dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey"
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Nội dung xử lý yêu cầu:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+
+                    <EditText
+                        android:id="@+id/et_process_content"
+                        android:layout_width="0dp"
+                        android:layout_height="80dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey"
+                        android:gravity="top"
+                        android:inputType="textMultiLine"
+                        android:padding="10dp"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Ghi chú -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Ghi chú:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+
+                    <EditText
+                        android:id="@+id/et_note"
+                        android:layout_width="0dp"
+                        android:layout_height="80dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey"
+                        android:gravity="top"
+                        android:inputType="textMultiLine"
+                        android:padding="10dp"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <!-- Trạng thái -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Trạng thái:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+
+                    <Spinner
+                        android:id="@+id/spinner_status"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey" />
+                </LinearLayout>
+
+                <!-- Chọn file & Tải lên buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="150dp"
+                        android:layout_height="0dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:id="@+id/btn_choose_file"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_btn_choose_file"
+                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="8dp"
+                            android:layout_marginEnd="6dp"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:layout_marginEnd="4dp"
+                                android:src="@drawable/ic_paperclip" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Chọn file"
+                                android:textColor="#01A789"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/btn_upload_file"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_tab_active"
+                            android:gravity="center"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="8dp"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <ImageView
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:layout_marginEnd="4dp"
+                                android:src="@drawable/ic_upload" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Tải lên"
+                                android:textColor="@color/white"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Tài liệu đính kèm -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
                     android:gravity="top"
-                    android:inputType="textMultiLine"
-                    android:padding="10dp"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    android:orientation="horizontal">
 
-            <!-- Ghi chú -->
+                    <TextView
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Tài liệu đính kèm:"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
+
+                    <LinearLayout
+                        android:id="@+id/layout_attachment_status"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="#F4F6F9"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:padding="12dp">
+
+                        <ImageView
+                            android:id="@+id/img_attachment_icon"
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_marginEnd="8dp"
+                            android:src="@drawable/ic_folder" />
+
+                        <TextView
+                            android:id="@+id/tv_attachment_status"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chưa có tài liệu đính kèm"
+                            android:textColor="#808080"
+                            android:textSize="13sp"
+                            android:textStyle="italic" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Dotted line -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="12dp"
+                    android:layerType="software"
+                    android:background="@drawable/dotted_line" />
+
+                <!-- Tạo yêu cầu xuất kho -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="end"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:id="@+id/btn_create_wms_request"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_blue_button"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_marginEnd="6dp"
+                            android:src="@drawable/ic_folder"
+                            app:tint="@color/white" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tạo yêu cầu xuất kho"
+                            android:textColor="@color/white"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- Tab 2 Container (Materials table) -->
+    <LinearLayout
+        android:id="@+id/layout_tab_materials_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="420dp">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:orientation="horizontal">
+                android:orientation="vertical"
+                android:padding="4dp">
 
-                <TextView
-                    android:layout_width="150dp"
+                <TableLayout
+                    android:id="@+id/table_materials"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Ghi chú:"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
+                    android:stretchColumns="0"
+                    android:background="@drawable/table_border"
+                    android:padding="1dp">
 
-                <EditText
-                    android:id="@+id/et_note"
-                    android:layout_width="0dp"
-                    android:layout_height="80dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey"
-                    android:gravity="top"
-                    android:inputType="textMultiLine"
-                    android:padding="10dp"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    <!-- Table Header Row -->
+                    <TableRow
+                        android:background="#F4F4F4"
+                        android:padding="8dp">
 
-            <!-- Trạng thái -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="3"
+                            android:text="Vật tư"
+                            android:textColor="@color/black"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:gravity="center_vertical"
+                            android:padding="4dp" />
 
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Số lượng"
+                            android:textColor="@color/black"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:padding="4dp" />
+                    </TableRow>
+                </TableLayout>
+
+                <!-- No materials fallback -->
                 <TextView
-                    android:layout_width="150dp"
+                    android:id="@+id/tv_no_materials"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Trạng thái:"
-                    android:textColor="@color/black"
-                    android:textSize="13sp" />
+                    android:gravity="center"
+                    android:padding="24dp"
+                    android:text="Không có vật tư đi kèm"
+                    android:textColor="#808080"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
 
-                <Spinner
-                    android:id="@+id/spinner_status"
-                    android:layout_width="0dp"
-                    android:layout_height="40dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/border_bg_grey" />
             </LinearLayout>
-
-        </LinearLayout>
-    </ScrollView>
+        </ScrollView>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -325,3 +601,4 @@
     </LinearLayout>
 
 </LinearLayout>
+
