@@ -544,6 +544,7 @@ public class LoginActivity extends AppCompatActivity {
                         try {
                             PreferenceHandler handler = new PreferenceHandler(this);
                             handler.clear();
+                            handler.setString("Userlogin", userName);
 
                             JSONObject jsonObject = rs.data.get(0);
                             String api_key = jsonObject.optString("token");

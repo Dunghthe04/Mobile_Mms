@@ -2,8 +2,11 @@ package com.mkac.meikomms.ui.workorder;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
+import android.os.Environment;
+import android.webkit.MimeTypeMap;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -207,6 +210,38 @@ public final class WorkOrderEntryDialogHelper {
             }
         }
 
+        if (tvAttachmentStatusView != null) {
+            tvAttachmentStatusView.setOnClickListener(v -> {
+                if (uploadedFileName == null || uploadedFileName.isEmpty()) {
+                    Toast.makeText(context, "Không có tệp đính kèm để tải về", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                ConfigManager config = new ConfigManager(context);
+                String serverDynamicUrl = config.getProperty("server_dynamic_url");
+                if (serverDynamicUrl.isEmpty()) {
+                    serverDynamicUrl = "http://192.86.0.225:9101/api/dynamics";
+                }
+
+                String finalUrl = serverDynamicUrl;
+                if (finalUrl.contains("://")) {
+                    String protocol = finalUrl.split("://")[0];
+                    String addressWithPort = finalUrl.split("://")[1];
+                    if (addressWithPort.contains(":")) {
+                        finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+                    } else {
+                        finalUrl = protocol + "://" + addressWithPort;
+                    }
+                }
+                if (finalUrl.endsWith("/")) {
+                    finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+                }
+                String downloadUrl = finalUrl + ":9101/api/v1/mms_file-img/" + uploadedFileName;
+
+                downloadFile(context, downloadUrl, uploadedFileName);
+            });
+        }
+
         // Tab switches
         btnTabInfo.setOnClickListener(v -> {
             btnTabInfo.setBackgroundResource(R.drawable.bg_tab_active);
@@ -285,6 +320,7 @@ public final class WorkOrderEntryDialogHelper {
                             uploadedFileName = fileVal;
                             if (tvAttachmentStatusView != null) {
                                 tvAttachmentStatusView.setText(fileVal);
+                                tvAttachmentStatusView.setPaintFlags(tvAttachmentStatusView.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
                             }
                             Toast.makeText(context, "Tải lên tài liệu thành công", Toast.LENGTH_SHORT).show();
                         } else {
@@ -301,6 +337,49 @@ public final class WorkOrderEntryDialogHelper {
         // WMS Export click listener
         View btnCreateWmsRequest = dialogView.findViewById(R.id.btn_create_wms_request);
         btnCreateWmsRequest.setOnClickListener(v -> {
+            PreferenceHandler prefHandler = new PreferenceHandler(context);
+            JSONObject userProfile = prefHandler.getJsonObject("user");
+            String userLoginId = "";
+            if (userProfile != null) {
+                userLoginId = userProfile.optString("userId");
+                if (userLoginId.isEmpty()) userLoginId = userProfile.optString("Id");
+            }
+            if (userLoginId.isEmpty()) {
+                userLoginId = prefHandler.getString("Userlogin");
+            }
+
+            if (userLoginId.isEmpty()) {
+                Toast.makeText(context, "Không tìm thấy thông tin đăng nhập người dùng", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String username = prefHandler.getString("Userlogin");
+            if (username.isEmpty() && userProfile != null) {
+                username = userProfile.optString("username");
+                if (username.isEmpty()) username = userProfile.optString("User_Name");
+            }
+
+            String machineIdVal = safeGet(workOrder, "Machine_Id");
+            if (machineIdVal.isEmpty()) machineIdVal = safeGet(workOrder, "MACHINE_ID");
+            String machineNameVal = safeGet(workOrder, "Machine_Name");
+            if (machineNameVal.isEmpty()) machineNameVal = safeGet(workOrder, "MACHINE_NAME");
+
+            int woTypeVal = workOrder.optInt("WO_TYPE", 0);
+            if (woTypeVal == 0) woTypeVal = workOrder.optInt("Wo_Type", 3);
+            String requestPurpose;
+            switch (woTypeVal) {
+                case 1:
+                    requestPurpose = "CM";
+                    break;
+                case 2:
+                    requestPurpose = "PM";
+                    break;
+                case 3:
+                default:
+                    requestPurpose = "BM";
+                    break;
+            }
+
             List<JSONObject> addMaterialsList = new ArrayList<>();
             String materialInfoStr = safeGet(workOrder, "Material_Info");
             if (materialInfoStr.isEmpty()) materialInfoStr = safeGet(workOrder, "MATERIAL_INFO");
@@ -321,9 +400,18 @@ public final class WorkOrderEntryDialogHelper {
                     double qty = item.optDouble("quantity", 0);
                     if (qty == 0) qty = item.optDouble("Quantity", 0);
 
+                    String qtyStr;
+                    if (qty == (long) qty) {
+                        qtyStr = String.valueOf((long) qty);
+                    } else {
+                        qtyStr = String.valueOf(qty);
+                    }
                     JSONObject matObj = new JSONObject();
-                    matObj.put("Material_Id", matId);
-                    matObj.put("Quantity", qty);
+                    matObj.put("Item_Id", matId);
+                    matObj.put("Item_Qty", qtyStr);
+                    matObj.put("Machine_Id", machineIdVal);
+                    matObj.put("Purpose", requestPurpose);
+                    matObj.put("User_Export", username);
                     addMaterialsList.add(matObj);
                 }
             } catch (Exception e) {
@@ -336,32 +424,19 @@ public final class WorkOrderEntryDialogHelper {
                 return;
             }
 
-            PreferenceHandler prefHandler = new PreferenceHandler(context);
-            JSONObject userProfile = prefHandler.getJsonObject("user");
-            String userLoginId = "";
-            if (userProfile != null) {
-                userLoginId = userProfile.optString("Id");
-                if (userLoginId.isEmpty()) userLoginId = userProfile.optString("username");
-                if (userLoginId.isEmpty()) userLoginId = userProfile.optString("User_Name");
-            }
-            if (userLoginId.isEmpty()) {
-                userLoginId = prefHandler.getString("Userlogin");
-            }
-
-            if (userLoginId.isEmpty()) {
-                Toast.makeText(context, "Không tìm thấy thông tin đăng nhập người dùng", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            String machineIdVal = safeGet(workOrder, "Machine_Id");
-            if (machineIdVal.isEmpty()) machineIdVal = safeGet(workOrder, "MACHINE_ID");
-            String machineNameVal = safeGet(workOrder, "Machine_Name");
-            if (machineNameVal.isEmpty()) machineNameVal = safeGet(workOrder, "MACHINE_NAME");
-
             String woCodeVal = safeGet(workOrder, "WO_CODE");
             if (woCodeVal.isEmpty()) woCodeVal = safeGet(workOrder, "Wo_Code");
 
-            String requestNote = "Yêu cầu xuất kho cho Work Order " + woCodeVal + "-" + machineIdVal + " " + machineNameVal;
+            String machineDisplay = machineNameVal;
+            if (machineDisplay.isEmpty()) {
+                machineDisplay = machineIdVal;
+            }
+            if (machineDisplay.startsWith("Máy ")) {
+                machineDisplay = machineDisplay.substring(4);
+            } else if (machineDisplay.startsWith("Máy")) {
+                machineDisplay = machineDisplay.substring(3);
+            }
+            String requestNote = "Yêu cầu xuất kho cho Work Order " + woCodeVal + "-Máy " + machineDisplay;
             String requestDateUnixStr = String.valueOf(System.currentTimeMillis() / 1000L);
 
             String serverUrlStr = prefHandler.getString("server_url");
@@ -372,17 +447,18 @@ public final class WorkOrderEntryDialogHelper {
             if (serverUrlStr.isEmpty()) {
                 serverUrlStr = "http://192.86.0.225:9103";
             }
-
             ProgressDialog wmsProgress = new ProgressDialog(context);
             wmsProgress.setMessage("Đang tạo yêu cầu xuất kho...");
             wmsProgress.setCancelable(false);
             wmsProgress.show();
 
             final String finalRequestDateUnix = requestDateUnixStr;
-            final String finalUserLoginId = userLoginId;
+            final String finalUsername = username;
             final String finalRequestNote = requestNote;
             final List<JSONObject> finalMaterials = addMaterialsList;
             final String finalServerUrl = serverUrlStr;
+            final String finalRequestPurpose = requestPurpose;
+            final String finalMachineId = machineIdVal;
 
             new Thread(() -> {
                 HttpClient.APIReturn result = HttpClient.save_request_material(
@@ -392,7 +468,9 @@ public final class WorkOrderEntryDialogHelper {
                         finalRequestNote,
                         finalMaterials,
                         finalServerUrl,
-                        finalUserLoginId
+                        finalUsername,
+                        finalRequestPurpose,
+                        finalMachineId
                 );
 
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -802,6 +880,49 @@ public final class WorkOrderEntryDialogHelper {
         if (obj == null) return "";
         String val = obj.optString(key, "").trim();
         return "null".equalsIgnoreCase(val) ? "" : val;
+    }
+
+    private static void downloadFile(Context context, String url, String fileName) {
+        try {
+            DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+            Uri uri = Uri.parse(url);
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            request.setTitle("Tải file: " + fileName);
+            request.setDescription("Đang tải tài liệu đính kèm...");
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+
+            PreferenceHandler handler = new PreferenceHandler(context);
+            String token = handler.getString("api_key");
+            if (token != null && !token.isEmpty()) {
+                request.addRequestHeader("Authorization", "Bearer " + token);
+            }
+
+            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(url);
+            if (fileExtension != null) {
+                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
+                if (mimeType != null) {
+                    request.setMimeType(mimeType);
+                }
+            }
+
+            if (downloadManager != null) {
+                downloadManager.enqueue(request);
+                Toast.makeText(context, "Bắt đầu tải xuống file...", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, "Không thể khởi chạy Download Manager", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(context, "Lỗi tải file: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            // Fallback to opening file/URL in browser
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception ex) {
+                Toast.makeText(context, "Không thể mở liên kết: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }
 

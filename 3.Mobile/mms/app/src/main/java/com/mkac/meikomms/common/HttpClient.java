@@ -907,7 +907,7 @@ public class HttpClient
 
     }
 
-    public static APIReturn save_request_material(Context context,String Request_Date_Unix,String WH_ID,String Note,List<JSONObject> list_material, String server_url,String User_Id)
+    public static APIReturn save_request_material(Context context,String Request_Date_Unix,String WH_ID,String Note,List<JSONObject> list_material, String server_url,String User_Id, String Request_Purpose, String Machine_Id)
     {
 
         // Tạo yêu cầu xuất kho
@@ -932,6 +932,8 @@ public class HttpClient
                     "\"Trans_Code\": \"001\", "+
                     "\"Request_Id\": \"mobile\", "+
                     "\"Request_Note\": \""+Note+"\","+
+                    "\"Request_Purpose\": \""+Request_Purpose+"\","+
+                    "\"Machine_Id\": \""+Machine_Id+"\","+
                     "\"User_Id\": \""+User_Id+"\","+
                     "\"Request_Date_Unix\": "+ Request_Date_Unix +","+
                     "\"Wh_Id\": \""+WH_ID+"\","+

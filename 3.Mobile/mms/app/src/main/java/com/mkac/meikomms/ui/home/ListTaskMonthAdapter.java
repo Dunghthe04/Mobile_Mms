@@ -366,6 +366,9 @@ public class ListTaskMonthAdapter extends RecyclerView.Adapter<ListTaskMonthAdap
                         JSONObject new_list = new JSONObject();
                         new_list.put("Task_Id",Category_Id);
                         new_list.put("Category_Name",Category_Name);
+                        new_list.put("Task_Type", jsonArray.getJSONObject(j).optString("Task_Type", ""));
+                        new_list.put("Machine_Id", jsonArray.getJSONObject(j).optString("Machine_Id", ""));
+                        new_list.put("Machine_Name", jsonArray.getJSONObject(j).optString("Machine_Name", ""));
                         data_list.add(new_list);
                     }
 

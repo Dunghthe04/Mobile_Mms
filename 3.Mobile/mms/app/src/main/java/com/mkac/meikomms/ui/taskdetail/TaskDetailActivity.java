@@ -120,6 +120,8 @@ public class TaskDetailActivity extends AppCompatActivity {
     private String Task_Id = "";
     private String Task_Type = "";
     private String Status = "";
+    private String Machine_Id = "";
+    private String Machine_Name = "";
     private String Image_list = "";
     private JSONObject obj = new JSONObject();
     List<JSONObject> materialList = new ArrayList<>();
@@ -269,8 +271,15 @@ public class TaskDetailActivity extends AppCompatActivity {
         {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         }
-        if (!handler.getString("Userlogin").isEmpty()) {
-            user_login = handler.getString("Userlogin");
+        user_login = handler.getString("Userlogin");
+        if (user_login == null || user_login.isEmpty()) {
+            org.json.JSONObject userProfile = handler.getJsonObject("user");
+            if (userProfile != null) {
+                user_login = userProfile.optString("userId", "");
+                if (user_login.isEmpty()) user_login = userProfile.optString("Id", "");
+                if (user_login.isEmpty()) user_login = userProfile.optString("username", "");
+                if (user_login.isEmpty()) user_login = userProfile.optString("User_Name", "");
+            }
         }
         if (!handler.getString("server_url").isEmpty()) {
             server_url = handler.getString("server_url");
@@ -443,8 +452,8 @@ public class TaskDetailActivity extends AppCompatActivity {
                                 String Category_Name = rs.data.get(0).getString("Category_Name");
                                 String Content = rs.data.get(0).getString("Content");
 
-                                String Machine_Id = rs.data.get(0).getString("Machine_Id");
-                                String Machine_Name = rs.data.get(0).getString("Machine_Name");
+                                Machine_Id = rs.data.get(0).getString("Machine_Id");
+                                Machine_Name = rs.data.get(0).getString("Machine_Name");
                                 txt_machine_infor.setText(Machine_Id+" - "+Machine_Name);
 
                                 Material_Export = rs.data.get(0).getString("Material_Export");
@@ -1125,6 +1134,37 @@ public class TaskDetailActivity extends AppCompatActivity {
                                     }
 
 
+                                    PreferenceHandler prefHandler = new PreferenceHandler(view.getContext());
+                                    JSONObject userProfile = prefHandler.getJsonObject("user");
+                                    String employeeId = "";
+                                    if (userProfile != null) {
+                                        employeeId = userProfile.optString("userId");
+                                        if (employeeId.isEmpty()) employeeId = userProfile.optString("Id");
+                                    }
+                                    if (employeeId.isEmpty()) {
+                                        employeeId = prefHandler.getString("Userlogin");
+                                    }
+
+                                    String username = prefHandler.getString("Userlogin");
+                                    if (username.isEmpty() && userProfile != null) {
+                                        username = userProfile.optString("username");
+                                        if (username.isEmpty()) username = userProfile.optString("User_Name");
+                                    }
+
+                                    String requestPurpose = "BM";
+                                    if ("0".equals(Task_Type) || "2".equals(Task_Type)) {
+                                        requestPurpose = "CM";
+                                    } else if ("3".equals(Task_Type)) {
+                                        requestPurpose = "PM";
+                                    } else {
+                                        requestPurpose = "BM";
+                                    }
+                                    final String finalRequestPurpose = requestPurpose;
+                                    final String finalEmployeeId = employeeId;
+
+                                    String mId = (Machine_Id != null) ? Machine_Id : "";
+                                    String mName = (Machine_Name != null) ? Machine_Name : "";
+
                                     List<JSONObject> list_material_create = new ArrayList<>();
                                     for (int i = 0; i < list_material_new.size(); i++)
                                     {
@@ -1135,6 +1175,9 @@ public class TaskDetailActivity extends AppCompatActivity {
                                         try {
                                             obj.put("Item_Id", material_id);
                                             obj.put("Item_Qty", material_qty);
+                                            obj.put("Machine_Id", mId);
+                                            obj.put("Purpose", finalRequestPurpose);
+                                            obj.put("User_Export", username);
                                         } catch (JSONException e) {
                                             throw new RuntimeException(e);
                                         }
@@ -1143,8 +1186,27 @@ public class TaskDetailActivity extends AppCompatActivity {
                                     }
 
                                     String Request_Date_Unix = String.valueOf(TimeUtils.getUnixTimeMillisFromString(cb_select_date.getText().toString()));
+
+                                    String userNote = txt_note_add_material.getText().toString().trim();
+                                    String machineDisplay = mName;
+                                    if (machineDisplay.isEmpty()) {
+                                        machineDisplay = mId;
+                                    }
+                                    if (machineDisplay.startsWith("Máy ")) {
+                                        machineDisplay = machineDisplay.substring(4);
+                                    } else if (machineDisplay.startsWith("Máy")) {
+                                        machineDisplay = machineDisplay.substring(3);
+                                    }
+                                    String requestNote = "Yêu cầu xuất kho cho Task " + Task_Id + "-Máy " + machineDisplay;
+                                    if (!userNote.isEmpty() && !userNote.equals("-") && !userNote.equals(i18n("Fill in note information")) && !userNote.equals(i18n("Enter the note requesting the release of stock"))) {
+                                        requestNote += " (" + userNote + ")";
+                                    }
+                                    final String finalRequestNote = requestNote;
+                                    final String finalUsername = username;
+                                    final String finalMachineId = mId;
+
                                     Thread getDataListMaterial = new Thread(() -> {
-                                        HttpClient.APIReturn rs_save_request_material = HttpClient.save_request_material(view.getContext(), Request_Date_Unix, WareHouse_Id_Select, txt_note_add_material.getText().toString(), list_material_create, api_creat_export_material, user_id_login.getText().toString());
+                                        HttpClient.APIReturn rs_save_request_material = HttpClient.save_request_material(view.getContext(), Request_Date_Unix, WareHouse_Id_Select, finalRequestNote, list_material_create, api_creat_export_material, finalUsername, finalRequestPurpose, finalMachineId);
                                         if (rs_save_request_material.code == 200) {
                                             runOnUiThread(() -> {
                                                 try {
