@@ -16,6 +16,7 @@
     <color name="rowBackground">#FFFFFFFF</color>
     <color name="yellow">#FFCC05</color>
     <color name="green">#03BD57</color>
+    <color name="green_main">#01A789</color>
     <color name="blue">#3059A0</color>
     <color name="grey">#727272</color>
     <color name="red">#ff6347</color>

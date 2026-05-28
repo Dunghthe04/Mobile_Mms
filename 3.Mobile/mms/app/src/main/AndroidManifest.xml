@@ -30,7 +30,11 @@
         android:required="true" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
 
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
+        android:name=".MeikoMmsApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -55,6 +59,10 @@
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity android:name=".ui.workorder.WorkOrderDataActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".common.Barcode"
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity
@@ -92,6 +100,16 @@
         <activity android:name=".ui.workorder.ListWorkOrderActivity"
             android:exported="false"
             android:screenOrientation="portrait"/>
+
+        <activity
+            android:name=".ui.workorder.MaintenancePlanListActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.workorder.EnterWorkOrderDataActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

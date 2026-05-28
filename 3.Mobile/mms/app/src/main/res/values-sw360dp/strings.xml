@@ -3,6 +3,21 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
+    <string name="work_order_hub_title_key">W/O Management</string>
+    <string name="work_order_hub_subtitle_key">Select function</string>
+    <string name="work_order_hub_description_key">Create a work order or enter work order and maintenance data</string>
+    <string name="work_order_hub_create_title_key">Add Work Order</string>
+    <string name="work_order_hub_create_desc_key">Create a new work order</string>
+    <string name="work_order_hub_enter_title_key">Enter Work Order Data</string>
+    <string name="work_order_hub_enter_desc_key">Manage work orders and perform maintenance</string>
+    <string name="work_order_hub_guest_key">Guest</string>
+
+    <string name="work_order_data_list_summary_placeholder">Machine code: -- | Quantity: 0</string>
+    <string name="work_order_data_list_machine_code_label">Mã máy</string>
+    <string name="work_order_data_list_quantity_label">Số lượng</string>
+    <string name="work_order_data_list_session_expired">Phiên đăng nhập hết hạn</string>
+    <string name="work_order_data_list_no_machine_data">Không tìm thấy dữ liệu cho máy</string>
+
 
     <string-array name="language_options">
         <item>日本</item>

@@ -51,6 +51,9 @@ public class HttpClient
     public static synchronized void clearToken() {
         token = null;
     }
+    public static synchronized String getToken() {
+        return token == null ? "" : token;
+    }
     public static APIReturn post(String url, String json)
     {
         RequestBody body = RequestBody.create(json, JSON);
@@ -123,7 +126,12 @@ public class HttpClient
                     .post(requestBody)
                     .build();
 
-            return executeRequest(request);
+            APIReturn apiReturn = executeRequest(request);
+            // Extra debug: log upload response details for easier troubleshooting
+            try {
+                Log.d("UPLOAD_IMAGE_DBG", "uploadPreventiveImage -> response code=" + (apiReturn == null ? "null" : apiReturn.code) + ", msg=" + (apiReturn == null ? "null" : apiReturn.message) + ", data=" + (apiReturn == null || apiReturn.data == null ? "null" : apiReturn.data.toString()));
+            } catch (Exception ignored) {}
+            return apiReturn;
         } catch (Exception e) {
             Log.e("Exception", e.getMessage());
             return new APIReturn(400, "Exception|| " + e.getMessage(), null);
@@ -162,62 +170,6 @@ public class HttpClient
         return builder.build();
     }
 
-//    private static APIReturn executeRequest(Request request)
-//    {
-//        client = new OkHttpClient.Builder()
-//                .connectTimeout(30, TimeUnit.SECONDS)
-//                .writeTimeout(30, TimeUnit.SECONDS)
-//                .readTimeout(60, TimeUnit.SECONDS)
-//                .build();
-//        try (Response response = client.newCall(request).execute())
-//        {
-//            assert response.body() != null;
-//            String responseBody = response.body().string();
-//
-//            JSONObject jsonObject = new JSONObject(responseBody);
-//
-//            // Extract the necessary fields from the JSON response
-//            int code = jsonObject.getInt("code");
-//            String message = jsonObject.getString("message");
-//            //JSONObject data = jsonObject.getJSONObject("data");
-//            Object rawData = jsonObject.get("data");
-//            List<JSONObject> dataList = new ArrayList<>();
-//            // Check if 'data' is a JSONObject
-//            if (rawData instanceof JSONObject)
-//            {
-//                JSONObject dataObject = (JSONObject) rawData;
-//                dataList.add(dataObject);
-//            }
-//            // Check if 'data' is a JSONArray
-//            else
-//            if (rawData instanceof JSONArray)
-//            {
-//                JSONArray dataArray = (JSONArray) rawData;
-//                // Iterate through the array and add each object to the list
-//                for (int i = 0; i < dataArray.length(); i++)
-//                {
-//                    JSONObject item = dataArray.optJSONObject(i);
-//                    String arr = dataArray.getString(i);
-//                    if (item != null)
-//                    {
-//                        dataList.add(item);
-//                    }
-//                    else
-//                    if(arr != null)
-//                    {
-//                        dataList.add(new JSONObject("{ \"value\": \""+arr+"\"}"));
-//                    }
-//                }
-//            }
-//            return new APIReturn(code, message, dataList);
-//        } catch (IOException e)
-//        {
-//            return new APIReturn(403, "IOException|| " + e.getMessage(), null);
-//        } catch (JSONException e) {
-//            return new APIReturn(404, "JSONException|| " + e.getMessage(), null);
-//        }
-//    }
-
     private static APIReturn executeRequest(Request request) {
         client = new OkHttpClient.Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
@@ -228,6 +180,7 @@ public class HttpClient
         try (Response response = client.newCall(request).execute()) {
             assert response.body() != null;
             String responseBody = response.body().string();
+            Log.d("WO_WORK_ORDER", "HTTP response code=" + response.code() + ", body=" + responseBody);
 
             JSONObject jsonObject = new JSONObject(responseBody);
             int code = jsonObject.optInt("code", 400);
@@ -259,6 +212,53 @@ public class HttpClient
             return new APIReturn(403, "IOException|| " + e.getMessage(), null);
         } catch (JSONException e) {
             return new APIReturn(404, "JSONException|| " + e.getMessage(), null);
+        }
+    }
+
+    // Debug helper: fetch raw URL with Authorization header and log basic response info
+    public static APIReturn fetchUrlDebug(String url) {
+        OkHttpClient debugClient = new OkHttpClient.Builder()
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
+        try {
+            Request request = new Request.Builder()
+                    .url(url)
+                    .header("Authorization", "Bearer " + (token == null ? "" : token))
+                    .get()
+                    .build();
+            try (Response response = debugClient.newCall(request).execute()) {
+                int code = response.code();
+                String ct = response.header("Content-Type", "");
+                long len = -1;
+                if (response.body() != null) {
+                    len = response.body().contentLength();
+                    // read small prefix
+                    byte[] prefix = new byte[0];
+                    try (InputStream is = response.body().byteStream()) {
+                        int max = 512;
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        byte[] buffer = new byte[256];
+                        int read;
+                        int total = 0;
+                        while ((read = is.read(buffer)) != -1 && total < max) {
+                            int toWrite = Math.min(read, max - total);
+                            out.write(buffer, 0, toWrite);
+                            total += toWrite;
+                        }
+                        prefix = out.toByteArray();
+                    } catch (Exception ignored) {}
+                    String prefixStr = "";
+                    try { prefixStr = new String(prefix); } catch (Exception ignored) {}
+                    Log.d("PREVIEW_DEBUG", "fetchUrlDebug url=" + url + " code=" + code + " contentType=" + ct + " len=" + len + " prefix=" + prefixStr);
+                } else {
+                    Log.d("PREVIEW_DEBUG", "fetchUrlDebug url=" + url + " code=" + code + " no body");
+                }
+                return new APIReturn(code, "OK", null);
+            }
+        } catch (Exception e) {
+            Log.e("PREVIEW_DEBUG", "fetchUrlDebug error for url=" + url, e);
+            return new APIReturn(500, "Exception||" + e.getMessage(), null);
         }
     }
 
@@ -736,14 +736,6 @@ public class HttpClient
         try {
 
             String EndPoint = "/api/v1/mms_mobile/machine";
-
-//            String bodyRequest = "{\n" +
-//
-//
-//                    "        \"User_Id\": \""+User_Id+"\",\n" +
-//                    "        \"Status\": \"\"\n" +
-//
-//                    "}";
 
             HttpClient httpClient = new HttpClient();
             String response = null;
@@ -1266,6 +1258,38 @@ public class HttpClient
         }
     }
 
+    //TODO: lấy thông tin tất cả workorder theo mã máy
+    public static APIReturn getAllWorkOrderByMachineId(Context context, String server_url, String Schema_MMS, String Schema_Core, String machineId, int offset, int limit){
+        try{
+            JSONObject conditionObj = new JSONObject();
+            String normalizedMachineId = normalizeMachineId(machineId);
+            conditionObj.put("machine_id", normalizedMachineId);
+            conditionObj.put("Offset", offset);
+            conditionObj.put("Limit", limit);
+            conditionObj.put("Schema_Core", Schema_Core);
+            conditionObj.put("Schema_MMS", Schema_MMS);
+            Log.d("WO_WORK_ORDER", "getAllWorkOrderByMachineId condition=" + conditionObj);
+            return callDynamics(context, server_url, "mes_mms", "MES_MMS_GET_ALL_WORK_ORDER_APP", conditionObj);
+        }catch (Exception e){
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    private static String normalizeMachineId(String machineId) {
+        if (machineId == null) return "";
+        String value = machineId.trim();
+        if (value.isEmpty()) return "";
+
+        value = value.replace("\r", "").replace("\n", "").trim();
+        if (value.contains(" - ")) {
+            value = value.split(" - ")[0].trim();
+        }
+        if (value.contains(":")) {
+            String[] parts = value.split(":");
+            value = parts[parts.length - 1].trim();
+        }
+        return value;
+    }
 
 
     //TODO: api insert work order
@@ -1408,6 +1432,217 @@ public class HttpClient
             this.code = code;
             this.message = message;
             this.data = data;
+        }
+    }
+
+    // =========================================================================
+    // TODO: MODULE BẢO DƯỠNG ĐỊNH KỲ (PREVENTIVE MAINTENANCE)
+    // =========================================================================
+
+    // TODO: Lấy danh sách kế hoạch bảo dưỡng định kỳ (ActionName: MMS_GET_MAINTAIN_PLAN_225)
+    public static APIReturn getMaintenancePlanList(Context context, String server_url, String schemaCore, String schemaMms,
+                                                   String whereTask, String whereMachine, long fromUnix, long toUnix) {
+        try {
+            JSONObject conditionObj = new JSONObject();
+            conditionObj.put("WhereTask", whereTask);
+            conditionObj.put("WhereMachine", whereMachine);
+            conditionObj.put("WhereProcess", "1=1");
+            conditionObj.put("WhereFeTeam", "1=1");
+            conditionObj.put("FROM_DATE", fromUnix);
+            conditionObj.put("TO_DATE", toUnix);
+            conditionObj.put("Schema_Core", schemaCore);
+            conditionObj.put("Schema_Mms", schemaMms);
+
+            return callDynamics(context, server_url, "mes_mms", "MMS_GET_MAINTAIN_PLAN_225", conditionObj);
+        } catch (Exception e) {
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    // TODO: Lấy danh sách hạng mục kiểm tra - BẢNG CHA (ActionName: GET_PARRENT_225_test)
+    public static APIReturn getParentMaintenanceItems(Context context, String server_url, String schemaCore, String schemaMms,
+                                                      String categoryId, String taskId, String machineId) {
+        try {
+            JSONObject conditionObj = new JSONObject();
+            conditionObj.put("Schema_Core", schemaCore);
+            conditionObj.put("Schema_Mms", schemaMms);
+            conditionObj.put("categoryId", categoryId);
+            conditionObj.put("taskId", taskId);
+            conditionObj.put("machine_id", machineId);
+
+            return callDynamics(context, server_url, "mes_mms", "GET_PARRENT_225_test", conditionObj);
+        } catch (Exception e) {
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    // TODO: Lấy danh sách task bảo dưỡng định kỳ chi tiết (ActionName: MMS_GET_MAINTAIN_TASK_225)
+    public static APIReturn getMaintainTaskList(Context context, String server_url, String schemaMms, String schemaCore,
+                                                String whereClause, int limit, int offset, String feTeamId) {
+        try {
+            JSONObject conditionObj = new JSONObject();
+            conditionObj.put("Schema_MMS", schemaMms);
+            conditionObj.put("Schema_Core", schemaCore);
+            conditionObj.put("where", whereClause);
+            conditionObj.put("limit", limit);
+            conditionObj.put("offset", offset);
+            conditionObj.put("feTeamId", feTeamId == null ? "" : feTeamId.trim());
+
+            return callDynamics(context, server_url, "mes_mms", "MMS_GET_MAINTAIN_TASK_225", conditionObj);
+        } catch (Exception e) {
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    // TODO: Lấy danh sách hạng mục kiểm tra con - BẢNG CON (ActionName: GET_CHILD_225_test)
+    public static APIReturn getChildMaintenanceItems(Context context, String server_url, String schemaMms,
+                                                     String parentCheckId, String taskId) {
+        try {
+            JSONObject conditionObj = new JSONObject();
+            conditionObj.put("Schema_Mms", schemaMms);
+            conditionObj.put("parrent", parentCheckId);
+            conditionObj.put("taskId", taskId);
+
+            return callDynamics(context, server_url, "mes_mms", "GET_CHILD_225_test", conditionObj);
+        } catch (Exception e) {
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    // TODO: Lưu kết quả chi tiết của từng hạng mục kiểm tra (Duyệt vòng lặp gửi từng item) (ActionName: MMS_ADD_BEFORE_DETAIL_CHECK_PREVENT_225)
+    public static APIReturn saveMaintenanceItemDetail(Context context, String server_url, String schemaMms,
+                                                      String taskId, String checkId, String checkValue,
+                                                      String checkValue2, String historyJsonArray, String comment,
+                                                      String imageList, String imageListDelete) {
+        try {
+            JSONObject conditionObj = new JSONObject();
+            conditionObj.put("schemaMMS", schemaMms);
+            conditionObj.put("Task_Id", taskId);
+            conditionObj.put("Check_Id", checkId);
+            conditionObj.put("Check_Value", checkValue);
+            conditionObj.put("Check_Value2", checkValue2);
+            conditionObj.put("History", historyJsonArray); // Dữ liệu chuỗi JSON Array lịch sử đã append
+            conditionObj.put("Comment", comment);
+            conditionObj.put("Image_List", imageList == null ? "" : imageList);
+            conditionObj.put("Image_List_Delete", imageListDelete == null ? "" : imageListDelete);
+
+            return callDynamics(context, server_url, "mes_mms", "MMS_ADD_BEFORE_DETAIL_CHECK_PREVENT_225", conditionObj);
+        } catch (Exception e) {
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    // TODO: Cập nhật trạng thái tổng của Task (Endpoint: /api/v1/mms/task (Gửi raw payload array dạng POST gốc))
+    public static APIReturn updateOverallTaskStatus(Context context, String server_url, String taskId, String machineId,
+                                                    long taskDateUnix, String maintainerId, String categoryId, String status) {
+        try {
+            String finalUrl = server_url;
+            if (finalUrl.endsWith("/")) {
+                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+            }
+            finalUrl += "/api/v1/mms/task";
+
+            // Tạo Object cập nhật
+            JSONObject taskUpdateObj = new JSONObject();
+            taskUpdateObj.put("Task_Id", taskId);
+            taskUpdateObj.put("Machine_Id", machineId);
+            // Server validation expects Task_Date_Unix as string (not numeric)
+            taskUpdateObj.put("Task_Date_Unix", String.valueOf(taskDateUnix));
+            taskUpdateObj.put("Task_Type", "1");
+            taskUpdateObj.put("Maintainer_Id", maintainerId);
+            taskUpdateObj.put("Category_Id", categoryId);
+            taskUpdateObj.put("Status", status); // "2" (OK) hoặc "3" (NG)
+
+            JSONArray updateTasksArray = new JSONArray();
+            updateTasksArray.put(taskUpdateObj);
+
+            // Bọc payload gốc theo cấu trúc tài liệu
+            JSONObject payload = new JSONObject();
+            payload.put("addTasks", new JSONArray());
+            payload.put("updateTasks", updateTasksArray);
+            payload.put("deleteTasks", new JSONArray());
+
+            return callPostRaw(context, finalUrl, payload);
+        } catch (Exception e) {
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    // TODO: Xem lịch sử của mục kiểm tra con (ActionName: GET_HISTORY_CHILD)
+    public static APIReturn getHistoryChildItems(Context context, String server_url, String schemaMms,
+                                                 String checkId, String taskId) {
+        try {
+            JSONObject conditionObj = new JSONObject();
+            conditionObj.put("Schema_Mms", schemaMms);
+            conditionObj.put("checkId", checkId);
+            conditionObj.put("task_id", taskId);
+
+            return callDynamics(context, server_url, "mes_mms", "GET_HISTORY_CHILD", conditionObj);
+        } catch (Exception e) {
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    // TODO: Upload hình ảnh cho từng hạng mục kiểm tra bảo dưỡng (Endpoint: :9101/api/v1/mms_file-img/uploadImagesComponentForPreventive)
+    public static APIReturn uploadPreventiveImage(Context context, String server_url, String taskId, String checkId, Uri fileUri) {
+        PreferenceHandler handler = new PreferenceHandler(context);
+        token = handler.getString("api_key");
+        try {
+            String finalUrl = server_url;
+            if (finalUrl.contains("://")) {
+                String protocol = finalUrl.split("://")[0];
+                String addressWithPort = finalUrl.split("://")[1];
+                if (addressWithPort.contains(":")) {
+                    finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+                } else {
+                    finalUrl = protocol + "://" + addressWithPort;
+                }
+            }
+            if (finalUrl.endsWith("/")) {
+                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+            }
+            // Trỏ đúng port và endpoint upload hình ảnh bảo dưỡng
+            finalUrl = finalUrl + ":9101/api/v1/mms_file-img/uploadImagesComponentForPreventive";
+
+            MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+            // Send both camelCase and underscore variants to satisfy different server expectations
+            String tId = taskId == null ? "" : taskId;
+            String cId = checkId == null ? "" : checkId;
+            builder.addFormDataPart("taskId", tId);
+            builder.addFormDataPart("checkId", cId);
+            builder.addFormDataPart("Task_Id", tId);
+            builder.addFormDataPart("Check_Id", cId);
+
+            String fileName = getFileNameFromUri(fileUri, context);
+            byte[] fileBytes = readFileFromUri(fileUri, context);
+
+            // Debug logs to inspect what is being sent
+            Log.d("UPLOAD_IMAGE_DBG", "uploadPreventiveImage -> finalUrl=" + finalUrl);
+            Log.d("UPLOAD_IMAGE_DBG", "uploadPreventiveImage -> Task_Id=" + tId + ", Check_Id=" + cId);
+            Log.d("UPLOAD_IMAGE_DBG", "uploadPreventiveImage -> fileName=" + fileName + ", fileBytes=" + (fileBytes == null ? 0 : fileBytes.length));
+            Log.d("UPLOAD_IMAGE_DBG", "uploadPreventiveImage -> tokenPresent=" + (token != null && !token.trim().isEmpty()));
+
+            if (fileBytes != null) {
+                RequestBody fileBody = RequestBody.create(MediaType.parse(getMimeType(fileName)), fileBytes);
+                // Send both 'file' and 'files' form names to maximize compatibility with backend
+                builder.addFormDataPart("file", fileName, fileBody);
+                builder.addFormDataPart("files", fileName, fileBody);
+            }
+
+            // Some backend variants expect a 'param' form field — include empty param to be safe
+            builder.addFormDataPart("param", "");
+
+            RequestBody requestBody = builder.build();
+            Request request = new Request.Builder()
+                    .url(finalUrl)
+                    .header("Authorization", "Bearer " + token)
+                    .post(requestBody)
+                    .build();
+
+            return executeRequest(request);
+        } catch (Exception e) {
+            Log.e("Exception", e.getMessage());
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
         }
     }
 }

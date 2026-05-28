@@ -12,46 +12,43 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Header -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#F0Fdf4"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="10dp">
+            android:paddingHorizontal="32dp"
+            android:paddingVertical="14dp">
 
             <TextView
                 android:id="@+id/tv_maintenance_summary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Periodic Maintenance Task List"
+                tools:text="DANH SÁCH NHIỆM VỤ BẢO DƯỠNG ĐỊNH KỲ"
                 android:textColor="#00A680"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                tools:text="DANH SÁCH NHIỆM VỤ BẢO DƯỠNG ĐỊNH KỲ" />
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:text="MMS System FE Subsystem"
+                tools:text="Hệ thống MMS phân hệ FE"
                 android:textColor="#6B7280"
-                android:textSize="11sp"
-                android:textStyle="italic"
-                tools:text="Hệ thống MMS phân hệ FE" />
+                android:textSize="13sp"
+                android:textStyle="italic" />
         </RelativeLayout>
 
-        <!-- RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_maintenance_tasks"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="8dp"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="12dp"
             android:scrollbars="vertical"
             tools:listitem="@layout/item_maintenance_plan_card" />
 
     </LinearLayout>
-
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mcv_item_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="14dp"
+    android:layout_marginTop="10dp"
+    android:layout_marginBottom="6dp"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="4dp"
+    app:strokeColor="#D4D9E2"
+    app:strokeWidth="1.2dp">
+
+    <LinearLayout
+        android:id="@+id/ll_main_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:id="@+id/ll_header_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_item_index"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_filter_segment_selected"
+                android:gravity="center"
+                android:text="1"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/ll_title_block"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/ll_title_tags_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_param_name"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:text="W/O code"
+                        android:textColor="#111827"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        tools:text="WO-2026-0089" />
+
+                    <TextView
+                        android:id="@+id/tv_tag_param_type"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:background="#EFF6FF"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="Machine"
+                        android:textColor="#2563EB"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="MC-0021" />
+
+                    <TextView
+                        android:id="@+id/tv_tag_uom"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:background="#ECFDF5"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="Work type"
+                        android:textColor="#047857"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="BM" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/ll_historical_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_label_last_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Request date"
+                        android:textColor="#6B7280"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/tv_tag_last_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:background="#F3F4F6"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text=""
+                        android:textColor="#4B5563"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        tools:text="2026-05-26 10:30" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_action_block"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_tag_entry_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_filter_segment_unselected"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:text="Incomplete"
+                    android:textColor="#1F2937"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Metadata -->
+        <LinearLayout
+            android:id="@+id/ll_metadata_block"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/ll_meta_left"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_spec_min"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Process"
+                    android:textColor="#4B5563"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_spec_max"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Type"
+                    android:textColor="#4B5563"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_spec_target"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Status"
+                    android:textColor="#9A3412"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/v_vertical_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="12dp"
+                android:background="#E5E7EB" />
+
+            <LinearLayout
+                android:id="@+id/ll_meta_right"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_actual_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Creator"
+                    android:textColor="#111827"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_entry_method"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Requester"
+                    android:textColor="#4B5563"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_deviation_alert"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Elapsed days"
+                    android:textColor="#111827"
+                    android:textSize="16sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Hidden -->
+        <TextView
+            android:id="@+id/tv_hidden_param_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#111827"
+            android:textSize="14sp"
+            android:visibility="gone"
+            tools:text="PARAM_ID_001" />
+
+        <TextView
+            android:id="@+id/tv_hidden_step_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#111827"
+            android:textSize="14sp"
+            android:visibility="gone"
+            tools:text="STEP_ID_102" />
+
+        <!-- Footer -->
+        <LinearLayout
+            android:id="@+id/ll_footer_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_entry_instruction"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="3"
+                android:text="Request reason"
+                android:textColor="#374151"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tv_btn_enter_wo"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:layout_marginStart="16dp"
+                android:background="@drawable/bg_btn_add"
+                android:gravity="center"
+                android:paddingHorizontal="18dp"
+                android:text="ADD Work Order"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/work_order_data_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -27,19 +28,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Nhập dữ liệu"
+            android:text="Enter Work Order Data"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold" />
-
-        <ImageView
-            android:id="@+id/update_icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:contentDescription="@null"
-            android:src="@drawable/refresh_cw_green" />
     </RelativeLayout>
 
     <View
@@ -47,19 +39,17 @@
         android:layout_height="1dp"
         android:background="#EEEEEE" />
 
-    <!-- Tabs -->
     <LinearLayout
         android:id="@+id/layout_tabs"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="46dp"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:paddingTop="8dp">
+        android:paddingHorizontal="16dp">
 
         <RelativeLayout
             android:id="@+id/tab_work_order_container"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="match_parent"
             android:layout_weight="1">
 
             <TextView
@@ -84,7 +74,7 @@
         <RelativeLayout
             android:id="@+id/tab_maintenance_container"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="match_parent"
             android:layout_weight="1">
 
             <TextView
@@ -93,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
                 android:gravity="center"
-                android:text="Bảo dưỡng"
+                android:text="Maintenance"
                 android:textColor="#5C5C5C"
                 android:textSize="14sp" />
 
@@ -104,6 +94,148 @@
                 android:layout_alignParentBottom="true"
                 android:background="#F4F2F2" />
         </RelativeLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_machine_scan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
+        android:background="#F7FBFA"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="10dp">
+
+        <ImageView
+            android:id="@+id/btn_scan_machine"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="@null"
+            android:src="@android:drawable/ic_menu_camera"
+            app:tint="#00A680" />
+
+        <TextView
+            android:id="@+id/tv_machine_scan_value"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="Machine not scanned"
+            android:textColor="#2B2B2B"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_filters_work_order"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginVertical="4dp"
+        android:orientation="horizontal"
+        android:visibility="visible">
+
+        <LinearLayout
+            android:id="@+id/btn_filter_wo_date"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1.2"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_filter_segment_unselected"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@android:drawable/ic_menu_my_calendar"
+                app:tint="#5C5C5C" />
+
+            <TextView
+                android:id="@+id/tv_filter_wo_date_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text=""
+                android:textColor="#2B2B2B"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_filter_segment_unselected"
+            android:paddingHorizontal="4dp">
+
+            <Spinner
+                android:id="@+id/spinner_filter_wo_status"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:dropDownWidth="match_parent"
+                android:gravity="center_vertical"
+                android:spinnerMode="dropdown" />
+        </FrameLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_filters_maintenance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginVertical="4dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/btn_filter_maint_date"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1.2"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/bg_filter_segment_unselected"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@android:drawable/ic_menu_my_calendar"
+                app:tint="#5C5C5C" />
+
+            <TextView
+                android:id="@+id/tv_filter_maint_date_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="Dự kiến: Tất cả"
+                android:textColor="#2B2B2B"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_filter_segment_unselected"
+            android:paddingHorizontal="4dp">
+
+            <Spinner
+                android:id="@+id/spinner_filter_maint_status"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:dropDownWidth="match_parent"
+                android:gravity="center_vertical"
+                android:spinnerMode="dropdown" />
+        </FrameLayout>
     </LinearLayout>
 
     <FrameLayout

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="14dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="4dp"
+    app:strokeColor="#D1D5DB"
+    app:strokeWidth="1.2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/view_status_indicator"
+            android:layout_width="8dp"
+            android:layout_height="match_parent"
+            android:background="#E5E7EB" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Title -->
+            <TextView
+                android:id="@+id/tv_item_check_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Check item name"
+                android:textColor="#111827"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                tools:text="Check item name placeholder" />
+
+            <TextView
+                android:id="@+id/tv_item_sub_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Standard / Range"
+                android:textColor="#6B7280"
+                android:textSize="15sp"
+                tools:text="Min: 10.0 | Max: 20.0" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:background="#E5E7EB" />
+
+            <!-- Action row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1">
+
+                    <!-- OK / NG -->
+                    <RadioGroup
+                        android:id="@+id/rg_assessment"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/rb_ok"
+                            android:layout_width="80dp"
+                            android:layout_height="48dp"
+                            android:layout_marginEnd="12dp"
+                            android:background="@drawable/bg_filter_segment_unselected"
+                            android:button="@null"
+                            android:gravity="center"
+                            android:text="OK"
+                            android:textColor="#047857"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+
+                        <RadioButton
+                            android:id="@+id/rb_ng"
+                            android:layout_width="80dp"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_filter_segment_unselected"
+                            android:button="@null"
+                            android:gravity="center"
+                            android:text="NG"
+                            android:textColor="#B91C1C"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </RadioGroup>
+
+                    <!-- Numeric inputs -->
+                    <LinearLayout
+                        android:id="@+id/layout_numeric_inputs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <EditText
+                            android:id="@+id/et_check_value_display"
+                            android:layout_width="110dp"
+                            android:layout_height="50dp"
+                            android:background="#F3F4F6"
+                            android:gravity="center"
+                            android:hint="Display"
+                            android:inputType="numberDecimal"
+                            android:paddingHorizontal="6dp"
+                            android:textColor="#111827"
+                            android:textSize="16sp" />
+
+                        <EditText
+                            android:id="@+id/et_check_value_actual"
+                            android:layout_width="110dp"
+                            android:layout_height="50dp"
+                            android:layout_marginStart="12dp"
+                            android:background="#F3F4F6"
+                            android:gravity="center"
+                            android:hint="Actual"
+                            android:inputType="numberDecimal"
+                            android:paddingHorizontal="6dp"
+                            android:textColor="#111827"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <!-- Action buttons -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/btn_item_info"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:scaleType="centerInside"
+                        android:src="@android:drawable/ic_dialog_info"
+                        app:tint="#01A789" />
+
+                    <ImageButton
+                        android:id="@+id/btn_item_history"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:scaleType="centerInside"
+                        android:src="@android:drawable/ic_menu_recent_history"
+                        app:tint="#4B5563" />
+
+                    <ImageButton
+                        android:id="@+id/btn_item_upload"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:scaleType="centerInside"
+                        android:src="@android:drawable/ic_menu_gallery"
+                        app:tint="#2563EB" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Preview images -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_check_previews"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="16dp"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                android:paddingEnd="4dp"
+                android:visibility="gone" />
+
+            <!-- Comment -->
+            <EditText
+                android:id="@+id/et_item_comment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="#F9FAFB"
+                android:hint="Enter a note or cause if any..."
+                android:minHeight="56dp"
+                android:padding="12dp"
+                android:textColor="#374151"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

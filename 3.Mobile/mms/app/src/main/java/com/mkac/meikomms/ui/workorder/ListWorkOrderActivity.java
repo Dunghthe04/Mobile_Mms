@@ -77,6 +77,7 @@ import java.util.TimeZone;
 
 public class ListWorkOrderActivity extends AppCompatActivity {
     private static final String TAG = "ListWorkOrderActivity";
+    private static final String EXTRA_LANGUAGE_CODE = "LANGUAGE_CODE";
     private static final int REQUEST_CODE_ADD_WO = 1001;
     private String serverDynamic, schemaData, schemaCore;
     private String currentDSACondition = "1=1";
@@ -148,6 +149,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        applyIncomingLanguageFromIntent();
+
         setContentView(R.layout.activity_list_work_order);
 
         ImageView imgUserProfile = findViewById(R.id.img_user_profile);
@@ -168,6 +171,23 @@ public class ListWorkOrderActivity extends AppCompatActivity {
 
         LanguageAPIUtils.setLang(findViewById(android.R.id.content));
         applyI18nTexts();
+    }
+
+    private void applyIncomingLanguageFromIntent() {
+        String passedLanguageCode = getIntent() != null ? getIntent().getStringExtra(EXTRA_LANGUAGE_CODE) : null;
+        if (passedLanguageCode == null || passedLanguageCode.trim().isEmpty()) {
+            return;
+        }
+
+        String normalizedCode = passedLanguageCode.trim();
+        int languagePosition = 2;
+        if ("ja".equalsIgnoreCase(normalizedCode)) languagePosition = 0;
+        else if ("en".equalsIgnoreCase(normalizedCode)) languagePosition = 1;
+        else if ("ch".equalsIgnoreCase(normalizedCode)) languagePosition = 3;
+
+        SharedPreferences prefs = getSharedPreferences("AppSettings", MODE_PRIVATE);
+        prefs.edit().putInt("languageSettingPosition", languagePosition).apply();
+        LanguageAPIUtils.setLanguageCode(normalizedCode);
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

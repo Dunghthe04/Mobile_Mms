@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/work_order_hub_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
     android:orientation="vertical">
 
-    <!-- Header: đồng bộ activity_list_work_order -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:text="Work Order"
+            android:text="W/O Management"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -41,6 +41,14 @@
                 android:layout_marginEnd="16dp"
                 android:contentDescription="@null"
                 android:src="@drawable/refresh_cw_green" />
+
+            <ImageView
+                android:id="@+id/img_language_switch"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="@null"
+                android:src="@drawable/language_icon" />
 
             <TextView
                 android:id="@+id/tv_username_display"
@@ -84,7 +92,7 @@
                 android:id="@+id/tv_hub_subtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Chọn chức năng"
+                android:text="Select function"
                 android:textColor="#6B7280"
                 android:textSize="14sp" />
 
@@ -94,11 +102,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="20dp"
-                android:text="Tạo work order mới hoặc nhập dữ liệu work order và bảo dưỡng"
+                android:text="Create a work order or enter work order and maintenance data"
                 android:textColor="@color/black"
                 android:textSize="13sp" />
 
-            <!-- 1. Thêm mới Work Order → WorkOrderActivity -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_create_work_order"
                 android:layout_width="match_parent"
@@ -145,7 +152,7 @@
                             android:id="@+id/tv_create_work_order_title"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Thêm mới Work Order"
+                            android:text="Add Work Order"
                             android:textColor="@color/black"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -155,7 +162,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Tạo phiếu công việc mới"
+                            android:text="Create a new work order"
                             android:textColor="#6B7280"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -169,7 +176,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 2. Nhập dữ liệu Work Order & Bảo dưỡng -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_enter_work_order_data"
                 android:layout_width="match_parent"
@@ -215,7 +221,7 @@
                             android:id="@+id/tv_enter_work_order_title"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Nhập dữ liệu Work Order, Bảo dưỡng"
+                            android:text="Enter Work Order Data"
                             android:textColor="@color/black"
                             android:textSize="15sp"
                             android:textStyle="bold" />
@@ -225,7 +231,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Quản lý phiếu công việc và thực hiện bảo dưỡng"
+                            android:text="Manage work orders and perform maintenance"
                             android:textColor="#6B7280"
                             android:textSize="12sp" />
                     </LinearLayout>

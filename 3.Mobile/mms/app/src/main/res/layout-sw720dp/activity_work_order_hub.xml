@@ -1,28 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/work_order_hub_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
     android:orientation="vertical">
 
-    <!-- Header: đồng bộ layout-sw720dp/activity_list_work_order -->
+    <!-- Header -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="20dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="10dp">
+        android:paddingHorizontal="28dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="14dp">
 
         <TextView
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:text="Work Order"
+            android:text="W/O Management"
             android:textColor="@color/black"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <LinearLayout
@@ -36,26 +37,34 @@
 
             <ImageView
                 android:id="@+id/update_icon"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_marginEnd="16dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="20dp"
                 android:contentDescription="@null"
                 android:src="@drawable/refresh_cw_green" />
+
+            <ImageView
+                android:id="@+id/img_language_switch"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/language_icon" />
 
             <TextView
                 android:id="@+id/tv_username_display"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="12dp"
                 android:text="Guest"
                 android:textColor="#000000"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
             <ImageView
                 android:id="@+id/img_user_profile"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:contentDescription="@null"
                 android:src="@drawable/user_icon" />
         </LinearLayout>
@@ -66,68 +75,64 @@
         android:layout_height="1dp"
         android:background="#EEEEEE" />
 
-    <LinearLayout
+    <!-- Content -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingHorizontal="32dp"
-        android:paddingTop="28dp"
-        android:paddingBottom="32dp">
+        android:fillViewport="true">
 
-        <TextView
-            android:id="@+id/tv_hub_subtitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Chọn chức năng"
-            android:textColor="#6B7280"
-            android:textSize="16sp" />
+            android:orientation="vertical"
+            android:paddingHorizontal="28dp"
+            android:paddingTop="28dp"
+            android:paddingBottom="32dp">
 
-        <TextView
-            android:id="@+id/tv_hub_description"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="28dp"
-            android:text="Tạo work order mới hoặc nhập dữ liệu work order và bảo dưỡng"
-            android:textColor="@color/black"
-            android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tv_hub_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Select function"
+                android:textColor="#6B7280"
+                android:textSize="18sp" />
 
-        <!-- Tablet: 2 thẻ ngang -->
-        <com.google.android.flexbox.FlexboxLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:alignItems="stretch"
-            app:flexWrap="nowrap"
-            app:justifyContent="space_evenly">
+            <TextView
+                android:id="@+id/tv_hub_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="28dp"
+                android:text="Create a work order or enter work order and maintenance data"
+                android:textColor="@color/black"
+                android:textSize="16sp" />
 
-            <!-- 1. Thêm mới Work Order -->
+            <!-- Add Work Order -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_create_work_order"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
+                android:layout_marginBottom="18dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardCornerRadius="10dp"
-                app:cardElevation="3dp"
-                app:layout_flexBasisPercent="48%"
-                app:layout_flexGrow="1"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="4dp"
                 app:strokeColor="#00A680"
-                app:strokeWidth="1dp">
+                app:strokeWidth="1.5dp">
 
                 <LinearLayout
                     android:id="@+id/btn_create_work_order"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_horizontal"
-                    android:minHeight="200dp"
-                    android:orientation="vertical"
-                    android:padding="24dp">
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="96dp"
+                    android:orientation="horizontal"
+                    android:padding="22dp">
 
                     <FrameLayout
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
                         android:background="@drawable/bg_btn_add">
 
                         <ImageView
@@ -139,55 +144,65 @@
                             app:tint="@color/white" />
                     </FrameLayout>
 
-                    <TextView
-                        android:id="@+id/tv_create_work_order_title"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center"
-                        android:text="Thêm mới Work Order"
-                        android:textColor="@color/black"
-                        android:textSize="17sp"
-                        android:textStyle="bold" />
+                        android:layout_marginStart="20dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_create_work_order_desc"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center"
-                        android:text="Tạo work order"
-                        android:textColor="#6B7280"
-                        android:textSize="14sp" />
+                        <TextView
+                            android:id="@+id/tv_create_work_order_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Add Work Order"
+                            android:textColor="@color/black"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_create_work_order_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Create a new work order"
+                            android:textColor="#6B7280"
+                            android:textSize="15sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:contentDescription="@null"
+                        android:src="@android:drawable/ic_media_play"
+                        app:tint="#9CA3AF" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 2. Nhập dữ liệu Work Order & Bảo dưỡng -->
+            <!-- Enter Work Order Data -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_enter_work_order_data"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardCornerRadius="10dp"
-                app:cardElevation="3dp"
-                app:layout_flexBasisPercent="48%"
-                app:layout_flexGrow="1"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="4dp"
                 app:strokeColor="#01A789"
-                app:strokeWidth="1dp">
+                app:strokeWidth="1.5dp">
 
                 <LinearLayout
                     android:id="@+id/btn_enter_work_order_data"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center_horizontal"
-                    android:minHeight="200dp"
-                    android:orientation="vertical"
-                    android:padding="24dp">
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:minHeight="96dp"
+                    android:orientation="horizontal"
+                    android:padding="22dp">
 
                     <FrameLayout
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
                         android:background="#01A789">
 
                         <ImageView
@@ -199,31 +214,42 @@
                             app:tint="@color/white" />
                     </FrameLayout>
 
-                    <TextView
-                        android:id="@+id/tv_enter_work_order_title"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:gravity="center"
-                        android:text="Nhập dữ liệu Work Order, Bảo dưỡng"
-                        android:textColor="@color/black"
-                        android:textSize="17sp"
-                        android:textStyle="bold" />
+                        android:layout_marginStart="20dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_enter_work_order_desc"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:gravity="center"
-                        android:text="Quản lý phiếu công việc và thực hiện bảo dưỡng"
-                        android:textColor="#6B7280"
-                        android:textSize="14sp" />
+                        <TextView
+                            android:id="@+id/tv_enter_work_order_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Enter Work Order Data"
+                            android:textColor="@color/black"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_enter_work_order_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Manage work orders and perform maintenance"
+                            android:textColor="#6B7280"
+                            android:textSize="15sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:contentDescription="@null"
+                        android:src="@android:drawable/ic_media_play"
+                        app:tint="#9CA3AF" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-        </com.google.android.flexbox.FlexboxLayout>
-
-    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

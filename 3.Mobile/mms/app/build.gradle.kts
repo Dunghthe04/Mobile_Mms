@@ -70,6 +70,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0");
     implementation("com.squareup.picasso:picasso:2.71828");
     implementation("androidx.viewpager2:viewpager2:1.1.0")
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
     implementation("com.burhanrashid52:photoeditor:3.0.2");
     implementation("com.google.mlkit:barcode-scanning:17.0.0")
     // CameraX dependencies

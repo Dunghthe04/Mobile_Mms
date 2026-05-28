@@ -214,7 +214,6 @@ public class WorkOrderActivity extends AppCompatActivity {
 
         if (btnClose != null) btnClose.setOnClickListener(v -> finish());
 
-//        if (btnAdd != null) btnAdd.setOnClickListener(v -> performAddWorkOrder());
         btnAdd.setOnClickListener(v -> {
             if(isEditMode){
                 performUpdateWorkOrder();
@@ -263,7 +262,7 @@ public class WorkOrderActivity extends AppCompatActivity {
             tvWorkOrderTitle.setText(i18n(isEditMode ? "Edit Work Order" : "Add Work Order"));
         }
         if (tvLabelWoCode != null) tvLabelWoCode.setText(i18n("W/O Code"));
-        if (tvLabelRequestDate != null) tvLabelRequestDate.setText(i18n("Request Date"));
+        if (tvLabelRequestDate != null) tvLabelRequestDate.setText(i18n("Time arises"));
         if (tvLabelMachine != null) tvLabelMachine.setText(i18n("Machine"));
         if (tvLabelProcess != null) tvLabelProcess.setText(i18n("Process"));
         if (tvLabelType != null) tvLabelType.setText(i18n("Type"));
@@ -488,9 +487,40 @@ public class WorkOrderActivity extends AppCompatActivity {
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
 
+        //TODO: chọn từ hiện tại tới tương lai
+//        if (editText.getId() == R.id.edt_request_date) {
+//            dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+//        }
+
+        //TODO: chọn từ quá khứ tới hiện tại
         if (editText.getId() == R.id.edt_request_date) {
-            dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+            try {
+                long maxDate;
+                if (isEditMode && editingData != null) {
+
+                    String createDateRaw = safeGet(editingData, "CREATE_DATE");
+
+                    if (createDateRaw.isEmpty()) {
+                        createDateRaw = safeGet(editingData, "Create_Date");
+                    }
+
+                    String createDateUi = formatDateForUI(createDateRaw);
+                    Date createDate = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).parse(createDateUi);
+
+                    if (createDate != null) {
+                        maxDate = createDate.getTime();
+                    } else {
+                        maxDate = System.currentTimeMillis();
+                    }
+                } else {
+                    maxDate = System.currentTimeMillis();
+                }
+                dialog.getDatePicker().setMaxDate(maxDate);
+            } catch (Exception e) {
+                dialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+            }
         }
+
         dialog.show();
     }
 
@@ -653,11 +683,6 @@ public class WorkOrderActivity extends AppCompatActivity {
                 ColorConsole.i(TAG, "Add WO success, start mail and task processes...");
 
                 //TODO: Cập nhật trạng thái máy
-               // HttpClient.APIReturn resStatus = HttpClient.updateMachineStatus(this, serverUrl, schemaCore, schemaMms, schemaData, machineId);
-//                HttpClient.APIReturn resStatus = HttpClient.updateMachineStatus(this, serverUrl, schemaCore, machineId);
-//                if(resStatus == null || resStatus.code != 200){
-//                    ColorConsole.e("API Error", "Lỗi cập nhật trạng thái máy: " + (resStatus != null ? resStatus.message : "Không kết nối được server"));
-//                }
 
                 if (getWoTypeInt(loaiHinh) == 3) {
 

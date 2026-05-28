@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:text="Nhập dữ liệu Work Order"
+        android:text="Enter Work Order Data"
         android:textColor="@color/black"
         android:textSize="16sp"
         android:textStyle="bold" />
@@ -31,7 +31,7 @@
             android:layout_weight="1"
             android:background="@drawable/bg_tab_active"
             android:gravity="center"
-            android:text="1.Thông tin"
+            android:text="1.Information"
             android:textColor="@color/white"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -44,7 +44,7 @@
             android:layout_marginStart="8dp"
             android:background="@drawable/bg_tab_inactive"
             android:gravity="center"
-            android:text="2.Vật tư"
+            android:text="2.Materials"
             android:textColor="@color/black"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -80,7 +80,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Thời gian phát sinh:"
+                        android:text="Occurrence Time"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -107,7 +107,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Thời gian bắt đầu thực hiện:"
+                        android:text="Start Time"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -136,7 +136,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Thời gian kết thúc thực hiện:"
+                        android:text="End Time"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -165,7 +165,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Hiện trạng:"
+                        android:text="Current Status"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -191,7 +191,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Phân loại nguyên nhân:"
+                        android:text="Cause Category"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -214,7 +214,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Nguyên nhân:"
+                        android:text="Root Cause"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -240,7 +240,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Ảnh hưởng (Sản phẩm/Thiết bị):"
+                        android:text="Impact (Product/Equipment)"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -265,7 +265,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Nội dung xử lý yêu cầu:"
+                        android:text="Action Taken"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -292,7 +292,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Ghi chú:"
+                        android:text="Note"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -320,7 +320,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Trạng thái:"
+                        android:text="Status"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -372,7 +372,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Chọn file"
+                                android:text="Choose File"
                                 android:textColor="#01A789"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
@@ -399,7 +399,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Tải lên"
+                                android:text="Upload"
                                 android:textColor="@color/white"
                                 android:textSize="12sp"
                                 android:textStyle="bold" />
@@ -418,7 +418,7 @@
                     <TextView
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Tài liệu đính kèm:"
+                        android:text="Attachment"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
@@ -443,7 +443,7 @@
                             android:id="@+id/tv_attachment_status"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Chưa có tài liệu đính kèm"
+                            android:text="No attachment file"
                             android:textColor="#808080"
                             android:textSize="13sp"
                             android:textStyle="italic" />
@@ -487,7 +487,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Tạo yêu cầu xuất kho"
+                            android:text="Create WMS Request"
                             android:textColor="@color/white"
                             android:textSize="13sp"
                             android:textStyle="bold" />
@@ -534,7 +534,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="3"
-                            android:text="Vật tư"
+                            android:text="Materials"
                             android:textColor="@color/black"
                             android:textSize="13sp"
                             android:textStyle="bold"
@@ -545,7 +545,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Số lượng"
+                            android:text="Quantity"
                             android:textColor="@color/black"
                             android:textSize="13sp"
                             android:textStyle="bold"
@@ -561,7 +561,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:padding="24dp"
-                    android:text="Không có vật tư đi kèm"
+                    android:text="No materials available"
                     android:textColor="#808080"
                     android:textSize="13sp"
                     android:visibility="gone" />

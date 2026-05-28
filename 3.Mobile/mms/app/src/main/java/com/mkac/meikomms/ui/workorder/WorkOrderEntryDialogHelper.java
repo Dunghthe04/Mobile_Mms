@@ -6,6 +6,7 @@ import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.os.Environment;
+import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
 import android.content.Context;
 import android.content.Intent;
@@ -29,6 +30,7 @@ import android.widget.Toast;
 import com.mkac.meikomms.R;
 import com.mkac.meikomms.common.ConfigManager;
 import com.mkac.meikomms.common.HttpClient;
+import com.mkac.meikomms.common.LanguageAPIUtils;
 import com.mkac.meikomms.common.PreferenceHandler;
 
 import org.json.JSONArray;
@@ -43,6 +45,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static com.mkac.meikomms.common.LanguageAPIUtils.i18n;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 public final class WorkOrderEntryDialogHelper {
 
     public interface OnSaveListener {
@@ -51,7 +58,6 @@ public final class WorkOrderEntryDialogHelper {
 
     private WorkOrderEntryDialogHelper() {}
 
-    // Static dialog state for onActivityResult callback
     private static Uri selectedFileUri = null;
     private static String uploadedFileName = "";
     private static TextView tvAttachmentStatusView = null;
@@ -166,6 +172,7 @@ public final class WorkOrderEntryDialogHelper {
 
     public static void show(Context context, JSONObject workOrder, OnSaveListener listener) {
         View dialogView = LayoutInflater.from(context).inflate(R.layout.layout_dialog_work_order_entry, null);
+        LanguageAPIUtils.setLang(dialogView);
 
         TextView tvTitle = dialogView.findViewById(R.id.tv_dialog_title);
         TextView tvOccurrence = dialogView.findViewById(R.id.tv_occurrence_time);
@@ -179,24 +186,20 @@ public final class WorkOrderEntryDialogHelper {
         EditText etNote = dialogView.findViewById(R.id.et_note);
         Spinner spinnerStatus = dialogView.findViewById(R.id.spinner_status);
 
-        // Tab Views
         TextView btnTabInfo = dialogView.findViewById(R.id.btn_tab_info);
         TextView btnTabMaterials = dialogView.findViewById(R.id.btn_tab_materials);
         LinearLayout layoutTabInfoContent = dialogView.findViewById(R.id.layout_tab_info_content);
         LinearLayout layoutTabMaterialsContent = dialogView.findViewById(R.id.layout_tab_materials_content);
 
-        // Attachment Views
         View btnChooseFile = dialogView.findViewById(R.id.btn_choose_file);
         View btnUploadFile = dialogView.findViewById(R.id.btn_upload_file);
         tvAttachmentStatusView = dialogView.findViewById(R.id.tv_attachment_status);
         imgAttachmentIconView = dialogView.findViewById(R.id.img_attachment_icon);
 
-        // Dialog Context
         dialogContext = context;
         selectedFileUri = null;
         uploadedFileName = "";
 
-        // Existing file display
         String existingFile = safeGet(workOrder, "File_Wo");
         if (existingFile.isEmpty()) existingFile = safeGet(workOrder, "FILE_WO");
         if (!existingFile.isEmpty()) {
@@ -213,7 +216,7 @@ public final class WorkOrderEntryDialogHelper {
         if (tvAttachmentStatusView != null) {
             tvAttachmentStatusView.setOnClickListener(v -> {
                 if (uploadedFileName == null || uploadedFileName.isEmpty()) {
-                    Toast.makeText(context, "Không có tệp đính kèm để tải về", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, i18n("No attachment file to download"), Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -242,7 +245,6 @@ public final class WorkOrderEntryDialogHelper {
             });
         }
 
-        // Tab switches
         btnTabInfo.setOnClickListener(v -> {
             btnTabInfo.setBackgroundResource(R.drawable.bg_tab_active);
             btnTabInfo.setTextColor(Color.WHITE);
@@ -261,21 +263,19 @@ public final class WorkOrderEntryDialogHelper {
             layoutTabMaterialsContent.setVisibility(View.VISIBLE);
         });
 
-        // Choose file click listener
         btnChooseFile.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("*/*");
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             if (context instanceof android.app.Activity) {
                 ((android.app.Activity) context).startActivityForResult(
-                        Intent.createChooser(intent, "Chọn tài liệu đính kèm"), 9999);
+                        Intent.createChooser(intent, i18n("Select attachment document")), 9999);
             }
         });
 
-        // Upload file click listener
         btnUploadFile.setOnClickListener(v -> {
             if (selectedFileUri == null) {
-                Toast.makeText(context, "Vui lòng chọn file trước khi tải lên", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("Please select a file before uploading"), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -287,7 +287,7 @@ public final class WorkOrderEntryDialogHelper {
             if (taskId.isEmpty()) taskId = safeGet(workOrder, "Task_ID");
 
             if (taskId.isEmpty()) {
-                Toast.makeText(context, "Không tìm thấy mã Work Order để tải lên", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("Work Order code not found for upload"), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -298,7 +298,7 @@ public final class WorkOrderEntryDialogHelper {
             }
 
             ProgressDialog uploadProgress = new ProgressDialog(context);
-            uploadProgress.setMessage("Đang tải lên tài liệu...");
+            uploadProgress.setMessage(i18n("Uploading document..."));
             uploadProgress.setCancelable(false);
             uploadProgress.show();
 
@@ -322,20 +322,22 @@ public final class WorkOrderEntryDialogHelper {
                                 tvAttachmentStatusView.setText(fileVal);
                                 tvAttachmentStatusView.setPaintFlags(tvAttachmentStatusView.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
                             }
-                            Toast.makeText(context, "Tải lên tài liệu thành công", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, i18n("Document uploaded successfully"), Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(context, "Tải lên thành công nhưng không lấy được tên file", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, i18n("Uploaded successfully but failed to get file name"), Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        String errMsg = (result != null) ? result.message : "Không phản hồi từ máy chủ";
-                        Toast.makeText(context, "Tải lên thất bại: " + errMsg, Toast.LENGTH_LONG).show();
+                        String errMsg = (result != null) ? result.message : i18n("No response_1");
+                        Toast.makeText(context, i18n("Upload failed") + ": " + errMsg, Toast.LENGTH_LONG).show();
                     }
                 });
             }).start();
         });
 
-        // WMS Export click listener
-        View btnCreateWmsRequest = dialogView.findViewById(R.id.btn_create_wms_request);
+        // =========================================================================
+        // KHỐI CẢI TIẾN LÕI: TRIỂN KHAI HỆ THỐNG KHÓA NÚT TẠO YÊU CẦU XUẤT KHO
+        // =========================================================================
+        final View btnCreateWmsRequest = dialogView.findViewById(R.id.btn_create_wms_request);
         btnCreateWmsRequest.setOnClickListener(v -> {
             PreferenceHandler prefHandler = new PreferenceHandler(context);
             JSONObject userProfile = prefHandler.getJsonObject("user");
@@ -349,7 +351,7 @@ public final class WorkOrderEntryDialogHelper {
             }
 
             if (userLoginId.isEmpty()) {
-                Toast.makeText(context, "Không tìm thấy thông tin đăng nhập người dùng", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("User login information not found"), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -368,16 +370,10 @@ public final class WorkOrderEntryDialogHelper {
             if (woTypeVal == 0) woTypeVal = workOrder.optInt("Wo_Type", 3);
             String requestPurpose;
             switch (woTypeVal) {
-                case 1:
-                    requestPurpose = "CM";
-                    break;
-                case 2:
-                    requestPurpose = "PM";
-                    break;
+                case 1: requestPurpose = "CM"; break;
+                case 2: requestPurpose = "PM"; break;
                 case 3:
-                default:
-                    requestPurpose = "BM";
-                    break;
+                default: requestPurpose = "BM"; break;
             }
 
             List<JSONObject> addMaterialsList = new ArrayList<>();
@@ -385,7 +381,7 @@ public final class WorkOrderEntryDialogHelper {
             if (materialInfoStr.isEmpty()) materialInfoStr = safeGet(workOrder, "MATERIAL_INFO");
 
             if (materialInfoStr.isEmpty() || "[]".equals(materialInfoStr)) {
-                Toast.makeText(context, "Không có vật tư nào để tạo yêu cầu xuất kho", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("No materials available to create warehouse request"), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -400,12 +396,7 @@ public final class WorkOrderEntryDialogHelper {
                     double qty = item.optDouble("quantity", 0);
                     if (qty == 0) qty = item.optDouble("Quantity", 0);
 
-                    String qtyStr;
-                    if (qty == (long) qty) {
-                        qtyStr = String.valueOf((long) qty);
-                    } else {
-                        qtyStr = String.valueOf(qty);
-                    }
+                    String qtyStr = (qty == (long) qty) ? String.valueOf((long) qty) : String.valueOf(qty);
                     JSONObject matObj = new JSONObject();
                     matObj.put("Item_Id", matId);
                     matObj.put("Item_Qty", qtyStr);
@@ -415,12 +406,12 @@ public final class WorkOrderEntryDialogHelper {
                     addMaterialsList.add(matObj);
                 }
             } catch (Exception e) {
-                Toast.makeText(context, "Lỗi phân tích danh sách vật tư: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("Error parsing material list") + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 return;
             }
 
             if (addMaterialsList.isEmpty()) {
-                Toast.makeText(context, "Không có vật tư hợp lệ để xuất kho", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("No valid materials for warehouse release"), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -428,15 +419,13 @@ public final class WorkOrderEntryDialogHelper {
             if (woCodeVal.isEmpty()) woCodeVal = safeGet(workOrder, "Wo_Code");
 
             String machineDisplay = machineNameVal;
-            if (machineDisplay.isEmpty()) {
-                machineDisplay = machineIdVal;
-            }
+            if (machineDisplay.isEmpty()) machineDisplay = machineIdVal;
             if (machineDisplay.startsWith("Máy ")) {
                 machineDisplay = machineDisplay.substring(4);
             } else if (machineDisplay.startsWith("Máy")) {
                 machineDisplay = machineDisplay.substring(3);
             }
-            String requestNote = "Yêu cầu xuất kho cho Work Order " + woCodeVal + "-Máy " + machineDisplay;
+            String requestNote = i18n("Warehouse request for Work Order") + " " + woCodeVal + "-" + i18n("Machine") + " " + machineDisplay;
             String requestDateUnixStr = String.valueOf(System.currentTimeMillis() / 1000L);
 
             String serverUrlStr = prefHandler.getString("server_url");
@@ -447,8 +436,14 @@ public final class WorkOrderEntryDialogHelper {
             if (serverUrlStr.isEmpty()) {
                 serverUrlStr = "http://192.86.0.225:9103";
             }
+
+            // CHỐT CHẶN 1: Ngang nhiên vô hiệu hóa nút bấm và làm mờ ngay lập tức để chống double-click khi đang chạy luồng mạng
+            btnCreateWmsRequest.setEnabled(false);
+            btnCreateWmsRequest.setClickable(false);
+            btnCreateWmsRequest.setAlpha(0.5f);
+
             ProgressDialog wmsProgress = new ProgressDialog(context);
-            wmsProgress.setMessage("Đang tạo yêu cầu xuất kho...");
+            wmsProgress.setMessage(i18n("Đang tạo yêu cầu xuất kho..."));
             wmsProgress.setCancelable(false);
             wmsProgress.show();
 
@@ -462,24 +457,27 @@ public final class WorkOrderEntryDialogHelper {
 
             new Thread(() -> {
                 HttpClient.APIReturn result = HttpClient.save_request_material(
-                        context,
-                        finalRequestDateUnix,
-                        "FE",
-                        finalRequestNote,
-                        finalMaterials,
-                        finalServerUrl,
-                        finalUsername,
-                        finalRequestPurpose,
-                        finalMachineId
+                        context, finalRequestDateUnix, "FE", finalRequestNote, finalMaterials,
+                        finalServerUrl, finalUsername, finalRequestPurpose, finalMachineId
                 );
 
                 new Handler(Looper.getMainLooper()).post(() -> {
                     wmsProgress.dismiss();
                     if (result != null && result.code == 200) {
-                        Toast.makeText(context, "Tạo yêu cầu xuất kho thành công!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, i18n("Warehouse release request created successfully!"), Toast.LENGTH_SHORT).show();
+
+                        // CHỐT CHẶN 2: Thành công -> Giữ nguyên trạng thái KHÓA VĨNH VIỄN, mờ hẳn đi để kĩ thuật viên không bấm được nữa
+                        btnCreateWmsRequest.setEnabled(false);
+                        btnCreateWmsRequest.setClickable(false);
+                        btnCreateWmsRequest.setAlpha(0.35f);
                     } else {
-                        String errMsg = (result != null) ? result.message : "Không phản hồi";
-                        Toast.makeText(context, "Lỗi tạo yêu cầu xuất kho: " + errMsg, Toast.LENGTH_LONG).show();
+                        String errMsg = (result != null) ? result.message : i18n("No response_2");
+                        Toast.makeText(context, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
+
+                        // PHỤC HỒI: Thất bại -> Mở khóa lại giao diện để kĩ thuật viên tiến hành bấm gửi lại lệnh mạng
+                        btnCreateWmsRequest.setEnabled(true);
+                        btnCreateWmsRequest.setClickable(true);
+                        btnCreateWmsRequest.setAlpha(1.0f);
                     }
                 });
             }).start();
@@ -529,9 +527,7 @@ public final class WorkOrderEntryDialogHelper {
                     StringBuilder sb = new StringBuilder("Item_Id IN (");
                     for (int i = 0; i < matIds.size(); i++) {
                         sb.append("'").append(matIds.get(i)).append("'");
-                        if (i < matIds.size() - 1) {
-                            sb.append(",");
-                        }
+                        if (i < matIds.size() - 1) sb.append(",");
                     }
                     sb.append(")");
                     String whereClause = sb.toString();
@@ -566,11 +562,7 @@ public final class WorkOrderEntryDialogHelper {
 
                     new Thread(() -> {
                         HttpClient.APIReturn result = HttpClient.callDynamics(
-                                context,
-                                finalServerDynamic,
-                                "mes_mms",
-                                "MMS_GET_LIST_MATERIALS_225",
-                                finalConditionObj
+                                context, finalServerDynamic, "mes_mms", "MMS_GET_LIST_MATERIALS_225", finalConditionObj
                         );
 
                         if (result != null && result.code == 200 && result.data != null) {
@@ -582,9 +574,7 @@ public final class WorkOrderEntryDialogHelper {
                                     nameMap.put(itemId, itemName);
                                 }
                             }
-                            new Handler(Looper.getMainLooper()).post(() -> {
-                                populateMaterialTable(context, tableMaterials, parsedMaterials, nameMap);
-                            });
+                            new Handler(Looper.getMainLooper()).post(() -> populateMaterialTable(context, tableMaterials, parsedMaterials, nameMap));
                         }
                     }).start();
                 }
@@ -598,13 +588,42 @@ public final class WorkOrderEntryDialogHelper {
         String requestDate = safeGet(workOrder, "Request_Date");
         tvOccurrence.setText(formatDateTimeDisplay(requestDate));
 
-        String[] causeOptions = context.getResources().getStringArray(R.array.work_order_cause_categories);
-        String[] statusOptions = context.getResources().getStringArray(R.array.work_order_entry_status);
+        String[] rawCauseOptions = context.getResources().getStringArray(R.array.work_order_cause_categories);
+        String[] causeOptions = new String[rawCauseOptions.length];
+        for (int i = 0; i < rawCauseOptions.length; i++) {
+            causeOptions[i] = LanguageAPIUtils.i18n(rawCauseOptions[i]);
+        }
 
-        spinnerCause.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, causeOptions));
+        String[] rawStatusOptions = context.getResources().getStringArray(R.array.work_order_entry_status);
+        String[] statusOptions = new String[rawStatusOptions.length];
+        for (int i = 0; i < rawStatusOptions.length; i++) {
+            statusOptions[i] = LanguageAPIUtils.i18n(rawStatusOptions[i]);
+        }
+
+        ArrayAdapter<String> causeAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, causeOptions) {
+            @Override
+            public boolean isEnabled(int position) {
+                return position != 0;
+            }
+            @Override
+            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getDropDownView(position, convertView, parent);
+                TextView tv = (TextView) view;
+
+                if (position == 0) {
+                    tv.setTextColor(Color.GRAY);
+                } else {
+                    tv.setTextColor(Color.BLACK);
+                }
+                return view;
+            }
+        };
+        causeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCause.setAdapter(causeAdapter);
+
+//        spinnerCause.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, causeOptions));
         spinnerStatus.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, statusOptions));
 
-        // Bind fields
         String actualTaskDateUnix = safeGet(workOrder, "Actual_Task_Date_Unix");
         if (actualTaskDateUnix.isEmpty()) actualTaskDateUnix = safeGet(workOrder, "ACTUAL_TASK_DATE_UNIX");
         etStart.setText(formatUnixTimestamp(actualTaskDateUnix));
@@ -631,7 +650,6 @@ public final class WorkOrderEntryDialogHelper {
         String actionTaken = safeGet(workOrder, "Task_Action_Taken");
         if (actionTaken.isEmpty()) actionTaken = safeGet(workOrder, "ACTION_TAKEN");
         if (actionTaken.isEmpty()) actionTaken = safeGet(workOrder, "Action_Taken");
-        if (actionTaken.isEmpty()) actionTaken = safeGet(workOrder, "Request_Reason");
         etProcessContent.setText(actionTaken);
 
         String note = safeGet(workOrder, "Task_Note");
@@ -642,10 +660,11 @@ public final class WorkOrderEntryDialogHelper {
         String rootCauseAnother = safeGet(workOrder, "Task_Root_Cause_Another");
         if (rootCauseAnother.isEmpty()) rootCauseAnother = safeGet(workOrder, "ROOT_CAUSE_ANOTHER");
         if (rootCauseAnother.isEmpty()) rootCauseAnother = safeGet(workOrder, "Root_Cause_Another");
+
         int causePosition = 0;
         if (!rootCauseAnother.isEmpty()) {
             for (int i = 0; i < causeOptions.length; i++) {
-                if (causeOptions[i].equalsIgnoreCase(rootCauseAnother)) {
+                if (rawCauseOptions[i].equalsIgnoreCase(rootCauseAnother) || causeOptions[i].equalsIgnoreCase(rootCauseAnother)) {
                     causePosition = i;
                     break;
                 }
@@ -696,7 +715,7 @@ public final class WorkOrderEntryDialogHelper {
             if (taskId.isEmpty()) taskId = safeGet(workOrder, "Task_ID");
 
             if (taskId.isEmpty()) {
-                Toast.makeText(context, "Không tìm thấy TASK_ID của Work Order", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("Work Order TASK_ID not found"), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -706,8 +725,11 @@ public final class WorkOrderEntryDialogHelper {
 
             int selectedCausePos = spinnerCause.getSelectedItemPosition();
             String selectedCause = "";
-            if (selectedCausePos > 0 && selectedCausePos < causeOptions.length) {
-                selectedCause = causeOptions[selectedCausePos];
+//            if (selectedCausePos > 0 && selectedCausePos < causeOptions.length) {
+//                selectedCause = causeOptions[selectedCausePos];
+//            }
+            if (selectedCausePos > 0 && selectedCausePos < rawCauseOptions.length) {
+                selectedCause = rawCauseOptions[selectedCausePos];
             }
 
             String causeDetail = etCause.getText().toString().trim();
@@ -717,14 +739,10 @@ public final class WorkOrderEntryDialogHelper {
             int statusVal = spinnerStatus.getSelectedItemPosition();
 
             long actualTaskDateUnixVal = 0;
-            try {
-                actualTaskDateUnixVal = Long.parseLong(startTimeSecStr);
-            } catch (NumberFormatException e) {}
+            try { actualTaskDateUnixVal = Long.parseLong(startTimeSecStr); } catch (NumberFormatException e) {}
 
             long approveTaskDateUnixVal = 0;
-            try {
-                approveTaskDateUnixVal = Long.parseLong(endTimeSecStr);
-            } catch (NumberFormatException e) {}
+            try { approveTaskDateUnixVal = Long.parseLong(endTimeSecStr); } catch (NumberFormatException e) {}
 
             ConfigManager configManager = new ConfigManager(context);
             String serverDynamic = configManager.getProperty("server_dynamic_url");
@@ -751,36 +769,32 @@ public final class WorkOrderEntryDialogHelper {
                 conditionObj.put("STATUS", statusVal);
                 conditionObj.put("TASK_ID", taskId);
             } catch (Exception e) {
-                Toast.makeText(context, "Lỗi tạo dữ liệu: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("System error while saving") + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 return;
             }
 
             ProgressDialog progressDialog = new ProgressDialog(context);
-            progressDialog.setMessage("Đang lưu...");
+            progressDialog.setMessage(i18n("Saving..."));
             progressDialog.setCancelable(false);
             progressDialog.show();
 
             final String finalServerDynamic = serverDynamic;
             new Thread(() -> {
                 HttpClient.APIReturn result = HttpClient.callDynamics(
-                        context,
-                        finalServerDynamic,
-                        "mes_mms",
-                        "MES_TASK_UPDATE_WORK_ORDER_OTHER",
-                        conditionObj
+                        context, finalServerDynamic, "mes_mms", "MES_TASK_UPDATE_WORK_ORDER_OTHER", conditionObj
                 );
 
                 new Handler(Looper.getMainLooper()).post(() -> {
                     progressDialog.dismiss();
                     if (result != null && result.code == 200) {
-                        Toast.makeText(context, "Lưu dữ liệu thành công", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, i18n("Data saved successfully"), Toast.LENGTH_SHORT).show();
                         dialog.dismiss();
                         clearState();
                         if (listener != null) {
                             listener.onSave(workOrder);
                         }
                     } else {
-                        String errMsg = (result != null) ? result.message : "Không phản hồi";
+                        String errMsg = (result != null) ? result.message : i18n("No response_3");
                         Toast.makeText(context, "Lưu thất bại: " + errMsg, Toast.LENGTH_LONG).show();
                     }
                 });
@@ -819,10 +833,10 @@ public final class WorkOrderEntryDialogHelper {
             }
             SimpleDateFormat in = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
             in.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-            
+
             SimpleDateFormat out = new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.getDefault());
             out.setTimeZone(java.util.TimeZone.getDefault());
-            
+
             Date parsed = in.parse(clean);
             return parsed != null ? out.format(parsed) : raw;
         } catch (Exception e) {
@@ -838,7 +852,6 @@ public final class WorkOrderEntryDialogHelper {
             }
         }
     }
-
 
     private static String formatUnixTimestamp(String unixSecStr) {
         if (unixSecStr == null || unixSecStr.trim().isEmpty()) return "";
@@ -887,8 +900,8 @@ public final class WorkOrderEntryDialogHelper {
             DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
             Uri uri = Uri.parse(url);
             DownloadManager.Request request = new DownloadManager.Request(uri);
-            request.setTitle("Tải file: " + fileName);
-            request.setDescription("Đang tải tài liệu đính kèm...");
+            request.setTitle(i18n("Download file") + ": " + fileName);
+            request.setDescription(i18n("Downloading attachment..."));
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
@@ -908,21 +921,19 @@ public final class WorkOrderEntryDialogHelper {
 
             if (downloadManager != null) {
                 downloadManager.enqueue(request);
-                Toast.makeText(context, "Bắt đầu tải xuống file...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("Starting file download..."), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(context, "Không thể khởi chạy Download Manager", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, i18n("Cannot initialize Download Manager"), Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
-            Toast.makeText(context, "Lỗi tải file: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            // Fallback to opening file/URL in browser
+            Toast.makeText(context, i18n("File download error") + ": " + e.getMessage(), Toast.LENGTH_LONG).show();
             try {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
             } catch (Exception ex) {
-                Toast.makeText(context, "Không thể mở liên kết: " + ex.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(context, i18n("Cannot open link") + ": " + ex.getMessage(), Toast.LENGTH_LONG).show();
             }
         }
     }
 }
-
