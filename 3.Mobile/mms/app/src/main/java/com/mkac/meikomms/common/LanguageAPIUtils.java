@@ -206,6 +206,9 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung cho WorkOrderEntryDialog ──────────────
                     "  \"Occurrence Time\": \"Occurrence Time\",\n" +
+                    "  \"Modification Time\": \"Modification Time\",\n" +
+                    "  \"Editor\": \"Editor\",\n" +
+                    "  \"Result\": \"Result\",\n" +
                     "  \"Select Cause\": \"Select Cause\",\n" +
                     "  \"Component Wear\": \"Component Wear\",\n" +
                     "  \"Electrical Control Failure\": \"Electrical Control Failure\",\n" +
@@ -434,6 +437,9 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"Thời gian phát sinh\",\n" +
+                    "  \"Modification Time\": \"Thời gian chỉnh sửa\",\n" +
+                    "  \"Editor\": \"Người chỉnh sửa\",\n" +
+                    "  \"Result\": \"Kết quả\",\n" +
                     "  \"Select Cause\": \"Chọn nguyên nhân\",\n" +
                     "  \"Component Wear\": \"Mòn linh kiện\",\n" +
                     "  \"Electrical Control Failure\": \"Lỗi điều khiển điện\",\n" +
@@ -619,6 +625,9 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"発生時間\",\n" +
+                    "  \"Modification Time\": \"修正時間\",\n" +
+                    "  \"Editor\": \"修正者\",\n" +
+                    "  \"Result\": \"結果\",\n" +
                     "  \"Start Time\": \"開始時間\",\n" +
                     "  \"Select Cause\": \"原因を選択\",\n" +
                     "  \"Component Wear\": \"部品磨耗\",\n" +
@@ -806,6 +815,9 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"发生时间\",\n" +
+                    "  \"Modification Time\": \"修改时间\",\n" +
+                    "  \"Editor\": \"修改人\",\n" +
+                    "  \"Result\": \"结果\",\n" +
                     "  \"Start Time\": \"开始时间\",\n" +
                     "  \"End Time\": \"结束时间\",\n" +
                     "  \"Current Status\": \"当前状态\",\n" +

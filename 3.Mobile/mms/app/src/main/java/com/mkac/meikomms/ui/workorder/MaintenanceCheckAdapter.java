@@ -56,6 +56,12 @@ public class MaintenanceCheckAdapter extends RecyclerView.Adapter<MaintenanceChe
         holder.binding.btnItemInfo.setEnabled(hasChildren);
         holder.binding.btnItemInfo.setAlpha(hasChildren ? 1.0f : 0.25f);
 
+        // - Nếu có hạng mục con (hasChildren = true): khóa cứng nút history ở mục cha
+        // - Nếu KHÔNG có hạng mục con (hasChildren = false): mở khóa nút history bình thường
+        boolean isHistoryEnabled = !hasChildren;
+        holder.binding.btnItemHistory.setEnabled(isHistoryEnabled);
+        holder.binding.btnItemHistory.setAlpha(isHistoryEnabled ? 1.0f : 0.25f);
+
         holder.binding.btnItemInfo.setOnClickListener(v -> actionListener.onInfoClick(item));
         holder.binding.btnItemHistory.setOnClickListener(v -> actionListener.onHistoryClick(item));
         holder.binding.btnItemUpload.setOnClickListener(v -> actionListener.onUploadClick(item));

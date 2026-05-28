@@ -5,8 +5,12 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TableLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -16,6 +20,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.mkac.meikomms.R;
 import com.mkac.meikomms.common.ConfigManager;
 import com.mkac.meikomms.common.LanguageAPIUtils;
 import com.mkac.meikomms.common.HttpClient;
@@ -657,10 +662,131 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         return item.checkValue;
     }
 
+//    private void loadHistoryForItem(MaintenanceItem item) {
+//        executorService.execute(() -> {
+//            HttpClient.APIReturn rs = HttpClient.getHistoryChildItems(this, serverUrl, schemaMms, item.checkId, taskId);
+//            runOnUiThread(() -> { if (rs.code == 200 && rs.data != null) new AlertDialog.Builder(this).setTitle(i18n("Lịch sử") + ": " + item.checkName).setMessage(rs.data.toString()).show(); });
+//        });
+//    }
+
     private void loadHistoryForItem(MaintenanceItem item) {
+        if (item == null) return;
+
+        Toast.makeText(this, i18n("Downloading history..."), Toast.LENGTH_SHORT).show();
+
         executorService.execute(() -> {
             HttpClient.APIReturn rs = HttpClient.getHistoryChildItems(this, serverUrl, schemaMms, item.checkId, taskId);
-            runOnUiThread(() -> { if (rs.code == 200 && rs.data != null) new AlertDialog.Builder(this).setTitle(i18n("Lịch sử") + ": " + item.checkName).setMessage(rs.data.toString()).show(); });
+
+            runOnUiThread(() -> {
+                if (rs == null || rs.code != 200 || rs.data == null) {
+                    Toast.makeText(this, i18n("No response from server"), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // 1. Giải bọc mảng dữ liệu lịch sử nhận về từ mạng Backend
+                List<JSONObject> historyRows = new ArrayList<>();
+                for (JSONObject row : rs.data) {
+                    JSONArray tableArray = row.optJSONArray("Table");
+                    if (tableArray == null) tableArray = row.optJSONArray("data");
+                    if (tableArray == null) tableArray = row.optJSONArray("Data");
+
+                    if (tableArray != null) {
+                        for (int i = 0; i < tableArray.length(); i++) {
+                            JSONObject subRow = tableArray.optJSONObject(i);
+                            if (subRow != null) historyRows.add(subRow);
+                        }
+                    } else {
+                        historyRows.add(row);
+                    }
+                }
+
+                if (historyRows.isEmpty()) {
+                    Toast.makeText(this, i18n("No maintenance history recorded"), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // 2. Nạp khung giao diện Dialog từ tệp mẫu XML
+                LayoutInflater inflater = LayoutInflater.from(this);
+                View dialogView = inflater.inflate(R.layout.dialog_maintenance_history, null);
+
+                // Đa ngôn ngữ hóa tiêu đề trên Header cột tĩnh
+                TextView tvHeaderTime = dialogView.findViewById(R.id.tv_header_time);
+                TextView tvHeaderEditor = dialogView.findViewById(R.id.tv_header_editor);
+                TextView tvHeaderResult = dialogView.findViewById(R.id.tv_header_result);
+                if (tvHeaderTime != null) tvHeaderTime.setText(i18n("Modification Time"));
+                if (tvHeaderEditor != null) tvHeaderEditor.setText(i18n("Editor"));
+                if (tvHeaderResult != null) tvHeaderResult.setText(i18n("Result"));
+
+                TableLayout tableHistoryContent = dialogView.findViewById(R.id.table_history_content);
+
+                // 3. Duyệt mảng cấu trúc để sinh dòng dựa trên item_history_row.xml
+                int index = 1;
+                for (JSONObject row : historyRows) {
+                    View rowView = inflater.inflate(R.layout.item_history_row, null);
+
+                    TextView tvIndex = rowView.findViewById(R.id.tv_history_index);
+                    TextView tvTime = rowView.findViewById(R.id.tv_history_time);
+                    TextView tvEditor = rowView.findViewById(R.id.tv_history_editor);
+                    TextView tvDisplay = rowView.findViewById(R.id.tv_history_display);
+                    TextView tvActual = rowView.findViewById(R.id.tv_history_actual);
+                    TextView tvResult = rowView.findViewById(R.id.tv_history_result);
+
+                    String rawTime = pickFirst(row.optString("time"), row.optString("Time"), row.optString("Update_Date"));
+                    String editor = pickFirst(row.optString("updateBy"), row.optString("UpdateBy"), row.optString("User_Name"), row.optString("Update_By_Name"));
+                    String displayVal = pickFirst(row.optString("value"), row.optString("Value"), row.optString("Check_Value"));
+                    String actualVal = pickFirst(row.optString("value_2"), row.optString("Value_2"), row.optString("Check_Value_2"));
+
+                    String resultText = "—";
+                    int resultColor = Color.BLACK;
+
+                    // Thuật toán so khớp dải thông số kỹ thuật (Numeric vs Radio)
+                    if (item.isNumericInput()) {
+                        if (!displayVal.isEmpty() && !actualVal.isEmpty()) {
+                            try {
+                                double v1 = Double.parseDouble(displayVal);
+                                double v2 = Double.parseDouble(actualVal);
+                                double min = (item.min == null || item.min.trim().isEmpty()) ? Double.NEGATIVE_INFINITY : Double.parseDouble(item.min.trim());
+                                double max = (item.max == null || item.max.trim().isEmpty()) ? Double.POSITIVE_INFINITY : Double.parseDouble(item.max.trim());
+
+                                boolean isOk = (v1 >= min && v1 <= max) && (v2 >= min && v2 <= max);
+                                resultText = isOk ? "OK" : "NG";
+                                resultColor = isOk ? Color.parseColor("#047857") : Color.parseColor("#B91C1C");
+                            } catch (Exception e) {
+                                resultText = "NG";
+                                resultColor = Color.parseColor("#B91C1C");
+                            }
+                        }
+                    } else {
+                        if (!displayVal.isEmpty()) {
+                            resultText = displayVal.toUpperCase();
+                            resultColor = "OK".equalsIgnoreCase(resultText) ? Color.parseColor("#047857") : Color.parseColor("#B91C1C");
+                            actualVal = ""; // Đối với radio, cột thực tế (actual) để trống theo mẫu
+                        }
+                    }
+
+                    if (tvIndex != null) tvIndex.setText(String.valueOf(index++));
+                    if (tvTime != null) tvTime.setText(rawTime.isEmpty() ? "—" : rawTime);
+                    if (tvEditor != null) tvEditor.setText(editor.isEmpty() ? "—" : editor);
+                    if (tvDisplay != null) tvDisplay.setText(displayVal.isEmpty() ? "—" : displayVal);
+                    if (tvActual != null) tvActual.setText(actualVal.isEmpty() ? "—" : actualVal);
+
+                    if (tvResult != null) {
+                        tvResult.setText(resultText);
+                        tvResult.setTextColor(resultColor);
+                    }
+
+                    if (tableHistoryContent != null) {
+                        tableHistoryContent.addView(rowView);
+                    }
+                }
+
+                // 4. Khởi tạo hộp thoại thông tin cảnh báo hiển thị bản ghi
+                new AlertDialog.Builder(this)
+                        .setTitle(i18n("Modification History") + ": " + item.checkName)
+                        .setView(dialogView)
+                        .setPositiveButton(i18n("Close"), (dialog, which) -> dialog.dismiss())
+                        .show();
+            });
         });
     }
 

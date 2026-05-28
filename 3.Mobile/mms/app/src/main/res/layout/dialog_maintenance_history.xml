@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#D1D5DB"
+        android:padding="1dp">
+
+        <TableRow
+            android:background="#F3F4F6"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.6"
+                android:text="#"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="#111827"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tv_header_time"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2.4"
+                android:text="Modification Time"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="#111827"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tv_header_editor"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.8"
+                android:text="Editor"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="#111827"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.2"
+                android:text="Display"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="#111827"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.2"
+                android:text="Actual"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="#111827"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tv_header_result"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1.0"
+                android:text="Result"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="#111827"
+                android:textSize="13sp"/>
+        </TableRow>
+    </TableLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:layout_marginTop="1dp">
+
+        <TableLayout
+            android:id="@+id/table_history_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#D1D5DB"
+            android:paddingHorizontal="1dp"
+            android:paddingBottom="1dp" />
+    </ScrollView>
+</LinearLayout>
