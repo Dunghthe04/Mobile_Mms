@@ -5,16 +5,16 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_white_conner_8"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="24dp">
 
     <TextView
         android:id="@+id/tv_dialog_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="16dp"
         android:text="Enter Work Order Data"
         android:textColor="@color/black"
-        android:textSize="16sp"
+        android:textSize="20sp"
         android:textStyle="bold" />
 
     <!-- Tabs Header -->
@@ -22,31 +22,31 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="12dp">
+        android:layout_marginBottom="16dp">
 
         <TextView
             android:id="@+id/btn_tab_info"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:layout_weight="1"
             android:background="@drawable/bg_tab_active"
             android:gravity="center"
             android:text="1.Information"
             android:textColor="@color/white"
-            android:textSize="13sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btn_tab_materials"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="12dp"
             android:background="@drawable/bg_tab_inactive"
             android:gravity="center"
             android:text="2.Materials"
             android:textColor="@color/black"
-            android:textSize="13sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
     </LinearLayout>
 
@@ -61,287 +61,287 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxHeight="420dp">
+            android:maxHeight="560dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Occurrence Time -->
+                <!-- Thời gian phát sinh -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:visibility="gone">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Occurrence Time"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <TextView
                         android:id="@+id/tv_occurrence_time"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey"
                         android:gravity="center_vertical"
-                        android:paddingHorizontal="10dp"
+                        android:paddingHorizontal="12dp"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- Start Time -->
+                <!-- Thời gian bắt đầu -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Start Time"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <EditText
                         android:id="@+id/et_start_time"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey"
                         android:clickable="true"
                         android:focusable="false"
                         android:hint="dd/mm/yyyy --:-- --"
-                        android:paddingHorizontal="10dp"
+                        android:paddingHorizontal="12dp"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- End Time -->
+                <!-- Thời gian kết thúc -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="End Time"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <EditText
                         android:id="@+id/et_end_time"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey"
                         android:clickable="true"
                         android:focusable="false"
                         android:hint="dd/mm/yyyy --:-- --"
-                        android:paddingHorizontal="10dp"
+                        android:paddingHorizontal="12dp"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- Current Status -->
+                <!-- Hiện trạng -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Current Status"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <EditText
                         android:id="@+id/et_current_status"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey"
-                        android:paddingHorizontal="10dp"
+                        android:paddingHorizontal="12dp"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- Cause Category -->
+                <!-- Phân loại nguyên nhân -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Cause Category"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <Spinner
                         android:id="@+id/spinner_cause_category"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey" />
                 </LinearLayout>
 
-                <!-- Root Cause -->
+                <!-- Nguyên nhân -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Root Cause"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <EditText
                         android:id="@+id/et_cause"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey"
-                        android:paddingHorizontal="10dp"
+                        android:paddingHorizontal="12dp"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- Impact -->
+                <!-- Ảnh hưởng -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Impact (Product/Equipment)"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <EditText
                         android:id="@+id/et_impact"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey"
-                        android:paddingHorizontal="10dp"
+                        android:paddingHorizontal="12dp"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- Action Taken -->
+                <!-- Nội dung xử lý -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Action Taken"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <EditText
                         android:id="@+id/et_process_content"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="100dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey"
                         android:gravity="top"
                         android:inputType="textMultiLine"
-                        android:padding="10dp"
+                        android:padding="12dp"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- Note -->
+                <!-- Ghi chú -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Note"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <EditText
                         android:id="@+id/et_note"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="100dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey"
                         android:gravity="top"
                         android:inputType="textMultiLine"
-                        android:padding="10dp"
+                        android:padding="12dp"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
                 </LinearLayout>
 
-                <!-- Status -->
+                <!-- Trạng thái -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Status"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <Spinner
                         android:id="@+id/spinner_status"
                         android:layout_width="0dp"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey" />
                 </LinearLayout>
 
-                <!-- Choose File & Upload buttons -->
+                <!-- Chọn file & Tải lên buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <View
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="0dp" />
 
                     <LinearLayout
@@ -353,20 +353,20 @@
                         <LinearLayout
                             android:id="@+id/btn_choose_file"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="48dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_btn_choose_file"
                             android:gravity="center"
                             android:orientation="horizontal"
-                            android:paddingHorizontal="8dp"
-                            android:layout_marginEnd="6dp"
+                            android:paddingHorizontal="10dp"
+                            android:layout_marginEnd="8dp"
                             android:clickable="true"
                             android:focusable="true">
 
                             <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:layout_marginEnd="4dp"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_marginEnd="6dp"
                                 android:src="@drawable/ic_paperclip" />
 
                             <TextView
@@ -374,26 +374,26 @@
                                 android:layout_height="wrap_content"
                                 android:text="Choose File"
                                 android:textColor="#01A789"
-                                android:textSize="12sp"
+                                android:textSize="14sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
 
                         <LinearLayout
                             android:id="@+id/btn_upload_file"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="48dp"
                             android:layout_weight="1"
                             android:background="@drawable/bg_tab_active"
                             android:gravity="center"
                             android:orientation="horizontal"
-                            android:paddingHorizontal="8dp"
+                            android:paddingHorizontal="10dp"
                             android:clickable="true"
                             android:focusable="true">
 
                             <ImageView
-                                android:layout_width="16dp"
-                                android:layout_height="16dp"
-                                android:layout_marginEnd="4dp"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_marginEnd="6dp"
                                 android:src="@drawable/ic_upload" />
 
                             <TextView
@@ -401,26 +401,26 @@
                                 android:layout_height="wrap_content"
                                 android:text="Upload"
                                 android:textColor="@color/white"
-                                android:textSize="12sp"
+                                android:textSize="14sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Attachment -->
+                <!-- Tài liệu đính kèm -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="top"
                     android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="150dp"
+                        android:layout_width="200dp"
                         android:layout_height="wrap_content"
                         android:text="Attachment"
                         android:textColor="@color/black"
-                        android:textSize="13sp" />
+                        android:textSize="15sp" />
 
                     <LinearLayout
                         android:id="@+id/layout_attachment_status"
@@ -430,13 +430,13 @@
                         android:background="#F4F6F9"
                         android:gravity="center"
                         android:orientation="horizontal"
-                        android:padding="12dp">
+                        android:padding="14dp">
 
                         <ImageView
                             android:id="@+id/img_attachment_icon"
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:layout_marginEnd="8dp"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_marginEnd="10dp"
                             android:src="@drawable/ic_folder" />
 
                         <TextView
@@ -445,7 +445,7 @@
                             android:layout_height="wrap_content"
                             android:text="No attachment file"
                             android:textColor="#808080"
-                            android:textSize="13sp"
+                            android:textSize="14sp"
                             android:textStyle="italic" />
                     </LinearLayout>
                 </LinearLayout>
@@ -454,33 +454,33 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:layout_marginVertical="12dp"
+                    android:layout_marginVertical="16dp"
                     android:layerType="software"
                     android:background="@drawable/dotted_line" />
 
-                <!-- Create WMS Request -->
+                <!-- Tạo yêu cầu xuất kho -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="10dp"
+                    android:layout_marginBottom="12dp"
                     android:gravity="end"
                     android:orientation="horizontal">
 
                     <LinearLayout
                         android:id="@+id/btn_create_wms_request"
                         android:layout_width="wrap_content"
-                        android:layout_height="40dp"
+                        android:layout_height="48dp"
                         android:background="@drawable/bg_blue_button"
                         android:gravity="center"
                         android:orientation="horizontal"
-                        android:paddingHorizontal="16dp"
+                        android:paddingHorizontal="20dp"
                         android:clickable="true"
                         android:focusable="true">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:layout_marginEnd="6dp"
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_marginEnd="8dp"
                             android:src="@drawable/ic_folder"
                             app:tint="@color/white" />
 
@@ -489,7 +489,7 @@
                             android:layout_height="wrap_content"
                             android:text="Create WMS Request"
                             android:textColor="@color/white"
-                            android:textSize="13sp"
+                            android:textSize="15sp"
                             android:textStyle="bold" />
                     </LinearLayout>
                 </LinearLayout>
@@ -509,7 +509,7 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxHeight="420dp">
+            android:maxHeight="560dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -528,7 +528,7 @@
                     <!-- Table Header Row -->
                     <TableRow
                         android:background="#F4F4F4"
-                        android:padding="8dp">
+                        android:padding="10dp">
 
                         <TextView
                             android:layout_width="0dp"
@@ -536,10 +536,10 @@
                             android:layout_weight="3"
                             android:text="Materials"
                             android:textColor="@color/black"
-                            android:textSize="13sp"
+                            android:textSize="15sp"
                             android:textStyle="bold"
                             android:gravity="center_vertical"
-                            android:padding="4dp" />
+                            android:padding="6dp" />
 
                         <TextView
                             android:layout_width="0dp"
@@ -547,10 +547,10 @@
                             android:layout_weight="1"
                             android:text="Quantity"
                             android:textColor="@color/black"
-                            android:textSize="13sp"
+                            android:textSize="15sp"
                             android:textStyle="bold"
                             android:gravity="center"
-                            android:padding="4dp" />
+                            android:padding="6dp" />
                     </TableRow>
                 </TableLayout>
 
@@ -560,45 +560,45 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:padding="24dp"
+                    android:padding="32dp"
                     android:text="No materials available"
                     android:textColor="#808080"
-                    android:textSize="13sp"
+                    android:textSize="15sp"
                     android:visibility="gone" />
 
             </LinearLayout>
         </ScrollView>
     </LinearLayout>
 
-    <!-- Bottom buttons -->
+    <!-- Bottom Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:gravity="end"
         android:orientation="horizontal">
 
         <TextView
             android:id="@+id/btn_dialog_close"
-            android:layout_width="120dp"
-            android:layout_height="40dp"
+            android:layout_width="140dp"
+            android:layout_height="48dp"
             android:background="@drawable/layout_bg_red"
             android:gravity="center"
-            android:text="Close"
+            android:text="Đóng"
             android:textColor="@color/red"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/btn_dialog_save"
-            android:layout_width="120dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="12dp"
+            android:layout_width="140dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
             android:background="@drawable/lay_out_conner_4_green_fill"
             android:gravity="center"
-            android:text="Save"
+            android:text="Lưu"
             android:textColor="@color/white"
-            android:textSize="14sp"
+            android:textSize="16sp"
             android:textStyle="bold" />
     </LinearLayout>
 

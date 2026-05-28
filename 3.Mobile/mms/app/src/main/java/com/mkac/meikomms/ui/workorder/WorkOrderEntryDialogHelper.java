@@ -38,6 +38,7 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -63,6 +64,19 @@ public final class WorkOrderEntryDialogHelper {
     private static TextView tvAttachmentStatusView = null;
     private static ImageView imgAttachmentIconView = null;
     private static Context dialogContext = null;
+
+    // Danh sách key chuẩn (tiếng Anh) — dùng để lưu DB và tra dịch qua i18n()
+    private static final List<String> REASON_KEYS = Arrays.asList(
+            "Select Cause",
+            "Component Wear",
+            "Electrical Control Failure",
+            "Operator Error",
+            "Initial Installation",
+            "Setting Change",
+            "Misalignment",
+            "Unknown Cause",
+            "Other Cause"
+    );
 
     public static void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 9999 && resultCode == android.app.Activity.RESULT_OK && data != null && data.getData() != null) {
@@ -111,6 +125,17 @@ public final class WorkOrderEntryDialogHelper {
         tvAttachmentStatusView = null;
         imgAttachmentIconView = null;
         dialogContext = null;
+    }
+
+    /**
+     * Chuyển index (1-based) sang chuỗi đã được dịch theo ngôn ngữ hiện tại.
+     * Dùng để hiển thị giá trị đã lưu trong DB ra UI.
+     */
+    private static String convertStatus(int status) {
+        if (status >= 1 && status <= REASON_KEYS.size()) {
+            return i18n(REASON_KEYS.get(status - 1));
+        }
+        return "";
     }
 
     private static void populateMaterialTable(Context context, TableLayout table, List<JSONObject> materials, Map<String, String> nameMap) {
@@ -240,7 +265,6 @@ public final class WorkOrderEntryDialogHelper {
                     finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
                 }
                 String downloadUrl = finalUrl + ":9101/api/v1/mms_file-img/" + uploadedFileName;
-
                 downloadFile(context, downloadUrl, uploadedFileName);
             });
         }
@@ -327,7 +351,7 @@ public final class WorkOrderEntryDialogHelper {
                             Toast.makeText(context, i18n("Uploaded successfully but failed to get file name"), Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        String errMsg = (result != null) ? result.message : i18n("No response_1");
+                        String errMsg = (result != null) ? result.message : i18n("No response from server");
                         Toast.makeText(context, i18n("Upload failed") + ": " + errMsg, Toast.LENGTH_LONG).show();
                     }
                 });
@@ -335,7 +359,7 @@ public final class WorkOrderEntryDialogHelper {
         });
 
         // =========================================================================
-        // KHỐI CẢI TIẾN LÕI: TRIỂN KHAI HỆ THỐNG KHÓA NÚT TẠO YÊU CẦU XUẤT KHO
+        // CREATE WMS REQUEST
         // =========================================================================
         final View btnCreateWmsRequest = dialogView.findViewById(R.id.btn_create_wms_request);
         btnCreateWmsRequest.setOnClickListener(v -> {
@@ -425,7 +449,8 @@ public final class WorkOrderEntryDialogHelper {
             } else if (machineDisplay.startsWith("Máy")) {
                 machineDisplay = machineDisplay.substring(3);
             }
-            String requestNote = i18n("Warehouse request for Work Order") + " " + woCodeVal + "-" + i18n("Machine") + " " + machineDisplay;
+            String requestNote = i18n("Warehouse request for Work Order") + " " + woCodeVal
+                    + " - " + i18n("Machine") + " " + machineDisplay;
             String requestDateUnixStr = String.valueOf(System.currentTimeMillis() / 1000L);
 
             String serverUrlStr = prefHandler.getString("server_url");
@@ -437,13 +462,12 @@ public final class WorkOrderEntryDialogHelper {
                 serverUrlStr = "http://192.86.0.225:9103";
             }
 
-            // CHỐT CHẶN 1: Ngang nhiên vô hiệu hóa nút bấm và làm mờ ngay lập tức để chống double-click khi đang chạy luồng mạng
             btnCreateWmsRequest.setEnabled(false);
             btnCreateWmsRequest.setClickable(false);
             btnCreateWmsRequest.setAlpha(0.5f);
 
             ProgressDialog wmsProgress = new ProgressDialog(context);
-            wmsProgress.setMessage(i18n("Đang tạo yêu cầu xuất kho..."));
+            wmsProgress.setMessage(i18n("Creating warehouse release request..."));
             wmsProgress.setCancelable(false);
             wmsProgress.show();
 
@@ -465,16 +489,12 @@ public final class WorkOrderEntryDialogHelper {
                     wmsProgress.dismiss();
                     if (result != null && result.code == 200) {
                         Toast.makeText(context, i18n("Warehouse release request created successfully!"), Toast.LENGTH_SHORT).show();
-
-                        // CHỐT CHẶN 2: Thành công -> Giữ nguyên trạng thái KHÓA VĨNH VIỄN, mờ hẳn đi để kĩ thuật viên không bấm được nữa
                         btnCreateWmsRequest.setEnabled(false);
                         btnCreateWmsRequest.setClickable(false);
                         btnCreateWmsRequest.setAlpha(0.35f);
                     } else {
-                        String errMsg = (result != null) ? result.message : i18n("No response_2");
+                        String errMsg = (result != null) ? result.message : i18n("No response from server");
                         Toast.makeText(context, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
-
-                        // PHỤC HỒI: Thất bại -> Mở khóa lại giao diện để kĩ thuật viên tiến hành bấm gửi lại lệnh mạng
                         btnCreateWmsRequest.setEnabled(true);
                         btnCreateWmsRequest.setClickable(true);
                         btnCreateWmsRequest.setAlpha(1.0f);
@@ -534,9 +554,7 @@ public final class WorkOrderEntryDialogHelper {
 
                     ConfigManager configManager = new ConfigManager(context);
                     String serverDynamic = configManager.getProperty("server_dynamic_url");
-                    if (serverDynamic.isEmpty()) {
-                        serverDynamic = "http://192.86.0.225:9101/api/dynamics";
-                    }
+                    if (serverDynamic.isEmpty()) serverDynamic = "http://192.86.0.225:9101/api/dynamics";
                     String schemaMms = configManager.getProperty("schema_mms");
                     if (schemaMms.isEmpty()) schemaMms = "MES_MMS_MKHC";
                     String schemaCore = configManager.getProperty("schema_core");
@@ -564,7 +582,6 @@ public final class WorkOrderEntryDialogHelper {
                         HttpClient.APIReturn result = HttpClient.callDynamics(
                                 context, finalServerDynamic, "mes_mms", "MMS_GET_LIST_MATERIALS_225", finalConditionObj
                         );
-
                         if (result != null && result.code == 200 && result.data != null) {
                             Map<String, String> nameMap = new HashMap<>();
                             for (JSONObject mat : result.data) {
@@ -574,7 +591,8 @@ public final class WorkOrderEntryDialogHelper {
                                     nameMap.put(itemId, itemName);
                                 }
                             }
-                            new Handler(Looper.getMainLooper()).post(() -> populateMaterialTable(context, tableMaterials, parsedMaterials, nameMap));
+                            new Handler(Looper.getMainLooper()).post(() ->
+                                    populateMaterialTable(context, tableMaterials, parsedMaterials, nameMap));
                         }
                     }).start();
                 }
@@ -583,15 +601,20 @@ public final class WorkOrderEntryDialogHelper {
 
         String woCode = safeGet(workOrder, "WO_CODE");
         if (woCode.isEmpty()) woCode = safeGet(workOrder, "Wo_Code");
-        tvTitle.setText("Nhập dữ liệu: " + woCode);
+        tvTitle.setText(i18n("Enter data") + ": " + woCode);
 
         String requestDate = safeGet(workOrder, "Request_Date");
         tvOccurrence.setText(formatDateTimeDisplay(requestDate));
 
-        String[] rawCauseOptions = context.getResources().getStringArray(R.array.work_order_cause_categories);
-        String[] causeOptions = new String[rawCauseOptions.length];
-        for (int i = 0; i < rawCauseOptions.length; i++) {
-            causeOptions[i] = LanguageAPIUtils.i18n(rawCauseOptions[i]);
+        // =========================================================================
+        // SPINNER CAUSE — dùng REASON_KEYS + i18n() thay vì R.array
+        // =========================================================================
+        // rawCauseOptions: English keys để so sánh/lưu DB
+        final String[] rawCauseOptions = REASON_KEYS.toArray(new String[0]);
+        // causeOptions: chuỗi đã dịch để hiển thị lên Spinner
+        final String[] causeOptions = new String[REASON_KEYS.size()];
+        for (int i = 0; i < REASON_KEYS.size(); i++) {
+            causeOptions[i] = i18n(REASON_KEYS.get(i));
         }
 
         String[] rawStatusOptions = context.getResources().getStringArray(R.array.work_order_entry_status);
@@ -600,6 +623,7 @@ public final class WorkOrderEntryDialogHelper {
             statusOptions[i] = LanguageAPIUtils.i18n(rawStatusOptions[i]);
         }
 
+        // Adapter cho spinnerCause: vô hiệu hóa item đầu (placeholder "Select Cause")
         ArrayAdapter<String> causeAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, causeOptions) {
             @Override
             public boolean isEnabled(int position) {
@@ -609,21 +633,17 @@ public final class WorkOrderEntryDialogHelper {
             public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
                 View view = super.getDropDownView(position, convertView, parent);
                 TextView tv = (TextView) view;
-
-                if (position == 0) {
-                    tv.setTextColor(Color.GRAY);
-                } else {
-                    tv.setTextColor(Color.BLACK);
-                }
+                tv.setTextColor(position == 0 ? Color.GRAY : Color.BLACK);
                 return view;
             }
         };
         causeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCause.setAdapter(causeAdapter);
-
-//        spinnerCause.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, causeOptions));
         spinnerStatus.setAdapter(new ArrayAdapter<>(context, android.R.layout.simple_spinner_dropdown_item, statusOptions));
 
+        // =========================================================================
+        // Điền dữ liệu từ workOrder vào các field
+        // =========================================================================
         String actualTaskDateUnix = safeGet(workOrder, "Actual_Task_Date_Unix");
         if (actualTaskDateUnix.isEmpty()) actualTaskDateUnix = safeGet(workOrder, "ACTUAL_TASK_DATE_UNIX");
         etStart.setText(formatUnixTimestamp(actualTaskDateUnix));
@@ -657,16 +677,31 @@ public final class WorkOrderEntryDialogHelper {
         if (note.isEmpty()) note = safeGet(workOrder, "Note");
         etNote.setText(note);
 
+        // =========================================================================
+        // Khôi phục vị trí spinnerCause từ DB
+        // Ưu tiên so sánh với rawCauseOptions (English key),
+        // fallback so sánh với causeOptions (đã dịch) để tương thích dữ liệu cũ
+        // =========================================================================
         String rootCauseAnother = safeGet(workOrder, "Task_Root_Cause_Another");
         if (rootCauseAnother.isEmpty()) rootCauseAnother = safeGet(workOrder, "ROOT_CAUSE_ANOTHER");
         if (rootCauseAnother.isEmpty()) rootCauseAnother = safeGet(workOrder, "Root_Cause_Another");
 
         int causePosition = 0;
         if (!rootCauseAnother.isEmpty()) {
-            for (int i = 0; i < causeOptions.length; i++) {
-                if (rawCauseOptions[i].equalsIgnoreCase(rootCauseAnother) || causeOptions[i].equalsIgnoreCase(rootCauseAnother)) {
+            // Bước 1: so khớp English key (cách lưu chuẩn)
+            for (int i = 0; i < rawCauseOptions.length; i++) {
+                if (rawCauseOptions[i].equalsIgnoreCase(rootCauseAnother)) {
                     causePosition = i;
                     break;
+                }
+            }
+            // Bước 2: nếu chưa tìm thấy, so khớp chuỗi đã dịch (dữ liệu cũ)
+            if (causePosition == 0) {
+                for (int i = 0; i < causeOptions.length; i++) {
+                    if (causeOptions[i].equalsIgnoreCase(rootCauseAnother)) {
+                        causePosition = i;
+                        break;
+                    }
                 }
             }
         }
@@ -723,11 +758,9 @@ public final class WorkOrderEntryDialogHelper {
             String endTimeSecStr = convertDateTimeToUnix(etEnd.getText().toString().trim());
             String currentSit = etCurrentStatus.getText().toString().trim();
 
+            // Lưu English key vào DB (không lưu chuỗi đã dịch)
             int selectedCausePos = spinnerCause.getSelectedItemPosition();
             String selectedCause = "";
-//            if (selectedCausePos > 0 && selectedCausePos < causeOptions.length) {
-//                selectedCause = causeOptions[selectedCausePos];
-//            }
             if (selectedCausePos > 0 && selectedCausePos < rawCauseOptions.length) {
                 selectedCause = rawCauseOptions[selectedCausePos];
             }
@@ -746,9 +779,7 @@ public final class WorkOrderEntryDialogHelper {
 
             ConfigManager configManager = new ConfigManager(context);
             String serverDynamic = configManager.getProperty("server_dynamic_url");
-            if (serverDynamic.isEmpty()) {
-                serverDynamic = "http://192.86.0.225:9101/api/dynamics";
-            }
+            if (serverDynamic.isEmpty()) serverDynamic = "http://192.86.0.225:9101/api/dynamics";
             String schemaMms = configManager.getProperty("schema_mms");
             if (schemaMms.isEmpty()) schemaMms = "MES_MMS_MKHC";
             String schemaCore = configManager.getProperty("schema_core");
@@ -761,7 +792,7 @@ public final class WorkOrderEntryDialogHelper {
                 conditionObj.put("ACTUAL_TASK_DATE_UNIX", actualTaskDateUnixVal);
                 conditionObj.put("APPROVE_TASK_DATE_UNIX", approveTaskDateUnixVal);
                 conditionObj.put("CURRENT_SITUATION", currentSit);
-                conditionObj.put("ROOT_CAUSE_ANOTHER", selectedCause);
+                conditionObj.put("ROOT_CAUSE_ANOTHER", selectedCause); // English key
                 conditionObj.put("ROOT_CAUSE", causeDetail);
                 conditionObj.put("QUALITY_IMPACT", impact);
                 conditionObj.put("ACTION_TAKEN", action);
@@ -794,8 +825,8 @@ public final class WorkOrderEntryDialogHelper {
                             listener.onSave(workOrder);
                         }
                     } else {
-                        String errMsg = (result != null) ? result.message : i18n("No response_3");
-                        Toast.makeText(context, "Lưu thất bại: " + errMsg, Toast.LENGTH_LONG).show();
+                        String errMsg = (result != null) ? result.message : i18n("No response from server");
+                        Toast.makeText(context, i18n("Save failed") + ": " + errMsg, Toast.LENGTH_LONG).show();
                     }
                 });
             }).start();
@@ -828,15 +859,11 @@ public final class WorkOrderEntryDialogHelper {
         if (raw == null || raw.isEmpty() || "null".equalsIgnoreCase(raw)) return "";
         try {
             String clean = raw;
-            if (clean.contains("T") && clean.length() >= 19) {
-                clean = clean.substring(0, 19);
-            }
+            if (clean.contains("T") && clean.length() >= 19) clean = clean.substring(0, 19);
             SimpleDateFormat in = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
             in.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-
             SimpleDateFormat out = new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.getDefault());
             out.setTimeZone(java.util.TimeZone.getDefault());
-
             Date parsed = in.parse(clean);
             return parsed != null ? out.format(parsed) : raw;
         } catch (Exception e) {
@@ -872,19 +899,13 @@ public final class WorkOrderEntryDialogHelper {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.getDefault());
             Date date = sdf.parse(dateStr.trim());
-            if (date != null) {
-                return String.valueOf(date.getTime() / 1000L);
-            }
+            if (date != null) return String.valueOf(date.getTime() / 1000L);
         } catch (Exception e) {
             try {
                 SimpleDateFormat sdf24 = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
                 Date date = sdf24.parse(dateStr.trim());
-                if (date != null) {
-                    return String.valueOf(date.getTime() / 1000L);
-                }
-            } catch (Exception e2) {
-                // ignore
-            }
+                if (date != null) return String.valueOf(date.getTime() / 1000L);
+            } catch (Exception e2) { /* ignore */ }
         }
         return "0";
     }
@@ -914,9 +935,7 @@ public final class WorkOrderEntryDialogHelper {
             String fileExtension = MimeTypeMap.getFileExtensionFromUrl(url);
             if (fileExtension != null) {
                 String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
-                if (mimeType != null) {
-                    request.setMimeType(mimeType);
-                }
+                if (mimeType != null) request.setMimeType(mimeType);
             }
 
             if (downloadManager != null) {
