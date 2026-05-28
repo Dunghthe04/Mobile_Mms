@@ -362,6 +362,16 @@ public final class WorkOrderEntryDialogHelper {
         // CREATE WMS REQUEST
         // =========================================================================
         final View btnCreateWmsRequest = dialogView.findViewById(R.id.btn_create_wms_request);
+
+        PreferenceHandler initialPrefHandler = new PreferenceHandler(context);
+        String initialWoCode = safeGet(workOrder, "WO_CODE");
+        if (initialWoCode.isEmpty()) initialWoCode = safeGet(workOrder, "Wo_Code");
+        if (initialPrefHandler.getBoolean("wms_request_created_" + initialWoCode)) {
+            btnCreateWmsRequest.setEnabled(false);
+            btnCreateWmsRequest.setClickable(false);
+            btnCreateWmsRequest.setAlpha(0.35f);
+        }
+
         btnCreateWmsRequest.setOnClickListener(v -> {
             PreferenceHandler prefHandler = new PreferenceHandler(context);
             JSONObject userProfile = prefHandler.getJsonObject("user");
@@ -478,6 +488,7 @@ public final class WorkOrderEntryDialogHelper {
             final String finalServerUrl = serverUrlStr;
             final String finalRequestPurpose = requestPurpose;
             final String finalMachineId = machineIdVal;
+            final String finalWoCodeVal = woCodeVal;
 
             new Thread(() -> {
                 HttpClient.APIReturn result = HttpClient.save_request_material(
@@ -492,6 +503,7 @@ public final class WorkOrderEntryDialogHelper {
                         btnCreateWmsRequest.setEnabled(false);
                         btnCreateWmsRequest.setClickable(false);
                         btnCreateWmsRequest.setAlpha(0.35f);
+                        prefHandler.setBoolean("wms_request_created_" + finalWoCodeVal, true);
                     } else {
                         String errMsg = (result != null) ? result.message : i18n("No response from server");
                         Toast.makeText(context, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
