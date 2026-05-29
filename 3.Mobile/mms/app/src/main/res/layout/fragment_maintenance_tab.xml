@@ -28,17 +28,7 @@
                 android:textColor="#00A680"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                tools:text="DANH SÁCH NHIỆM VỤ BẢO DƯỠNG ĐỊNH KỲ" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:text="MMS System FE Subsystem"
-                android:textColor="#6B7280"
-                android:textSize="11sp"
-                android:textStyle="italic"
-                tools:text="Hệ thống MMS phân hệ FE" />
+                tools:text="DANH SÁCH NHIỆM VỤ BẢO DƯỠNG" />
         </RelativeLayout>
 
         <!-- RecyclerView -->

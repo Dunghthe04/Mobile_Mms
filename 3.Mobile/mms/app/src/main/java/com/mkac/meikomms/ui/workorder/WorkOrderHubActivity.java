@@ -18,8 +18,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
+import com.google.android.material.card.MaterialCardView;
 import com.mkac.meikomms.R;
 import com.mkac.meikomms.common.ConfigManager;
+import com.mkac.meikomms.common.HttpClient;
 import com.mkac.meikomms.common.LanguageAPIUtils;
 import com.mkac.meikomms.common.PreferenceHandler;
 
@@ -41,6 +43,7 @@ public class WorkOrderHubActivity extends AppCompatActivity {
     private static final String EXTRA_LANGUAGE_CODE = "LANGUAGE_CODE";
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private String serverUrl = "";
+    private String schemaCore = "";
     private String localAppVersion = "2.4.7";
 
     public static void start(Context context) {
@@ -55,6 +58,7 @@ public class WorkOrderHubActivity extends AppCompatActivity {
         LanguageAPIUtils.init(this);
         loadAppConfigurations();
         displayUserInfo();
+        updateEnterWorkOrderDataPermission();
         applyLanguage();
 
         LinearLayout card_create_work_order = findViewById(R.id.btn_create_work_order);
@@ -93,25 +97,20 @@ public class WorkOrderHubActivity extends AppCompatActivity {
         LanguageAPIUtils.init(this);
         applyLanguage();
         displayUserInfo();
+        updateEnterWorkOrderDataPermission();
+
         LanguageAPIUtils.setLang(findViewById(android.R.id.content));
     }
 
+
     private void applyLanguage() {
         TextView tvTitle = findViewById(R.id.tv_title);
-        TextView tvHubSubtitle = findViewById(R.id.tv_hub_subtitle);
-        TextView tvHubDescription = findViewById(R.id.tv_hub_description);
         TextView tvCreateWorkOrderTitle = findViewById(R.id.tv_create_work_order_title);
-        TextView tvCreateWorkOrderDesc = findViewById(R.id.tv_create_work_order_desc);
         TextView tvEnterWorkOrderTitle = findViewById(R.id.tv_enter_work_order_title);
-        TextView tvEnterWorkOrderDesc = findViewById(R.id.tv_enter_work_order_desc);
 
         if (tvTitle != null) tvTitle.setText(i18n("W/O Management"));
-        if (tvHubSubtitle != null) tvHubSubtitle.setText(i18n("Select function"));
-        if (tvHubDescription != null) tvHubDescription.setText(i18n("Create a work order or enter work order and maintenance data"));
         if (tvCreateWorkOrderTitle != null) tvCreateWorkOrderTitle.setText(i18n("Add Work Order"));
-        if (tvCreateWorkOrderDesc != null) tvCreateWorkOrderDesc.setText(i18n("Create a new work order"));
         if (tvEnterWorkOrderTitle != null) tvEnterWorkOrderTitle.setText(i18n("Enter Work Order Data"));
-        if (tvEnterWorkOrderDesc != null) tvEnterWorkOrderDesc.setText(i18n("Manage work orders and perform maintenance"));
     }
 
     private void showLanguageSelectionDialog() {
@@ -151,20 +150,7 @@ public class WorkOrderHubActivity extends AppCompatActivity {
         PreferenceHandler handler = new PreferenceHandler(this);
         JSONObject userObj = handler.getJsonObject("user");
 
-        String accountName = "";
-        if (userObj != null) {
-            if (userObj.has("User_Name")) {
-                accountName = userObj.optString("User_Name", "").trim();
-            } else if (userObj.has("username")) {
-                accountName = userObj.optString("username", "").trim();
-            } else if (userObj.has("Account")) {
-                accountName = userObj.optString("Account", "").trim();
-            }
-
-            if (accountName.isEmpty() || "null".equalsIgnoreCase(accountName)) {
-                accountName = userObj.optString("Full_Name", "").trim();
-            }
-        }
+        String accountName = resolveAccountName(userObj, handler);
 
         if (accountName.isEmpty() || "null".equalsIgnoreCase(accountName)) {
             accountName = "MMS_Account";
@@ -186,6 +172,113 @@ public class WorkOrderHubActivity extends AppCompatActivity {
         if (configVer != null && !configVer.trim().isEmpty()) {
             localAppVersion = configVer.trim();
         }
+
+        schemaCore = handler.getString("schema_core");
+        if (schemaCore == null || schemaCore.trim().isEmpty()) {
+            schemaCore = configManager.getProperty("schema_core");
+        }
+
+        if (schemaCore == null || schemaCore.trim().isEmpty()) {
+            schemaCore = "MES_CORE";
+        }
+    }
+
+    private void updateEnterWorkOrderDataPermission() {
+        LinearLayout btnEnterWorkOrderData = findViewById(R.id.btn_enter_work_order_data);
+        if (btnEnterWorkOrderData == null) return;
+
+        btnEnterWorkOrderData.setEnabled(false);
+        btnEnterWorkOrderData.setAlpha(0.5f);
+
+        PreferenceHandler handler = new PreferenceHandler(this);
+        JSONObject userObj = handler.getJsonObject("user");
+        String userName = resolveAccountName(userObj, handler);
+
+        if (userName.isEmpty()) {
+            applyEnterWorkOrderDataState(btnEnterWorkOrderData, false);
+            return;
+        }
+
+        String finalServerUrl = serverUrl;
+        String finalSchemaCore = schemaCore;
+        executorService.execute(() -> {
+            boolean isFeDivision = false;
+
+            try {
+                HttpClient.APIReturn response = HttpClient.getUserInfo(
+                        WorkOrderHubActivity.this,
+                        finalServerUrl,
+                        userName,
+                        finalSchemaCore
+                );
+
+                if (response != null && response.code == 200 && response.data != null && !response.data.isEmpty()) {
+                    JSONObject userInfo = response.data.get(0);
+                    String divisionName = resolveDivisionName(userInfo);
+                    isFeDivision = "FE".equalsIgnoreCase(divisionName);
+                }
+            } catch (Exception e) {
+                Log.e("WORK_ORDER_HUB", "updateEnterWorkOrderDataPermission error", e);
+            }
+
+            boolean finalAllowed = isFeDivision;
+            runOnUiThread(() -> applyEnterWorkOrderDataState(btnEnterWorkOrderData, finalAllowed));
+        });
+    }
+
+    private void applyEnterWorkOrderDataState(LinearLayout button, boolean enabled) {
+        if (button == null) return;
+        button.setEnabled(enabled);
+        button.setClickable(enabled);
+        button.setAlpha(enabled ? 1.0f : 0.5f);
+    }
+
+    private String resolveAccountName(JSONObject userObj, PreferenceHandler handler) {
+        String accountName = "";
+
+        if (userObj != null) {
+            if (userObj.has("User_Name")) {
+                accountName = userObj.optString("User_Name", "").trim();
+            } else if (userObj.has("username")) {
+                accountName = userObj.optString("username", "").trim();
+            } else if (userObj.has("Account")) {
+                accountName = userObj.optString("Account", "").trim();
+            }
+
+            if (accountName.isEmpty() || "null".equalsIgnoreCase(accountName)) {
+                accountName = userObj.optString("Full_Name", "").trim();
+            }
+        }
+
+        if (accountName.isEmpty() || "null".equalsIgnoreCase(accountName)) {
+            accountName = handler.getString("Userlogin").trim();
+        }
+
+        return accountName;
+    }
+
+    private String resolveDivisionName(JSONObject userObj) {
+        if (userObj == null) return "";
+
+        if (userObj.has("Division_Name")) {
+            return normalizeDivisionName(userObj.optString("Division_Name", ""));
+        }
+
+        if (userObj.has("divisionName")) {
+            return normalizeDivisionName(userObj.optString("divisionName", ""));
+        }
+
+        if (userObj.has("Department_Code")) {
+            return normalizeDivisionName(userObj.optString("Department_Code", ""));
+        }
+
+        return "";
+    }
+
+    private String normalizeDivisionName(String rawValue) {
+        if (rawValue == null) return "";
+        String value = rawValue.trim();
+        return "null".equalsIgnoreCase(value) ? "" : value;
     }
 
     private void showLogoutConfirmationDialog() {
@@ -202,6 +295,7 @@ public class WorkOrderHubActivity extends AppCompatActivity {
     private void executeLogoutAction() {
         try {
             PreferenceHandler handler = new PreferenceHandler(this);
+            handler.setBoolean("isLoggedIn", false);
             handler.remove("user");
             handler.remove("api_key");
 

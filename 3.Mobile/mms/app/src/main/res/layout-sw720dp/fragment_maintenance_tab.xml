@@ -24,20 +24,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Periodic Maintenance Task List"
-                tools:text="DANH SÁCH NHIỆM VỤ BẢO DƯỠNG ĐỊNH KỲ"
+                tools:text="DANH SÁCH NHIỆM VỤ BẢO DƯỠNG"
                 android:textColor="#00A680"
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:text="MMS System FE Subsystem"
-                tools:text="Hệ thống MMS phân hệ FE"
-                android:textColor="#6B7280"
-                android:textSize="13sp"
-                android:textStyle="italic" />
         </RelativeLayout>
 
         <androidx.recyclerview.widget.RecyclerView

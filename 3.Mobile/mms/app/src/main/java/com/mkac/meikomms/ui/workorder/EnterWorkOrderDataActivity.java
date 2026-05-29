@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TableLayout;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -53,7 +55,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
     private final List<MaintenanceItem> parentItems = new ArrayList<>();
     private final Map<String, List<MaintenanceItem>> childItemsByParent = new HashMap<>();
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-
     private String serverUrl = "";
     private String schemaCore = "";
     private String schemaMms = "";
@@ -102,6 +103,15 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         schemaCore = pickFirst(handler.getString("schema_core"), configManager.getProperty("schema_core"));
         schemaMms = pickFirst(handler.getString("schema_mms"), configManager.getProperty("schema_mms"), handler.getString("schema_data"), configManager.getProperty("schema_data"));
 
+        JSONObject userObj = handler.getJsonObject("user");
+        if (userObj != null) {
+            currentUserId = userObj.optString("userId", "");
+            if (currentUserId.isEmpty()) currentUserId = userObj.optString("Id", "");
+            if (currentUserId.isEmpty()) currentUserId = userObj.optString("username", "");
+        }
+        if (currentUserId.isEmpty()) {
+            currentUserId = handler.getString("Userlogin");
+        }
     }
 
     private void parseIntentData() {
@@ -135,29 +145,28 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         switch (cleanStatus) {
             case "0":
                 binding.tvPlanStatus.setText(i18n("Pending"));
-                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#F3F4F6")); // Nền Xám
-                binding.tvPlanStatus.setTextColor(Color.parseColor("#4B5563"));       // Chữ Đen Xám
+                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#F3F4F6"));
+                binding.tvPlanStatus.setTextColor(Color.parseColor("#4B5563"));
                 break;
             case "1":
                 binding.tvPlanStatus.setText(i18n("Done") + " / " + i18n("Approve"));
-                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#EFF6FF")); // Nền Xanh dương nhạt
-                binding.tvPlanStatus.setTextColor(Color.parseColor("#2563EB"));       // Chữ Xanh dương đậm
+                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#EFF6FF"));
+                binding.tvPlanStatus.setTextColor(Color.parseColor("#2563EB"));
                 break;
             case "2":
                 binding.tvPlanStatus.setText(i18n("Checksheet OK"));
-                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#D1FAE5")); // Nền Xanh lá nhạt
-                binding.tvPlanStatus.setTextColor(Color.parseColor("#047857"));       // Chữ Xanh lá đậm
+                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#D1FAE5"));
+                binding.tvPlanStatus.setTextColor(Color.parseColor("#047857"));
                 break;
             case "3":
-                // ĐỒNG BỘ CHUẨN XÁC CHỮ MÀU ĐỎ ĐẬM TRÊN NỀN ĐỎ NHẠT KHỚP VỚI ADAPTER OUTSIDE
                 binding.tvPlanStatus.setText(i18n("Checksheet NG"));
-                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#FEE2E2")); // Nền Đỏ nhạt
-                binding.tvPlanStatus.setTextColor(Color.parseColor("#B91C1C"));       // Chữ Đỏ đậm
+                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#FEE2E2"));
+                binding.tvPlanStatus.setTextColor(Color.parseColor("#B91C1C"));
                 break;
             case "5":
                 binding.tvPlanStatus.setText(i18n("Overdue"));
-                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#FFEEEE")); // Nền Đỏ tươi nhạt
-                binding.tvPlanStatus.setTextColor(Color.parseColor("#E11D48"));       // Chữ Hồng Đỏ đậm
+                binding.tvPlanStatus.setBackgroundColor(Color.parseColor("#FFEEEE"));
+                binding.tvPlanStatus.setTextColor(Color.parseColor("#E11D48"));
                 break;
             default:
                 binding.tvPlanStatus.setText(i18n("Pending"));
@@ -215,8 +224,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         });
     }
 
-
-
     private void loadParentCheckList() {
         if (serverUrl.isEmpty() || taskId.isEmpty()) return;
 
@@ -236,7 +243,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         });
     }
 
-    // Hàm bổ trợ dựng link ảnh theo đường dẫn web public/imagesForComponentPreventive trên server
     private String buildMaintenanceImageUrl(String baseUrl, String fileName) {
         if (fileName == null || fileName.isEmpty()) return "";
         if (fileName.startsWith("http://") || fileName.startsWith("https://")) return fileName;
@@ -310,7 +316,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         bottomSheetDialog.show();
     }
 
-    // TODO: thuật toán phán định
     private void syncParentFromChildren(MaintenanceItem parentItem, List<MaintenanceItem> childItems) {
         if (childItems == null || childItems.isEmpty()) return;
 
@@ -323,7 +328,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
 
             if ("NG".equalsIgnoreCase(childStatus)) {
                 anyNg = true;
-                break; // Chỉ cần 1 mục con lỗi sập hệ thống -> Cha thành NG ngay
+                break;
             }
             if (childStatus.isEmpty()) {
                 anyEmpty = true;
@@ -348,7 +353,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         parentItem.refreshChangedState();
     }
 
-    // TODO: Lưu
     private void executeSaveAction() {
         Toast.makeText(this, i18n("Saving maintenance data..."), Toast.LENGTH_SHORT).show();
 
@@ -376,12 +380,10 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                     }
                     if (!isAllSaveSuccess) break;
 
-                    // 2. Sau khi lưu các con, nội suy lại trạng thái Cha từ danh sách con (nếu có)
                     if (children != null && !children.isEmpty()) {
                         syncParentFromChildren(parentItem, children);
                     }
 
-                    // 3. Lưu bản thân Cha (nếu có thay đổi sau khi nội suy)
                     parentItem.refreshChangedState();
                     if (parentItem.changed) {
                         boolean result = saveItemWithLatestRemoteHistory(parentItem);
@@ -399,12 +401,9 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                     return;
                 }
 
-                // --- BƯỚC 5.2: CẬP NHẬT TRẠNG THÁI TỔNG CỦA TASK (CÓ ĐIỀU KIỆN CHẶN CHƯA NHẬP ĐỦ) ---
                 String overallStatus = resolveOverallStatus();
 
                 if (overallStatus.isEmpty()) {
-                    // NGHIỆP VỤ: Nếu trạng thái tổng trả về rỗng (Do đang làm dở, các mục khác chưa nhập gì)
-                    // CHỈ lưu thành công chi tiết hạng mục vừa nhập (Bước 5.1) và THOÁT, KHÔNG cập nhật trạng thái Task tổng.
                     final int finalSavedCount = savedCount;
                     runOnUiThread(() -> {
                         Toast.makeText(this, i18n("Temporarily saved successfully") + " " + finalSavedCount + " " + i18n("detailed items") + "!", Toast.LENGTH_LONG).show();
@@ -412,8 +411,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                         finish();
                     });
                 } else {
-                    // Khi đã phán định rõ ràng: Hoặc tất cả đều OK ("2") hoặc có bất kỳ mục nào lỗi NG ("3")
-                    // Validate required fields before calling server to avoid generic validation error
                     StringBuilder missing = new StringBuilder();
                     if (taskId == null || taskId.isEmpty()) missing.append("Task_Id ");
                     if (machineId == null || machineId.isEmpty()) missing.append("Machine_Id ");
@@ -456,35 +453,27 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Hàm bổ trợ xử lý bóc tách lịch sử, append bản ghi mới và đẩy lên API chi tiết
-     */
     private int saveSingleItemWithHistory(MaintenanceItem item) {
-        // 1. Lấy mảng lịch sử cũ từ Json hiện tại của item
         JSONArray historyArray = parseHistoryArray(item.historyJson);
 
-        // 2. Tạo đối tượng lịch sử mới ({ time, value, value_2, updateBy }) theo đúng tài liệu quy định
         JSONObject newHistoryEntry = new JSONObject();
         try {
             String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
             newHistoryEntry.put("time", currentTime);
             newHistoryEntry.put("value", safe(item.checkValue));
-            // Nếu là dạng Ngoại quan Radio thì gửi rỗng trường value_2
             newHistoryEntry.put("value_2", item.isRadioInput() ? "" : safe(item.checkValue2));
             newHistoryEntry.put("updateBy", currentUserId);
 
-            // 3. Đẩy (push) phần tử mới vào mảng lịch sử cũ
             historyArray.put(newHistoryEntry);
         } catch (Exception e) {
             Log.e("HISTORY_APPEND_ERR", "Không thể append lịch sử cho mục: " + item.checkId, e);
         }
 
-        // 3. Thực hiện lệnh gọi API đồng bộ đẩy lên Server dữ liệu chuỗi Stringify
         HttpClient.APIReturn rs = HttpClient.saveMaintenanceItemDetail(
                 this, serverUrl, schemaMms, taskId, item.checkId,
                 safe(item.checkValue), item.isRadioInput() ? "" : safe(item.checkValue2),
-            historyArray.toString(), safe(item.comment),
-            buildImageListPayload(item), ""
+                historyArray.toString(), safe(item.comment),
+                buildImageListPayload(item), ""
         );
 
         if (rs != null) {
@@ -494,9 +483,8 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         }
 
         if (rs != null && rs.code == 200) {
-            // Chụp ảnh lại giá trị làm mốc lịch sử mới, đổi trạng thái locked và reset changed cờ hiệu
             item.snapshotOriginalValues();
-            item.historyJson = historyArray.toString(); // Đồng bộ lại chuỗi lịch sử cục bộ
+            item.historyJson = historyArray.toString();
             item.locked = "OK".equalsIgnoreCase(item.initialStatus);
             lastSaveErrorMessage = null;
             return 1;
@@ -512,12 +500,10 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
     private boolean saveItemWithLatestRemoteHistory(MaintenanceItem item) {
         JSONArray historyArray = new JSONArray();
 
-        // 1. Gọi đồng bộ API GET_HISTORY_CHILD lấy mảng lịch sử mới nhất đang lưu trên Server
         HttpClient.APIReturn historyRs = HttpClient.getHistoryChildItems(this, serverUrl, schemaMms, item.checkId, taskId);
 
         if (historyRs != null && historyRs.code == 200 && historyRs.data != null) {
             for (JSONObject row : historyRs.data) {
-                // Giải bọc mảng DataSet lồng nếu Backend trả về qua hộp Table/data
                 JSONArray tableArray = row.optJSONArray("Table");
                 if (tableArray == null) tableArray = row.optJSONArray("data");
                 if (tableArray == null) tableArray = row.optJSONArray("Data");
@@ -533,14 +519,12 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
             }
         }
 
-        // 2. Tạo đối tượng lịch sử mới { time, value, value_2, updateBy } và push vào mảng
         try {
             JSONObject newHistoryEntry = new JSONObject();
             String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
             newHistoryEntry.put("time", currentTime);
             newHistoryEntry.put("value", safe(item.checkValue));
-            // Quy tắc: Nếu là dạng Radio ngoại quan thì gửi rỗng trường value_2 lên Server
             newHistoryEntry.put("value_2", item.isRadioInput() ? "" : safe(item.checkValue2));
             newHistoryEntry.put("updateBy", currentUserId);
 
@@ -549,18 +533,16 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
             Log.e("HISTORY_APPEND_ERR", "Không thể append lịch sử thời gian thực cho mục: " + item.checkId, e);
         }
 
-        // 3. Thực hiện đẩy gói Condition lên hàm lưu chi tiết phần tử
         HttpClient.APIReturn saveRs = HttpClient.saveMaintenanceItemDetail(
                 this, serverUrl, schemaMms, taskId, item.checkId,
                 safe(item.checkValue), item.isRadioInput() ? "" : safe(item.checkValue2),
-            historyArray.toString(), safe(item.comment),
-            buildImageListPayload(item), ""
+                historyArray.toString(), safe(item.comment),
+                buildImageListPayload(item), ""
         );
 
         if (saveRs != null && saveRs.code == 200) {
-            // Chốt hạ Snapshot cục bộ thiết lập lại mốc gốc, khóa dữ liệu nếu đạt trạng thái OK
             item.snapshotOriginalValues();
-            item.historyJson = historyArray.toString(); // Đồng bộ lại chuỗi lịch sử cục bộ mới
+            item.historyJson = historyArray.toString();
             item.locked = "OK".equalsIgnoreCase(item.initialStatus);
             return true;
         }
@@ -609,30 +591,50 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         boolean allOk = true;
 
         for (MaintenanceItem parent : parentItems) {
-            // Tìm thấy bất kỳ một mục Cha nào NG -> Trả kết quả toàn Task là NG (mã 3)
             if ("NG".equalsIgnoreCase(parent.initialStatus)) { anyNg = true; break; }
-            // Tồn tại mục chưa hoàn thành nhập liệu
             if (!"OK".equalsIgnoreCase(parent.initialStatus)) allOk = false;
         }
-        if (anyNg) return "3";// Mã trạng thái: Checksheet NG
-        if (allOk && !parentItems.isEmpty()) return "2";// Mã trạng thái: Checksheet OK
-        return "";// Trạng thái mặc định nếu chưa làm xong hoặc rơi vào trạng thái chờ trung lập
+        if (anyNg) return "3";
+        if (allOk && !parentItems.isEmpty()) return "2";
+        return "";
     }
 
     private MaintenanceItem parseItem(JSONObject row, String parentId) {
         MaintenanceItem item = new MaintenanceItem();
-        item.checkId = pickFirst(row.optString("Check_Id"), row.optString("checkId"));
-        item.parentCheckId = pickFirst(parentId, row.optString("Parent_Check_Id"));
+
+        String parsedId = "";
+        if (parentId != null && !parentId.isEmpty()) {
+            // ĐANG PHÂN GIẢI HẠNG MỤC CON (DETAIL TABLE):
+            String checkId1 = row.optString("Check_Id_1");
+            String checkIdReal = row.optString("Check_Id");
+            String checkIdCamel = row.optString("checkId");
+            String childCheckId = row.optString("Child_Check_Id");
+
+            // Nếu Check_Id bị trùng khít với ID cha, ép hệ thống cào từ Check_Id_1 để ra mã con chuẩn
+            if (checkIdReal.equalsIgnoreCase(parentId)) {
+                parsedId = pickFirst(checkId1, childCheckId, row.optString("childCheckId"), checkIdCamel);
+            } else {
+                parsedId = pickFirst(checkIdReal, checkId1, checkIdCamel, childCheckId);
+            }
+
+            if (parsedId.isEmpty() || parsedId.equalsIgnoreCase(parentId)) {
+                parsedId = pickFirst(checkIdReal, checkId1, checkIdCamel);
+            }
+        } else {
+            parsedId = pickFirst(row.optString("Check_Id"), row.optString("checkId"));
+        }
+
+        item.checkId = parsedId;
+        item.parentCheckId = pickFirst(parentId, row.optString("Parent_Check_Id"), row.optString("Parent"));
         item.checkName = pickFirst(row.optString("Check_Name"), row.optString("Check_Content"));
-        item.min = pickFirst(row.optString("Check_Content_Min"));
-        item.max = pickFirst(row.optString("Check_Content_Max"));
+        item.min = pickFirst(row.optString("Check_Content_Min"), row.optString("Check_Content_Min"));
+        item.max = pickFirst(row.optString("Check_Content_Max"), row.optString("Check_Content_Max"));
         item.checkValue = pickFirst(row.optString("Check_Value"), row.optString("Value"));
         item.checkValue2 = pickFirst(row.optString("Check_Value_2"), row.optString("Value_2"));
         item.childCount = row.optInt("Child_Count", 0);
         item.comment = row.optString("Comment", "");
         item.historyJson = row.optString("History", "");
         item.setImagePaths(parseImagePathsFromRow(row));
-        Log.d("WORKORDER_IMAGE_DBG", "parseItem checkId=" + item.checkId + ", imageCount=" + item.getImagePathsSnapshot().size() + ", imagePaths=" + item.getImagePathsSnapshot());
 
         item.initialStatus = resolveInitialStatus(item);
         if (item.childCount > 0) {
@@ -642,8 +644,8 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         }
 
         item.subDesc = item.isNumericInput()
-            ? i18n("Minimum") + ": " + safe(item.min) + " | " + i18n("Maximum") + ": " + safe(item.max)
-            : (item.childCount > 0 ? i18n("Has") + " " + item.childCount + " " + i18n("child items") : i18n("Visual inspection"));
+                ? i18n("Minimum") + ": " + safe(item.min) + " | " + i18n("Maximum") + ": " + safe(item.max)
+                : (item.childCount > 0 ? i18n("Has") + " " + item.childCount + " " + i18n("child items") : i18n("Visual inspection"));
         item.snapshotOriginalValues();
         return item;
     }
@@ -662,20 +664,30 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         return item.checkValue;
     }
 
-//    private void loadHistoryForItem(MaintenanceItem item) {
-//        executorService.execute(() -> {
-//            HttpClient.APIReturn rs = HttpClient.getHistoryChildItems(this, serverUrl, schemaMms, item.checkId, taskId);
-//            runOnUiThread(() -> { if (rs.code == 200 && rs.data != null) new AlertDialog.Builder(this).setTitle(i18n("Lịch sử") + ": " + item.checkName).setMessage(rs.data.toString()).show(); });
-//        });
-//    }
-
     private void loadHistoryForItem(MaintenanceItem item) {
         if (item == null) return;
 
         Toast.makeText(this, i18n("Downloading history..."), Toast.LENGTH_SHORT).show();
 
+        PreferenceHandler handler = new PreferenceHandler(this);
+        ConfigManager configManager = new ConfigManager(this);
+
+        // Trích xuất trực tiếp server_dynamic_url cấu hình nhà máy từ file config
+        String activeDynamicUrl = handler.getString("server_dynamic_url");
+        if (activeDynamicUrl == null || activeDynamicUrl.isEmpty()) {
+            activeDynamicUrl = configManager.getProperty("server_dynamic_url");
+        }
+        if (activeDynamicUrl == null || activeDynamicUrl.isEmpty()) {
+            if (serverUrl != null && !serverUrl.isEmpty()) {
+                activeDynamicUrl = serverUrl.endsWith("/") ? serverUrl + "api/dynamics" : serverUrl + "/api/dynamics";
+            } else {
+                activeDynamicUrl = "http://192.86.0.225:9101/api/dynamics";
+            }
+        }
+        final String finalServerDynamicUrl = activeDynamicUrl;
+
         executorService.execute(() -> {
-            HttpClient.APIReturn rs = HttpClient.getHistoryChildItems(this, serverUrl, schemaMms, item.checkId, taskId);
+            HttpClient.APIReturn rs = HttpClient.getHistoryChildItems(this, finalServerDynamicUrl, schemaMms, item.checkId, taskId);
 
             runOnUiThread(() -> {
                 if (rs == null || rs.code != 200 || rs.data == null) {
@@ -683,20 +695,48 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                     return;
                 }
 
-                // 1. Giải bọc mảng dữ liệu lịch sử nhận về từ mạng Backend
                 List<JSONObject> historyRows = new ArrayList<>();
-                for (JSONObject row : rs.data) {
-                    JSONArray tableArray = row.optJSONArray("Table");
-                    if (tableArray == null) tableArray = row.optJSONArray("data");
-                    if (tableArray == null) tableArray = row.optJSONArray("Data");
 
-                    if (tableArray != null) {
-                        for (int i = 0; i < tableArray.length(); i++) {
-                            JSONObject subRow = tableArray.optJSONObject(i);
-                            if (subRow != null) historyRows.add(subRow);
+                for (JSONObject row : rs.data) {
+                    String nestedHistoryStr = row.has("History") ? row.optString("History") : row.optString("HISTORY");
+
+                    if (nestedHistoryStr != null && !nestedHistoryStr.trim().isEmpty() && !"null".equalsIgnoreCase(nestedHistoryStr.trim())) {
+                        try {
+                            JSONArray historyArr = new JSONArray(nestedHistoryStr.trim());
+                            for (int i = 0; i < historyArr.length(); i++) {
+                                JSONObject logRow = historyArr.optJSONObject(i);
+                                if (logRow != null) historyRows.add(logRow);
+                            }
+                        } catch (Exception e) {
+                            Log.e("HISTORY_NESTED_ERR", "Lỗi bóc tách chuỗi History", e);
                         }
                     } else {
-                        historyRows.add(row);
+                        JSONArray tableArray = row.optJSONArray("Table");
+                        if (tableArray == null) tableArray = row.optJSONArray("data");
+                        if (tableArray == null) tableArray = row.optJSONArray("Data");
+
+                        if (tableArray != null) {
+                            for (int i = 0; i < tableArray.length(); i++) {
+                                JSONObject subRow = tableArray.optJSONObject(i);
+                                if (subRow != null) historyRows.add(subRow);
+                            }
+                        } else {
+                            if (row.has("time") || row.has("Time") || row.has("TIME") || row.has("Update_Date")) {
+                                historyRows.add(row);
+                            }
+                        }
+                    }
+                }
+
+                if (historyRows.isEmpty() && item.historyJson != null && !item.historyJson.trim().isEmpty() && !"null".equalsIgnoreCase(item.historyJson.trim())) {
+                    try {
+                        JSONArray localArray = new JSONArray(item.historyJson.trim());
+                        for (int i = 0; i < localArray.length(); i++) {
+                            JSONObject localRow = localArray.optJSONObject(i);
+                            if (localRow != null) historyRows.add(localRow);
+                        }
+                    } catch (Exception e) {
+                        Log.e("HISTORY_CACHE_ERR", "Lỗi đọc dữ liệu lịch sử từ bộ nhớ tạm", e);
                     }
                 }
 
@@ -705,11 +745,9 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                     return;
                 }
 
-                // 2. Nạp khung giao diện Dialog từ tệp mẫu XML
                 LayoutInflater inflater = LayoutInflater.from(this);
                 View dialogView = inflater.inflate(R.layout.dialog_maintenance_history, null);
 
-                // Đa ngôn ngữ hóa tiêu đề trên Header cột tĩnh
                 TextView tvHeaderTime = dialogView.findViewById(R.id.tv_header_time);
                 TextView tvHeaderEditor = dialogView.findViewById(R.id.tv_header_editor);
                 TextView tvHeaderResult = dialogView.findViewById(R.id.tv_header_result);
@@ -718,11 +756,13 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                 if (tvHeaderResult != null) tvHeaderResult.setText(i18n("Result"));
 
                 TableLayout tableHistoryContent = dialogView.findViewById(R.id.table_history_content);
+                if (tableHistoryContent != null) {
+                    tableHistoryContent.removeAllViews();
+                }
 
-                // 3. Duyệt mảng cấu trúc để sinh dòng dựa trên item_history_row.xml
                 int index = 1;
                 for (JSONObject row : historyRows) {
-                    View rowView = inflater.inflate(R.layout.item_history_row, null);
+                    View rowView = inflater.inflate(R.layout.item_history_row, tableHistoryContent, false);
 
                     TextView tvIndex = rowView.findViewById(R.id.tv_history_index);
                     TextView tvTime = rowView.findViewById(R.id.tv_history_time);
@@ -731,16 +771,37 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                     TextView tvActual = rowView.findViewById(R.id.tv_history_actual);
                     TextView tvResult = rowView.findViewById(R.id.tv_history_result);
 
-                    String rawTime = pickFirst(row.optString("time"), row.optString("Time"), row.optString("Update_Date"));
-                    String editor = pickFirst(row.optString("updateBy"), row.optString("UpdateBy"), row.optString("User_Name"), row.optString("Update_By_Name"));
-                    String displayVal = pickFirst(row.optString("value"), row.optString("Value"), row.optString("Check_Value"));
-                    String actualVal = pickFirst(row.optString("value_2"), row.optString("Value_2"), row.optString("Check_Value_2"));
+                    String rawTime = pickFirst(row.optString("time"), row.optString("Time"), row.optString("TIME"), row.optString("Update_Date"), row.optString("UPDATE_DATE"), row.optString("Create_Date"));
+                    String editor = pickFirst(row.optString("updateBy"), row.optString("UpdateBy"), row.optString("UPDATE_BY"), row.optString("User_Name"), row.optString("Update_By_Name"), row.optString("Full_Name"));
+                    String displayVal = pickFirst(row.optString("value"), row.optString("Value"), row.optString("VALUE"), row.optString("Check_Value"));
+                    String actualVal = pickFirst(row.optString("value_2"), row.optString("Value_2"), row.optString("VALUE_2"), row.optString("Check_Value_2"));
+
+                    if (rawTime.contains("T")) {
+                        try {
+                            String cleanTime = rawTime.endsWith("Z") ? rawTime.substring(0, rawTime.length() - 1) : rawTime;
+                            if (cleanTime.contains(".")) {
+                                cleanTime = cleanTime.substring(0, cleanTime.indexOf('.'));
+                            }
+                            SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                            parser.setTimeZone(TimeZone.getTimeZone("UTC"));
+                            Date parsedDate = parser.parse(cleanTime);
+                            if (parsedDate != null) {
+                                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy- HH:mm:ss", Locale.getDefault());
+                                formatter.setTimeZone(TimeZone.getDefault());
+                                rawTime = formatter.format(parsedDate);
+                            }
+                        } catch (Exception ignored) {}
+                    }
 
                     String resultText = "—";
                     int resultColor = Color.BLACK;
 
-                    // Thuật toán so khớp dải thông số kỹ thuật (Numeric vs Radio)
-                    if (item.isNumericInput()) {
+                    // Nội suy kiểu dữ liệu Số và Ngoại quan linh hoạt theo cặp thông số thực tế
+                    boolean isNumericMode = item.isNumericInput()
+                            || (item.min != null && !item.min.isEmpty() && item.max != null && !item.max.isEmpty())
+                            || (actualVal != null && !actualVal.isEmpty());
+
+                    if (isNumericMode) {
                         if (!displayVal.isEmpty() && !actualVal.isEmpty()) {
                             try {
                                 double v1 = Double.parseDouble(displayVal);
@@ -760,7 +821,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                         if (!displayVal.isEmpty()) {
                             resultText = displayVal.toUpperCase();
                             resultColor = "OK".equalsIgnoreCase(resultText) ? Color.parseColor("#047857") : Color.parseColor("#B91C1C");
-                            actualVal = ""; // Đối với radio, cột thực tế (actual) để trống theo mẫu
+                            actualVal = "";
                         }
                     }
 
@@ -777,10 +838,16 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
 
                     if (tableHistoryContent != null) {
                         tableHistoryContent.addView(rowView);
+
+                        View divider = new View(EnterWorkOrderDataActivity.this);
+                        TableLayout.LayoutParams dividerLp = new TableLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT, 1);
+                        divider.setLayoutParams(dividerLp);
+                        divider.setBackgroundColor(Color.parseColor("#E5E7EB"));
+                        tableHistoryContent.addView(divider);
                     }
                 }
 
-                // 4. Khởi tạo hộp thoại thông tin cảnh báo hiển thị bản ghi
                 new AlertDialog.Builder(this)
                         .setTitle(i18n("Modification History") + ": " + item.checkName)
                         .setView(dialogView)
@@ -797,7 +864,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
     }
 
     private String pickFirst(String... v) {
-        for (String s : v) if (s != null && !s.trim().isEmpty() && !"null".equals(s)) return s.trim();
+        for (String s : v) if (s != null && !s.trim().isEmpty() && !"null".equalsIgnoreCase(s.trim())) return s.trim();
         return "";
     }
     private String safe(String s) { return s == null ? "" : s.trim(); }
@@ -967,9 +1034,4 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         }
         return "";
     }
-
-    private String i18n(String key) {
-        return LanguageAPIUtils.i18n(key);
-    }
-
 }

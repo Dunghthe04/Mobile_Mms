@@ -35,7 +35,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class MaintenanceTabFragment extends Fragment {
-
     private FragmentMaintenanceTabBinding binding;
     private MaintenancePlanAdapter adapter;
     private final List<MaintenancePlan> planList = new ArrayList<>();
@@ -50,11 +49,12 @@ public class MaintenanceTabFragment extends Fragment {
     private String machineId = "";
 
     private static final String[] FILTER_STATUS_KEYS = {
-            "Machine Breakdown",
-            "Preparing operation",
-            "Stop due to shortage",
-            "Stop by production plan",
-            "Maintenance and repair"
+            "All",
+            "Incomplete",        //chưa hoàn thành
+            "Approve",          //phê duyệt
+            "Checksheet OK",    //Checksheet OK
+            "Checksheet NG",    //Checksheet NG
+            "Overdue"           //quá hạn
     };
 
     public static String[] getLocalizedStatusLabels() {
@@ -316,21 +316,29 @@ public class MaintenanceTabFragment extends Fragment {
         for (MaintenancePlan plan : fullPlanList) {
             if (plan == null) continue;
 
+            // 1. Kiểm tra bộ lọc ngày
             boolean matchesDate = true;
             if (!currentDateFilter.isEmpty()) {
                 String planDateStr = formatUnixToCompare(plan.taskDateUnix);
                 matchesDate = currentDateFilter.equals(planDateStr);
             }
 
-            String targetStatusCode = "";
-            switch (currentStatusPosition) {
-                case 0: targetStatusCode = "0"; break; // Chưa hoàn thành
-                case 1: targetStatusCode = "1"; break; // Phê duyệt
-                case 2: targetStatusCode = "2"; break; // Checksheet OK
-                case 3: targetStatusCode = "3"; break; // Checksheet NG
-                case 4: targetStatusCode = "5"; break; // Quá hạn
+            // 2. Kiểm tra bộ lọc trạng thái
+            boolean matchesStatus = false;
+
+            if (currentStatusPosition == 0) {
+                matchesStatus = true;
+            } else {
+                String targetStatusCode = "";
+                switch (currentStatusPosition) {
+                    case 1: targetStatusCode = "0"; break; // Chưa hoàn thành
+                    case 2: targetStatusCode = "1"; break; // Phê duyệt
+                    case 3: targetStatusCode = "2"; break; // Checksheet OK
+                    case 4: targetStatusCode = "3"; break; // Checksheet NG
+                    case 5: targetStatusCode = "5"; break; // Quá hạn
+                }
+                matchesStatus = targetStatusCode.equalsIgnoreCase(plan.status);
             }
-            boolean matchesStatus = targetStatusCode.equalsIgnoreCase(plan.status);
 
             if (matchesDate && matchesStatus) {
                 filteredList.add(plan);

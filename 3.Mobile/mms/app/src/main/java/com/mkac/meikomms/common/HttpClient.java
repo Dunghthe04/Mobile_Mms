@@ -1408,13 +1408,13 @@ public class HttpClient
     }
 
     //TODO: lấy thông tin user login
-    public static APIReturn getUserInfo(Context context, String server_url, String userId, String Schema_Core){
+    public static APIReturn getUserInfo(Context context, String server_url, String userName, String Schema_Core){
         try{
             JSONObject conditionObj = new JSONObject();
-            conditionObj.put("Id", userId);
+            conditionObj.put("UserName", userName);
             conditionObj.put("Schema_Core", Schema_Core);
 
-            return callDynamics(context, server_url, "mes_mms", "MMS_GET_USER_INFO", conditionObj);
+            return callDynamics(context, server_url, "mes_mms", "MMS_GET_USER_INFO_1", conditionObj);
         }catch (Exception e){
             return new APIReturn(400, "Exception|| " + e.getMessage(), null);
         }

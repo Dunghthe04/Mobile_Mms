@@ -364,7 +364,7 @@
                                     android:id="@+id/tv_label_mes_lock"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="MES Device Lock"
+                                    android:text="Is there a device lock feature on the MES system?"
                                     android:textStyle="bold"
                                     android:textColor="#303133"
                                     android:layout_marginBottom="8dp"/>

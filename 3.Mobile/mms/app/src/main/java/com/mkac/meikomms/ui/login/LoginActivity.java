@@ -562,7 +562,7 @@ public class LoginActivity extends AppCompatActivity {
 
                             userDetail.put("token", api_key);
 
-                            handler.setBoolean("isLoggedIn", false);
+                            handler.setBoolean("isLoggedIn", true);
 
                             handler.setJsonObject("user", userDetail);
                             handler.setString("api_key", api_key);

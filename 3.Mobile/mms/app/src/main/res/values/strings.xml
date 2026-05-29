@@ -9,7 +9,6 @@
     <string name="work_order_hub_create_title_key">Add Work Order</string>
     <string name="work_order_hub_create_desc_key">Create a new work order</string>
     <string name="work_order_hub_enter_title_key">Enter Work Order Data</string>
-    <string name="work_order_hub_enter_desc_key">Manage work orders and perform maintenance</string>
     <string name="work_order_hub_guest_key">Guest</string>
 
     <string name="work_order_data_list_summary_placeholder">Mã máy: -- | Số lượng: 0</string>

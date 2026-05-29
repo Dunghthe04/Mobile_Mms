@@ -88,24 +88,6 @@
             android:paddingTop="20dp"
             android:paddingBottom="24dp">
 
-            <TextView
-                android:id="@+id/tv_hub_subtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Select function"
-                android:textColor="#6B7280"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tv_hub_description"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="20dp"
-                android:text="Create a work order or enter work order and maintenance data"
-                android:textColor="@color/black"
-                android:textSize="13sp" />
-
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/card_create_work_order"
                 android:layout_width="match_parent"
@@ -156,15 +138,6 @@
                             android:textColor="@color/black"
                             android:textSize="15sp"
                             android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_create_work_order_desc"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Create a new work order"
-                            android:textColor="#6B7280"
-                            android:textSize="12sp" />
                     </LinearLayout>
 
                     <ImageView
@@ -225,15 +198,6 @@
                             android:textColor="@color/black"
                             android:textSize="15sp"
                             android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tv_enter_work_order_desc"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Manage work orders and perform maintenance"
-                            android:textColor="#6B7280"
-                            android:textSize="12sp" />
                     </LinearLayout>
 
                     <ImageView

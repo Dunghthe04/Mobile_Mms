@@ -206,6 +206,10 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung cho WorkOrderEntryDialog ──────────────
                     "  \"Occurrence Time\": \"Occurrence Time\",\n" +
+                    "  \"Is there a device lock feature on the MES system?\": \"Is there a device lock feature on the MES system?\",\n" +
+                    "  \"Preparing operation\": \"Preparing operation\",\n" +
+                    "  \"Stop due to shortage\": \"Stop due to shortage\",\n" +
+                    "  \"Stop by production plan\": \"Stop by production plan\",\n" +
                     "  \"Modification Time\": \"Modification Time\",\n" +
                     "  \"Editor\": \"Editor\",\n" +
                     "  \"Result\": \"Result\",\n" +
@@ -271,7 +275,6 @@ public class LanguageAPIUtils
                     "  \"ADD Work Order\": \"Add Work Order\",\n" +
                     "  \"Create a new work order\": \"Create a new work order\",\n" +
                     "  \"Enter Work Order Data\": \"Enter Work Order Data And Maintenance\",\n" +
-                    "  \"Manage work orders and perform maintenance\": \"Manage work orders and perform maintenance\",\n" +
                     "  \"Language\": \"Language\",\n" +
                     "  \"No attachment file to download\": \"No attachment file to download\",\n" +
                     "  \"Select attachment document\": \"Select attachment document\",\n" +
@@ -437,6 +440,11 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"Thời gian phát sinh\",\n" +
+                    "  \"MA status\": \"Trạng thái MA báo\",\n" +
+                    "  \"Time arises\": \"Thời gian phát sinh\",\n" +
+                    "  \"Preparing operation\": \"Chuẩn bị thao tác\",\n" +
+                    "  \"Stop due to shortage\": \"Dừng thiếu tồn\",\n" +
+                    "  \"Stop by production plan\": \"Dừng theo kế hoạch sản xuất\",\n" +
                     "  \"Modification Time\": \"Thời gian chỉnh sửa\",\n" +
                     "  \"Editor\": \"Người chỉnh sửa\",\n" +
                     "  \"Result\": \"Kết quả\",\n" +
@@ -473,7 +481,7 @@ public class LanguageAPIUtils
                     "  \"No response from server\": \"Không phản hồi từ máy chủ\",\n" +
                     // ── Keys cũ ─────────────────────────────────────────────────
                     "  \"Model\": \"Mã thiết bị\",\n" +
-                    "  \"Periodic Maintenance Task List\": \"DANH SÁCH HẠNG MỤC BẢO DƯỠNG ĐỊNH KỲ\",\n" +
+                    "  \"Periodic Maintenance Task List\": \"DANH SÁCH HẠNG MỤC BẢO DƯỠNG\",\n" +
                     "  \"MMS System FE Subsystem\": \"Hệ thống MMS phân hệ FE\",\n" +
                     "  \"Category Name\": \"Tên hạng mục\",\n" +
                     "  \"Person in charge\": \"Người phụ trách\",\n" +
@@ -499,7 +507,7 @@ public class LanguageAPIUtils
                     "  \"Add Work Order\": \"Thêm Work Order\",\n" +
                     "  \"ADD Work Order\": \"Nhập thông tin Work Order\",\n" +
                     "  \"Create a new work order\": \"Tạo mới một Work Order\",\n" +
-                    "  \"Enter Work Order Data\": \"Nhập kết quả Work Order và hạng mục bảo dưỡng\",\n" +
+                    "  \"Enter Work Order Data\": \"Nhập kết quả Work Order\",\n" +
                     "  \"Language\": \"Ngôn ngữ\",\n" +
                     "  \"No attachment file to download\": \"Không có tệp đính kèm để tải về\",\n" +
                     "  \"Select attachment document\": \"Chọn tài liệu đính kèm\",\n" +
@@ -615,6 +623,7 @@ public class LanguageAPIUtils
                     "  \"Quá hạn\": \"Quá hạn\",\n" +
                     "  \"Lịch sử\": \"Lịch sử\",\n" +
                     "  \"Vật tư\": \"Vật tư\",\n" +
+                    "  \"Is there a device lock feature on the MES system?\": \"Có lock thiết bị trên hệ thống MES không?\",\n" +
                     "  \"Action\": \"Thao tác\"\n" +
                     "}\n";
 
@@ -625,6 +634,9 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"発生時間\",\n" +
+                    "  \"Preparing operation\": \"じゅんびさぎょう\",\n" +
+                    "  \"Stop due to shortage\": \"部品不足による停止\",\n" +
+                    "  \"Stop by production plan\": \"生産計画による停止\",\n" +
                     "  \"Modification Time\": \"修正時間\",\n" +
                     "  \"Editor\": \"修正者\",\n" +
                     "  \"Result\": \"結果\",\n" +
@@ -805,6 +817,7 @@ public class LanguageAPIUtils
                     "  \"Đã làm\": \"実施済み\",\n" +
                     "  \"Quá hạn\": \"期限切れ\",\n" +
                     "  \"Lịch sử\": \"履歴\",\n" +
+                    "  \"Is there a device lock feature on the MES system?\": \"MESシステムにデバイスロック機能はありますか\",\n" +
                     "  \"Action\": \"操作\"\n" +
                     "}\n";
 
@@ -815,6 +828,9 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"发生时间\",\n" +
+                    "  \"Preparing operation\": \"准备作业\",\n" +
+                    "  \"Stop due to shortage\": \"因缺料停机\",\n" +
+                    "  \"Stop by production plan\": \"因生产计划停机\",\n" +
                     "  \"Modification Time\": \"修改时间\",\n" +
                     "  \"Editor\": \"修改人\",\n" +
                     "  \"Result\": \"结果\",\n" +
@@ -995,6 +1011,7 @@ public class LanguageAPIUtils
                     "  \"Quá hạn\": \"已逾期\",\n" +
                     "  \"Lịch sử\": \"历史记录\",\n" +
                     "  \"Language changed successfully\": \"语言修改成功\",\n" +
+                    "  \"Is there a device lock feature on the MES system?\": \"MES系统有设备锁定功能吗？\",\n" +
                     "  \"Action\": \"操作\"\n" +
                     "}\n";
 

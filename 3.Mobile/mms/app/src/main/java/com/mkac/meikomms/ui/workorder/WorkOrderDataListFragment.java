@@ -58,16 +58,16 @@ public class WorkOrderDataListFragment extends Fragment {
     private String machineId = "";
     private boolean isLoading = false;
     private static final String[] FILTER_STATUS_KEYS = {
-            "Incomplete",
-            "Overdue",
-            "Completed",
-            "Canceled"
+            "All",          // Tất cả công việc
+            "Incomplete",   //chưa hoàn thành
+            "Overdue",      //quá hạn
+            "Completed",    //đã thực hiện
+            "Canceled"      //đã hủy
     };
 
     public static String[] getLocalizedStatusLabels() {
         String[] localizedLabels = new String[FILTER_STATUS_KEYS.length];
         for (int i = 0; i < FILTER_STATUS_KEYS.length; i++) {
-            // Gọi qua LanguageAPIUtils để bảo đảm an toàn luồng ngữ cảnh tĩnh
             localizedLabels[i] = LanguageAPIUtils.i18n(FILTER_STATUS_KEYS[i]);
         }
         return localizedLabels;
@@ -432,7 +432,7 @@ public class WorkOrderDataListFragment extends Fragment {
                     status1BgColor = "#D1FAE5";   // Nền xanh lá nhạt
                     status1TextColor = "#047857"; // Chữ xanh lá đậm
                     break;
-                case "4":
+                case "6":
                     status1Display = i18n("Canceled");
                     status1BgColor = "#FEE2E2";   // Nền đỏ nhạt
                     status1TextColor = "#B91C1C"; // Chữ đỏ đậm
@@ -624,32 +624,36 @@ public class WorkOrderDataListFragment extends Fragment {
         for (JSONObject item : fullWorkOrderList) {
             if (item == null) continue;
 
+            // 1. Kiểm tra bộ lọc theo Ngày yêu cầu sửa chữa
             String rawRequestDate = safeGetFromObject(item, "Request_Date", "REQUEST_DATE", "request_date");
             boolean matchesDate = true;
             if (!currentDateFilter.isEmpty()) {
                 matchesDate = rawRequestDate.startsWith(currentDateFilter);
             }
 
-            String status = safeGetFromObject(item, "Status", "status", "WO_STATUS");
+            String status1 = safeGetFromObject(item, "Status_1", "status_1", "STATUS_1").trim();
             boolean matchesStatus = false;
             switch (currentStatusPosition) {
-                case 0:
-                    if (status.isEmpty() || "0".equals(status) || "1".equals(status) || "2".equals(status) || "Pending".equalsIgnoreCase(status)) {
+                case 0: // Tất cả
+                    matchesStatus = true;
+                    break;
+                case 1: // Chưa hoàn thành
+                    if (status1.isEmpty() || "0".equals(status1)) {
                         matchesStatus = true;
                     }
                     break;
-                case 1:
-                    if ("5".equals(status) || "Overdue".equalsIgnoreCase(status)) {
+                case 2: // Quá hạn
+                    if ("5".equals(status1)) {
                         matchesStatus = true;
                     }
                     break;
-                case 2:
-                    if ("6".equals(status) || "Completed".equalsIgnoreCase(status)) {
+                case 3: // Đã thực hiện (Completed)
+                    if ("1".equals(status1)) {
                         matchesStatus = true;
                     }
                     break;
-                case 3:
-                    if ("4".equals(status) || "Cancelled".equalsIgnoreCase(status)) {
+                case 4: // Đã hủy (Canceled)
+                    if ("6".equals(status1)) {
                         matchesStatus = true;
                     }
                     break;
