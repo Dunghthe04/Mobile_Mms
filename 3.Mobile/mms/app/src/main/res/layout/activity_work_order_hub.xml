@@ -194,7 +194,7 @@
                             android:id="@+id/tv_enter_work_order_title"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Enter Work Order Data"
+                            android:text="Enter Work Order Data And Maintenance"
                             android:textColor="@color/black"
                             android:textSize="15sp"
                             android:textStyle="bold" />

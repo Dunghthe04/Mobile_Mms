@@ -24,16 +24,19 @@ import com.mkac.meikomms.common.ConfigManager;
 import com.mkac.meikomms.common.HttpClient;
 import com.mkac.meikomms.common.LanguageAPIUtils;
 import com.mkac.meikomms.common.PreferenceHandler;
+import com.mkac.meikomms.common.TimeUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 
 import androidx.annotation.StringRes;
 
@@ -57,12 +60,13 @@ public class WorkOrderDataListFragment extends Fragment {
     private String schemaCore = "";
     private String machineId = "";
     private boolean isLoading = false;
+
     private static final String[] FILTER_STATUS_KEYS = {
-            "All",          // Tất cả công việc
-            "Incomplete",   //chưa hoàn thành
-            "Overdue",      //quá hạn
-            "Completed",    //đã thực hiện
-            "Canceled"      //đã hủy
+            "All",
+            "Incomplete",
+            "Overdue",
+            "Completed",
+            "Canceled"
     };
 
     public static String[] getLocalizedStatusLabels() {
@@ -179,7 +183,6 @@ public class WorkOrderDataListFragment extends Fragment {
 
         if (token == null || token.isEmpty()) {
             if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
-            Toast.makeText(getContext(), t(R.string.work_order_data_list_session_expired), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -195,7 +198,7 @@ public class WorkOrderDataListFragment extends Fragment {
         new Thread(() -> {
             try {
                 HttpClient.APIReturn apiReturn = HttpClient.getAllWorkOrderByMachineId(
-                        appContext, serverDynamic, schemaData, schemaCore,  targetMachineId, 0, 200
+                        appContext, serverDynamic, schemaData, schemaCore, targetMachineId, 0, 200
                 );
 
                 Log.d(TAG, "API CODE = " + (apiReturn != null ? apiReturn.code : "NULL"));
@@ -245,10 +248,6 @@ public class WorkOrderDataListFragment extends Fragment {
 
                     if (recyclerView != null) {
                         recyclerView.setVisibility(View.VISIBLE);
-                    }
-
-                    if (items.isEmpty()) {
-                        Toast.makeText(requireContext(), t(R.string.work_order_data_list_no_machine_data) + ": " + targetMachineId, Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -389,23 +388,18 @@ public class WorkOrderDataListFragment extends Fragment {
         public void onBindViewHolder(@NonNull VH holder, int position) {
             JSONObject data = items.get(position);
 
-            // 1. Số thứ tự thẻ
             holder.tvItemIndex.setText(String.valueOf(position + 1));
 
-            // 2. Mã Lệnh Work Order (Gắn vào tv_param_name)
             String woCode = safeGet(data, "WO_CODE", "Wo_Code", "wo_code", "WO_Code_Today");
             holder.tvParamName.setText(woCode.isEmpty() ? "—" : woCode);
 
-            // 3. Mã Máy (Gắn nhanh vào tag Đo số)
             String machineInline = safeGet(data, "Machine_Id", "MACHINE_ID", "machine_id", "MachineId", "Machine_Name");
             holder.tvTagParamType.setText(machineInline.isEmpty() ? i18n("Machine") : machineInline);
 
-            // 4. Loại hình công việc nghiệp vụ (Gắn nhanh vào tag Bar)
             String workTypeInline = safeGet(data, "Work_Type", "WORK_TYPE", "work_type", "WorkType");
             holder.tvTagUom.setText(workTypeInline.isEmpty() ? "BM" : workTypeInline);
             holder.tvTagUom.setVisibility(workTypeInline.isEmpty() ? View.GONE : View.VISIBLE);
 
-            // 5. Ngày & Giờ yêu cầu (Gắn vào lịch sử kỳ trước)
             holder.tvLabelLastValue.setText(i18n("Request date") + ":");
             String reqDate = safeGet(data, "Request_Date", "REQUEST_DATE", "request_date");
             String reqTime = safeGet(data, "Request_Time", "REQUEST_TIME", "request_time");
@@ -413,9 +407,6 @@ public class WorkOrderDataListFragment extends Fragment {
             String fullTimeDisplay = (formattedDate + " " + reqTime).trim();
             holder.tvTagLastValue.setText(fullTimeDisplay.isEmpty() ? "—" : fullTimeDisplay);
 
-            // =========================================================================
-            // HOÁN ĐỔI LỚP 1: tv_tag_entry_status HIỂN THỊ TRẠNG THÁI MA (Status_1)
-            // =========================================================================
             String status1Value = safeGet(data, "Status_1", "STATUS_1", "status_1").trim();
             String status1Display;
             String status1BgColor;
@@ -424,23 +415,23 @@ public class WorkOrderDataListFragment extends Fragment {
             switch (status1Value) {
                 case "0":
                     status1Display = i18n("Incomplete");
-                    status1BgColor = "#F3F4F6";   // Nền xám nhạt
-                    status1TextColor = "#4B5563"; // Chữ đen xám
+                    status1BgColor = "#F3F4F6";
+                    status1TextColor = "#4B5563";
                     break;
                 case "1":
                     status1Display = i18n("Completed");
-                    status1BgColor = "#D1FAE5";   // Nền xanh lá nhạt
-                    status1TextColor = "#047857"; // Chữ xanh lá đậm
+                    status1BgColor = "#D1FAE5";
+                    status1TextColor = "#047857";
                     break;
                 case "6":
                     status1Display = i18n("Canceled");
-                    status1BgColor = "#FEE2E2";   // Nền đỏ nhạt
-                    status1TextColor = "#B91C1C"; // Chữ đỏ đậm
+                    status1BgColor = "#FEE2E2";
+                    status1TextColor = "#B91C1C";
                     break;
                 case "5":
                     status1Display = i18n("Overdue");
-                    status1BgColor = "#FFEEEE";   // Nền đỏ tươi nhạt
-                    status1TextColor = "#E11D48"; // Chữ hồng đỏ
+                    status1BgColor = "#FFEEEE";
+                    status1TextColor = "#E11D48";
                     break;
                 default:
                     status1Display = status1Value.isEmpty() ? "—" : status1Value;
@@ -456,17 +447,12 @@ public class WorkOrderDataListFragment extends Fragment {
                     android.content.res.ColorStateList.valueOf(Color.parseColor(status1BgColor))
             );
 
-            // =========================================================================
-            // 7. Khối Metadata Trái (CẬP NHẬT: BÓC TÁCH CÔNG ĐOẠN TỪ Physical_Group_Name)
-            // =========================================================================
-            // Đã ưu tiên bóc tách từ khóa kết quả "Physical_Group_Name" từ log hình debug lên đầu dải tìm kiếm
             String process = safeGet(data, "Physical_Group_Name", "Physical_group_name", "physical_group_name", "Process", "PROCESS", "process_name");
             holder.tvSpecMin.setText(i18n("Process") + ": " + (process.isEmpty() ? "—" : process));
 
             String workTypeDetail = safeGet(data, "Work_Type_Name", "Work_Type", "WORK_TYPE");
             holder.tvSpecMax.setText(i18n("Type") + ": " + (workTypeDetail.isEmpty() ? "BM" : workTypeDetail));
 
-            // HOÁN ĐỔI LỚP 2: tv_spec_target CHUYỂN SANG HIỂN THỊ TRẠNG THÁI VẬN HÀNH (Status 0,1,2,5,6)
             String status = safeGet(data, "Status", "status", "WO_STATUS", "Wo_Status").trim();
             String statusDisplay;
             String statusColor;
@@ -474,23 +460,23 @@ public class WorkOrderDataListFragment extends Fragment {
             switch (status) {
                 case "0":
                     statusDisplay = i18n("Machine Breakdown");
-                    statusColor = "#B91C1C"; // Chữ đỏ đậm
+                    statusColor = "#B91C1C";
                     break;
                 case "1":
                     statusDisplay = i18n("Preparing operation");
-                    statusColor = "#2563EB"; // Chữ xanh dương đậm
+                    statusColor = "#2563EB";
                     break;
                 case "2":
                     statusDisplay = i18n("Stop due to shortage");
-                    statusColor = "#D97706"; // Chữ cam đậm
+                    statusColor = "#D97706";
                     break;
                 case "5":
                     statusDisplay = i18n("Stop by production plan");
-                    statusColor = "#4B5563"; // Chữ xám đậm
+                    statusColor = "#4B5563";
                     break;
                 case "6":
                     statusDisplay = i18n("Maintenance and repair");
-                    statusColor = "#047857"; // Chữ xanh lá đậm
+                    statusColor = "#047857";
                     break;
                 default:
                     statusDisplay = status.isEmpty() ? "—" : status;
@@ -501,26 +487,26 @@ public class WorkOrderDataListFragment extends Fragment {
             holder.tvSpecTarget.setText(i18n("Status") + ": " + statusDisplay);
             holder.tvSpecTarget.setTextColor(Color.parseColor(statusColor));
 
-            // =========================================================================
-            // 8. Khối Metadata Phải (Người tạo, Người yêu cầu, Số ngày trôi qua)
-            // =========================================================================
             String creator = safeGet(data, "Creator", "CREATOR", "Create_By", "create_by", "Create_Full_Name", "Full_Name");
             holder.tvActualValue.setText(i18n("Creator") + ": " + (creator.isEmpty() ? "—" : creator));
 
             String requester = safeGet(data, "Request_User", "Request_user", "request_user", "Requester", "Request_By", "Full_Name");
             holder.tvEntryMethod.setText(i18n("Requester") + ": " + (requester.isEmpty() ? "—" : requester));
 
-            String elapsed = safeGet(data, "Elapsed_Days", "Elapsed", "elapsed_days", "ELAPSED_DAYS");
-            holder.tvDeviationAlert.setText(i18n("Elapsed days") + ": " + (elapsed.isEmpty() ? "0 " + i18n("Day") : elapsed));
+            // ĐÃ VÁ LỖI CÚ PHÁP: Gọi hàm độc lập tính toán số ngày trôi qua chuẩn xác
+            String createDate = safeGet(
+                    data,
+                    "Create_Date", "CREATE_DATE", "create_date",
+                    "Request_Date", "REQUEST_DATE", "request_date"
+            );
+            String elapsed = calculateElapsedDays(reqDate);
+            holder.tvDeviationAlert.setText(i18n("Elapsed days") + ": " + elapsed);
 
-            // 9. Nội dung mô tả chi tiết yêu cầu sửa chữa
             String content = safeGet(data, "Request_Reason", "REQUEST_REASON", "Content", "content", "Note");
             holder.tvEntryInstruction.setText(content.isEmpty() ? i18n("Request reason") : content);
 
-            // 10. Gán ID ngầm phục vụ xử lý logic sự kiện nếu cần
             holder.tvHiddenParamId.setText(woCode);
 
-            // 11. Đăng ký sự kiện click nút bấm hành động trên thẻ
             holder.tvBtnEnterWo.setText(i18n("Enter Work Order Data"));
             holder.tvBtnEnterWo.setOnClickListener(v -> {
                 if (listener != null) listener.onEnter(data);
@@ -571,6 +557,10 @@ public class WorkOrderDataListFragment extends Fragment {
             return "";
         }
 
+        // =========================================================================
+        // KHỐI VÁ CÚ PHÁP CHUẨN: TÁCH BIỆT HOÀN TOÀN CÁC HÀM XỬ LÝ NGÀY THÁNG LÔGIC
+        // Đảm bảo cấu trúc class độc lập, sạch lỗi dấu ngoặc lồng nhau
+        // =========================================================================
         private static String formatDate(String dateStr) {
             if (dateStr == null || dateStr.isEmpty() || "null".equalsIgnoreCase(dateStr)) {
                 return "";
@@ -591,6 +581,55 @@ public class WorkOrderDataListFragment extends Fragment {
             } catch (Exception ignored) {}
             return dateStr;
         }
+
+        private static String calculateElapsedDays(String sourceDate) {
+            Date startDate = parseDate(sourceDate);
+            if (startDate == null) {
+                return "0 " + LanguageAPIUtils.i18n("Day");
+            }
+
+            Calendar start = Calendar.getInstance();
+            start.setTime(startDate);
+            clearTime(start);
+
+            Calendar today = Calendar.getInstance();
+            clearTime(today);
+
+            long diffMillis = today.getTimeInMillis() - start.getTimeInMillis();
+            long elapsedDays = diffMillis / (24L * 60L * 60L * 1000L);
+
+            if (elapsedDays < 0) elapsedDays = 0;
+            return elapsedDays + " " + LanguageAPIUtils.i18n("Day");
+        }
+
+        private static Date parseDate(String dateStr) {
+            if (dateStr == null || dateStr.isEmpty() || "null".equalsIgnoreCase(dateStr)) {
+                return null;
+            }
+            String[] formats = {
+                    "yyyy-MM-dd'T'HH:mm:ss",
+                    "yyyy-MM-dd HH:mm:ss",
+                    "yyyy-MM-dd",
+                    "dd/MM/yyyy"
+            };
+            for (String fmt : formats) {
+                try {
+                    SimpleDateFormat parser = new SimpleDateFormat(fmt, Locale.getDefault());
+                    parser.setLenient(false);
+                    Date parsed = parser.parse(dateStr.trim());
+                    if (parsed != null) return parsed;
+                } catch (Exception ignored) {}
+            }
+            return null;
+        }
+
+        private static void clearTime(Calendar calendar) {
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+        }
+        // =========================================================================
     }
 
     public void filterByStatus(int position) {
@@ -624,35 +663,38 @@ public class WorkOrderDataListFragment extends Fragment {
         for (JSONObject item : fullWorkOrderList) {
             if (item == null) continue;
 
-            // 1. Kiểm tra bộ lọc theo Ngày yêu cầu sửa chữa
-            String rawRequestDate = safeGetFromObject(item, "Request_Date", "REQUEST_DATE", "request_date");
+            String rawCreateDate = safeGetFromObject(
+                    item,
+                    "Create_Date", "CREATE_DATE", "create_date",
+                    "Request_Date", "REQUEST_DATE", "request_date"
+            );
             boolean matchesDate = true;
             if (!currentDateFilter.isEmpty()) {
-                matchesDate = rawRequestDate.startsWith(currentDateFilter);
+                matchesDate = rawCreateDate.startsWith(currentDateFilter);
             }
 
             String status1 = safeGetFromObject(item, "Status_1", "status_1", "STATUS_1").trim();
             boolean matchesStatus = false;
             switch (currentStatusPosition) {
-                case 0: // Tất cả
+                case 0:
                     matchesStatus = true;
                     break;
-                case 1: // Chưa hoàn thành
+                case 1:
                     if (status1.isEmpty() || "0".equals(status1)) {
                         matchesStatus = true;
                     }
                     break;
-                case 2: // Quá hạn
+                case 2:
                     if ("5".equals(status1)) {
                         matchesStatus = true;
                     }
                     break;
-                case 3: // Đã thực hiện (Completed)
+                case 3:
                     if ("1".equals(status1)) {
                         matchesStatus = true;
                     }
                     break;
-                case 4: // Đã hủy (Canceled)
+                case 4:
                     if ("6".equals(status1)) {
                         matchesStatus = true;
                     }

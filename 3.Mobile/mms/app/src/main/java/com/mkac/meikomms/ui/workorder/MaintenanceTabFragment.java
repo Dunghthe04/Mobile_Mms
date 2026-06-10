@@ -228,7 +228,7 @@ public class MaintenanceTabFragment extends Fragment {
         plan.categoryName = pickFirst(row.optString("Category_Name"), row.optString("categoryName"));
         plan.assigneeName = pickFirst(row.optString("Full_Name_In_Charge"), row.optString("User_Name_In_Charge"), row.optString("Person_In_Charge"));
         plan.executorName = pickFirst(row.optString("Full_Name"), row.optString("Maintainer_Id"), row.optString("Actual_Maintaner_Id"));
-        plan.status = pickFirst(row.optString("Status"), row.optString("status"));
+        plan.status = pickFirst(row.optString("Status"), row.optString("status"), row.optString("Status_Check"));
         plan.taskDateUnix = parseLong(pickFirst(row.optString("Task_Date_Unix"), row.optString("taskDateUnix")));
 
         String doneUnix = pickFirst(row.optString("After_Approve_Task_Date_Unix"), row.optString("Approve_Task_Date_Unix"));

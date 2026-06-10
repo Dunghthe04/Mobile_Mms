@@ -58,6 +58,8 @@ public class MaintenancePlanAdapter extends RecyclerView.Adapter<MaintenancePlan
         MaintenancePlan plan = list.get(position);
         if (plan == null) return;
 
+        String itemIndexPrefix = (position + 1) + ". ";
+
         // 1. Máy (Machine): Mã máy và tên máy (Ghép nối an toàn, rỗng thì hiển thị "")
         String mId = safe(plan.machineId);
         String mName = safe(plan.machineName);
@@ -69,7 +71,9 @@ public class MaintenancePlanAdapter extends RecyclerView.Adapter<MaintenancePlan
         } else if (!mName.isEmpty()) {
             machineTitle = mName;
         }
-        holder.binding.tvPlanMachineTitle.setText(machineTitle);
+
+//        holder.binding.tvPlanMachineTitle.setText(machineTitle);
+        holder.binding.tvPlanMachineTitle.setText(itemIndexPrefix + machineTitle);
 
         // 2. Hạng mục bảo dưỡng (Nếu rỗng thì hiển thị "")
         String catName = safe(plan.categoryName);
@@ -109,7 +113,7 @@ public class MaintenancePlanAdapter extends RecyclerView.Adapter<MaintenancePlan
                     holder.binding.tvPlanStatusBadge.setTextColor(Color.parseColor("#4B5563"));       // Chữ Đen Xám
                     break;
                 case "1":
-                    holder.binding.tvPlanStatusBadge.setText(i18n(KEY_STATUS_DONE) + " / " + i18n("Approve"));
+                    holder.binding.tvPlanStatusBadge.setText(i18n("Approve"));
                     holder.binding.tvPlanStatusBadge.setBackgroundColor(Color.parseColor("#EFF6FF")); // Nền Xanh dương nhạt
                     holder.binding.tvPlanStatusBadge.setTextColor(Color.parseColor("#2563EB"));       // Chữ Xanh dương đậm
                     break;

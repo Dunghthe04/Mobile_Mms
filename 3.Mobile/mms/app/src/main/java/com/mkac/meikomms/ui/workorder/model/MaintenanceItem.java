@@ -14,6 +14,9 @@ public class MaintenanceItem {
     public String checkValue2;
     public String comment;
     public String historyJson;
+    public String method = "";
+    public String testContent = "";
+    public String unit = "";
     public int childCount;
     public String initialStatus;
     public String imagePath;

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -41,6 +42,7 @@ public class WorkOrderDataActivity extends AppCompatActivity {
     private TextView btnTabWorkOrder;
     private TextView btnTabMaintenance;
     private TextView tvMachineScanValue;
+    private TextView tvTitle;
     private View lineTabWorkOrder;
     private View lineTabMaintenance;
     private View btnScanMachine;
@@ -75,6 +77,8 @@ public class WorkOrderDataActivity extends AppCompatActivity {
         setContentView(R.layout.activity_work_order_data);
 
         LanguageAPIUtils.init(this);
+
+        tvTitle = findViewById(R.id.tv_title);
 
         btnTabWorkOrder = findViewById(R.id.btn_tab_work_order);
         btnTabMaintenance = findViewById(R.id.btn_tab_maintenance);
@@ -304,6 +308,11 @@ public class WorkOrderDataActivity extends AppCompatActivity {
     private void applyLanguage() {
         if (btnTabWorkOrder != null) btnTabWorkOrder.setText(i18n("Work Order"));
         if (btnTabMaintenance != null) btnTabMaintenance.setText(i18n("Maintenance"));
+        String maintenanceText = i18n("Maintenance");
+        Log.e("DEBUG_LANG", "Maintenance = " + maintenanceText);
+        btnTabMaintenance.setText(maintenanceText);
+
+        if (tvTitle != null) tvTitle.setText(i18n("Enter Work Order Data"));
 
         View rootView = findViewById(android.R.id.content);
         if (rootView != null) {
@@ -311,7 +320,6 @@ public class WorkOrderDataActivity extends AppCompatActivity {
         }
 
         populateStatusSpinnersWithI18n();
-
 
         String activeMachineId = (currentSelectedTab == 0) ? workOrderMachineId : maintenanceMachineId;
         updateMachineScanUi(activeMachineId);

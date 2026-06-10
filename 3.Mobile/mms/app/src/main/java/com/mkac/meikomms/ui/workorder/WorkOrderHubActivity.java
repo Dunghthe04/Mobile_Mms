@@ -110,7 +110,7 @@ public class WorkOrderHubActivity extends AppCompatActivity {
 
         if (tvTitle != null) tvTitle.setText(i18n("W/O Management"));
         if (tvCreateWorkOrderTitle != null) tvCreateWorkOrderTitle.setText(i18n("Add Work Order"));
-        if (tvEnterWorkOrderTitle != null) tvEnterWorkOrderTitle.setText(i18n("Enter Work Order Data"));
+        if (tvEnterWorkOrderTitle != null) tvEnterWorkOrderTitle.setText(i18n("Enter Work Order Data And Maintenance"));
     }
 
     private void showLanguageSelectionDialog() {

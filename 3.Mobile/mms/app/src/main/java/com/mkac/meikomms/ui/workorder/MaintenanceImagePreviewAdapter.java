@@ -54,6 +54,7 @@ public class MaintenanceImagePreviewAdapter extends RecyclerView.Adapter<Mainten
         String imagePath = imagePaths.get(position);
         Log.d("PREVIEW_LOAD_DBG", "attempt load preview pos=" + position + " url=" + imagePath);
         Object loadModel = imagePath;
+
         if (imagePath != null && (imagePath.startsWith("http://") || imagePath.startsWith("https://"))) {
             String token = HttpClient.getToken();
             if (token != null && !token.trim().isEmpty()) {
@@ -63,6 +64,14 @@ public class MaintenanceImagePreviewAdapter extends RecyclerView.Adapter<Mainten
             loadModel = gUrl;
             }
         }
+
+        holder.itemView.setOnClickListener(v -> {
+            Context viewContext = holder.itemView.getContext();
+            if (viewContext instanceof EnterWorkOrderDataActivity) {
+                ((EnterWorkOrderDataActivity) viewContext).showLargeImagePreview(imagePath);
+            }
+        });
+
         Glide.with(holder.itemView)
             .load(loadModel)
                 .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {

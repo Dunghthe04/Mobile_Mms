@@ -10,6 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -178,9 +180,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
 
     private void applyLanguage() {
         binding.tvTitle.setText(i18n("Enter maintenance data"));
-        binding.tvChecklistHeader.setText(i18n("Checklist"));
-        binding.tvTableIndicator.setText(i18n("Parent"));
-        binding.btnEditPlan.setText(i18n("Edit"));
         binding.btnBackToParent.setText(i18n("Back"));
         binding.btnSaveMaintenance.setText(i18n("Save"));
     }
@@ -276,7 +275,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         DialogChildMaintenanceItemsBinding dialogBinding = DialogChildMaintenanceItemsBinding.inflate(getLayoutInflater());
         bottomSheetDialog.setContentView(dialogBinding.getRoot());
         LanguageAPIUtils.setLang(dialogBinding.getRoot());
-        dialogBinding.tvDialogParentTitle.setText(i18n("Parent Item") + ": " + parentItem.checkName);
+        dialogBinding.tvDialogParentTitle.setText(parentItem.checkName);
         dialogBinding.rvChildItems.setLayoutManager(new LinearLayoutManager(this));
         List<MaintenanceItem> childItems = new ArrayList<>();
         MaintenanceCheckAdapter childAdapter = new MaintenanceCheckAdapter(childItems, new MaintenanceCheckAdapter.OnItemActionListener() {
@@ -599,18 +598,87 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         return "";
     }
 
+//    private MaintenanceItem parseItem(JSONObject row, String parentId) {
+//        MaintenanceItem item = new MaintenanceItem();
+//
+//        String parsedId = "";
+//        if (parentId != null && !parentId.isEmpty()) {
+//            // ĐANG PHÂN GIẢI HẠNG MỤC CON (DETAIL TABLE):
+//            String checkId1 = row.optString("Check_Id_1");
+//            String checkIdReal = row.optString("Check_Id");
+//            String checkIdCamel = row.optString("checkId");
+//            String childCheckId = row.optString("Child_Check_Id");
+//
+//            // Nếu Check_Id bị trùng khít với ID cha, ép hệ thống cào từ Check_Id_1 để ra mã con chuẩn
+//            if (checkIdReal.equalsIgnoreCase(parentId)) {
+//                parsedId = pickFirst(checkId1, childCheckId, row.optString("childCheckId"), checkIdCamel);
+//            } else {
+//                parsedId = pickFirst(checkIdReal, checkId1, checkIdCamel, childCheckId);
+//            }
+//
+//            if (parsedId.isEmpty() || parsedId.equalsIgnoreCase(parentId)) {
+//                parsedId = pickFirst(checkIdReal, checkId1, checkIdCamel);
+//            }
+//        } else {
+//            parsedId = pickFirst(row.optString("Check_Id"), row.optString("checkId"));
+//        }
+//
+//        item.checkId = parsedId;
+//        item.parentCheckId = pickFirst(parentId, row.optString("Parent_Check_Id"), row.optString("Parent"));
+//        item.checkName = pickFirst(row.optString("Check_Name"), row.optString("Check_Content"));
+//        item.min = pickFirst(row.optString("Check_Content_Min"), row.optString("Check_Content_Min"));
+//        item.max = pickFirst(row.optString("Check_Content_Max"), row.optString("Check_Content_Max"));
+//        item.checkValue = pickFirst(row.optString("Check_Value"), row.optString("Value"));
+//        item.checkValue2 = pickFirst(row.optString("Check_Value_2"), row.optString("Value_2"));
+//        item.childCount = row.optInt("Child_Count", 0);
+//        item.comment = row.optString("Comment", "");
+//        item.historyJson = row.optString("History", "");
+//        item.setImagePaths(parseImagePathsFromRow(row));
+//
+//        item.method = pickFirst(row.optString("Method"), row.optString("method"));
+//        item.testContent = pickFirst(row.optString("Test_Content"), row.optString("testContent"), row.optString("Visual_Standard"));
+//        item.unit = pickFirst(row.optString("Unit"), row.optString("unit"));
+//
+//        StringBuilder sb = new StringBuilder();
+//        if (!item.method.isEmpty()) {
+//            sb.append(i18n("Method")).append(": ").append(item.method).append("\n");
+//        }
+//
+//        if (item.isNumericInput()) {
+//            sb.append(i18n("Minimum")).append(": ").append(item.min);
+//            if (!item.unit.isEmpty()) sb.append(" ").append(item.unit);
+//            sb.append(" | ").append(i18n("Maximum")).append(": ").append(item.max);
+//            if (!item.unit.isEmpty()) sb.append(" ").append(item.unit);
+//        } else {
+//            if (!item.testContent.isEmpty()) {
+//                sb.append(i18n("Visual Standard")).append(": ").append(item.testContent);
+//            } else {
+//                sb.append(i18n("Visual inspection"));
+//            }
+//        }
+//        item.subDesc = sb.toString().trim();
+//
+//        item.initialStatus = resolveInitialStatus(item);
+//        if (item.childCount > 0) {
+//            item.locked = true;
+//        } else {
+//            item.locked = "OK".equalsIgnoreCase(item.initialStatus);
+//        }
+//
+//        item.snapshotOriginalValues();
+//        return item;
+//    }
+
     private MaintenanceItem parseItem(JSONObject row, String parentId) {
         MaintenanceItem item = new MaintenanceItem();
 
         String parsedId = "";
         if (parentId != null && !parentId.isEmpty()) {
-            // ĐANG PHÂN GIẢI HẠNG MỤC CON (DETAIL TABLE):
             String checkId1 = row.optString("Check_Id_1");
             String checkIdReal = row.optString("Check_Id");
             String checkIdCamel = row.optString("checkId");
             String childCheckId = row.optString("Child_Check_Id");
 
-            // Nếu Check_Id bị trùng khít với ID cha, ép hệ thống cào từ Check_Id_1 để ra mã con chuẩn
             if (checkIdReal.equalsIgnoreCase(parentId)) {
                 parsedId = pickFirst(checkId1, childCheckId, row.optString("childCheckId"), checkIdCamel);
             } else {
@@ -636,6 +704,12 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         item.historyJson = row.optString("History", "");
         item.setImagePaths(parseImagePathsFromRow(row));
 
+        // CHỈ NẠP DỮ LIỆU SẠCH - KHÔNG ĐÚNG NGHĨA TẠO CHUỖI GIAO DIỆN TẠI ĐÂY
+        item.method = pickFirst(row.optString("Method"), row.optString("method"));
+        item.testContent = pickFirst(row.optString("Test_Content"), row.optString("testContent"), row.optString("Visual_Standard"));
+        item.unit = pickFirst(row.optString("Unit"), row.optString("unit"));
+        item.subDesc = ""; // Bỏ trống chuỗi tĩnh cũ
+
         item.initialStatus = resolveInitialStatus(item);
         if (item.childCount > 0) {
             item.locked = true;
@@ -643,9 +717,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
             item.locked = "OK".equalsIgnoreCase(item.initialStatus);
         }
 
-        item.subDesc = item.isNumericInput()
-                ? i18n("Minimum") + ": " + safe(item.min) + " | " + i18n("Maximum") + ": " + safe(item.max)
-                : (item.childCount > 0 ? i18n("Has") + " " + item.childCount + " " + i18n("child items") : i18n("Visual inspection"));
         item.snapshotOriginalValues();
         return item;
     }
@@ -751,9 +822,11 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                 TextView tvHeaderTime = dialogView.findViewById(R.id.tv_header_time);
                 TextView tvHeaderEditor = dialogView.findViewById(R.id.tv_header_editor);
                 TextView tvHeaderResult = dialogView.findViewById(R.id.tv_header_result);
+                Button btnHistoryClose = dialogView.findViewById(R.id.btn_history_close);
                 if (tvHeaderTime != null) tvHeaderTime.setText(i18n("Modification Time"));
                 if (tvHeaderEditor != null) tvHeaderEditor.setText(i18n("Editor"));
                 if (tvHeaderResult != null) tvHeaderResult.setText(i18n("Result"));
+                if (btnHistoryClose != null) btnHistoryClose.setText(i18n("Close"));
 
                 TableLayout tableHistoryContent = dialogView.findViewById(R.id.table_history_content);
                 if (tableHistoryContent != null) {
@@ -816,6 +889,9 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                                 resultText = "NG";
                                 resultColor = Color.parseColor("#B91C1C");
                             }
+                        } else {
+                            resultText = "NG";
+                            resultColor = Color.parseColor("#B91C1C");
                         }
                     } else {
                         if (!displayVal.isEmpty()) {
@@ -848,19 +924,25 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                     }
                 }
 
-                new AlertDialog.Builder(this)
+                AlertDialog historyDialog = new AlertDialog.Builder(this)
                         .setTitle(i18n("Modification History") + ": " + item.checkName)
                         .setView(dialogView)
-                        .setPositiveButton(i18n("Close"), (dialog, which) -> dialog.dismiss())
                         .show();
+
+                if (btnHistoryClose != null) {
+                    btnHistoryClose.setOnClickListener(v -> historyDialog.dismiss());
+                }
             });
         });
     }
 
     private String resolveStatusLabel(String status) {
+        if ("0".equals(status)) return i18n("Incomplete");
+        if ("1".equals(status)) return i18n("Approve");
         if ("2".equals(status)) return i18n("Checksheet OK");
         if ("3".equals(status)) return i18n("Checksheet NG");
-        return i18n("Pending");
+        if ("5".equals(status)) return i18n("Overdue");
+        return i18n("");
     }
 
     private String pickFirst(String... v) {
@@ -885,6 +967,88 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         }
         item.setImagePaths(new ArrayList<>(merged));
         Log.d("WORKORDER_IMAGE_DBG", "mergeUploadedImages checkId=" + item.checkId + ", imageCount=" + item.getImagePathsSnapshot().size() + ", imagePaths=" + item.getImagePathsSnapshot());
+    }
+
+    public void showLargeImagePreview(final String imagePath) {
+        if (imagePath == null || imagePath.trim().isEmpty() || "null".equalsIgnoreCase(imagePath.trim())) {
+            return;
+        }
+
+        runOnUiThread(() -> {
+            // Khởi tạo Dialog phóng đại dạng Fullscreen không viền tiêu đề
+            final Dialog dialog = new Dialog(EnterWorkOrderDataActivity.this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+            // Dựng Layout cha bằng code Java để không bị phụ thuộc vào tệp XML giao diện bên ngoài
+            android.widget.FrameLayout layout = new android.widget.FrameLayout(EnterWorkOrderDataActivity.this);
+            layout.setBackgroundColor(Color.BLACK);
+
+            // Thiết lập ImageView nhận diện khung hiển thị căn giữa
+            final ImageView imageView = new ImageView(EnterWorkOrderDataActivity.this);
+            android.widget.FrameLayout.LayoutParams imgParams = new android.widget.FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            imageView.setLayoutParams(imgParams);
+            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            layout.addView(imageView);
+
+            // Thiết lập nút Đóng (X) màu trắng ở góc trên bên phải màn hình
+            ImageView btnClose = new ImageView(EnterWorkOrderDataActivity.this);
+            android.widget.FrameLayout.LayoutParams closeParams = new android.widget.FrameLayout.LayoutParams(80, 80);
+            closeParams.gravity = android.view.Gravity.TOP | android.view.Gravity.END;
+            closeParams.topMargin = 60;
+            closeParams.rightMargin = 60;
+            btnClose.setLayoutParams(closeParams);
+            btnClose.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
+            btnClose.setColorFilter(Color.WHITE);
+            layout.addView(btnClose);
+
+            dialog.setContentView(layout);
+
+            // Bấm nút Đóng hoặc bấm ra vùng màn hình đen đều tự động thoát Trình xem ảnh
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+            layout.setOnClickListener(v -> dialog.dismiss());
+
+            final String cleanPath = imagePath.trim();
+
+            // LUỒNG 1: Nếu là ảnh liên kết từ máy chủ Web (Hỗ trợ khi reload hoặc vào lại lệnh bảo trì)
+            if (cleanPath.startsWith("http://") || cleanPath.startsWith("https://")) {
+                executorService.execute(() -> {
+                    try {
+                        java.net.URL url = new java.net.URL(cleanPath);
+                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                        conn.setDoInput(true);
+                        conn.setConnectTimeout(8000);
+                        conn.connect();
+
+                        java.io.InputStream input = conn.getInputStream();
+                        final android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(input);
+
+                        runOnUiThread(() -> {
+                            if (bitmap != null) {
+                                imageView.setImageBitmap(bitmap);
+                            } else {
+                                Toast.makeText(EnterWorkOrderDataActivity.this, i18n("Image load error"), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } catch (Exception e) {
+                        Log.e("IMAGE_PREVIEW_NET_ERR", "Lỗi tải ảnh từ Web URL: " + cleanPath, e);
+                        runOnUiThread(() -> Toast.makeText(EnterWorkOrderDataActivity.this, i18n("Image connection error"), Toast.LENGTH_SHORT).show());
+                    }
+                });
+            }
+            // LUỒNG 2: Nếu là ảnh bộ nhớ đệm cục bộ thiết bị (Hỗ trợ xem ngay lập tức khi vừa upload xong)
+            else {
+                try {
+                    Uri localUri = Uri.parse(cleanPath);
+                    imageView.setImageURI(localUri);
+                } catch (Exception e) {
+                    Log.e("IMAGE_PREVIEW_LOCAL_ERR", "Lỗi nạp cấu trúc URI ảnh nội bộ: " + cleanPath, e);
+                    Toast.makeText(EnterWorkOrderDataActivity.this, i18n("Image format invalid"), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            dialog.show();
+        });
     }
 
     private String buildImageListPayload(MaintenanceItem item) {

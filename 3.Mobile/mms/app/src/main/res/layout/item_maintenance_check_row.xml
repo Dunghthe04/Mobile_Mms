@@ -106,30 +106,60 @@
                         android:visibility="gone"
                         tools:visibility="visible">
 
-                        <EditText
-                            android:id="@+id/et_check_value_display"
-                            android:layout_width="72dp"
-                            android:layout_height="36dp"
-                            android:background="#F3F4F6"
-                            android:gravity="center"
-                            android:hint="Display"
-                            android:inputType="numberDecimal"
-                            android:paddingHorizontal="4dp"
-                            android:textColor="#111827"
-                            android:textSize="12sp" />
+                        <LinearLayout
+                            android:layout_width="110dp"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
 
-                        <EditText
-                            android:id="@+id/et_check_value_actual"
-                            android:layout_width="72dp"
-                            android:layout_height="36dp"
-                            android:layout_marginStart="8dp"
-                            android:background="#F3F4F6"
-                            android:gravity="center"
-                            android:hint="Actual"
-                            android:inputType="numberDecimal"
-                            android:paddingHorizontal="4dp"
-                            android:textColor="#111827"
-                            android:textSize="12sp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="4dp"
+                                android:text="Display"
+                                android:textColor="#4B5563"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <EditText
+                                android:id="@+id/et_check_value_display"
+                                android:layout_width="match_parent"
+                                android:layout_height="50dp"
+                                android:background="#F3F4F6"
+                                android:gravity="center"
+                                android:hint="Display"
+                                android:inputType="numberDecimal"
+                                android:paddingHorizontal="6dp"
+                                android:textColor="#111827"
+                                android:textSize="16sp" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="110dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="4dp"
+                                android:text="Actual"
+                                android:textColor="#4B5563"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <EditText
+                                android:id="@+id/et_check_value_actual"
+                                android:layout_width="match_parent"
+                                android:layout_height="50dp"
+                                android:background="#F3F4F6"
+                                android:gravity="center"
+                                android:hint="Actual"
+                                android:inputType="numberDecimal"
+                                android:paddingHorizontal="6dp"
+                                android:textColor="#111827"
+                                android:textSize="16sp" />
+                        </LinearLayout>
                     </LinearLayout>
                 </FrameLayout>
 

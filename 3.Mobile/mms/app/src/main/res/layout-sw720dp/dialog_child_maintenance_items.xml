@@ -72,15 +72,6 @@
         android:paddingHorizontal="24dp"
         android:paddingTop="14dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:text="* Dữ liệu con tự động nội suy phán định lên mục Cha"
-            android:textColor="#9A3412"
-            android:textSize="13sp"
-            android:textStyle="italic" />
-
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_confirm_child_data"
             android:layout_width="160dp"

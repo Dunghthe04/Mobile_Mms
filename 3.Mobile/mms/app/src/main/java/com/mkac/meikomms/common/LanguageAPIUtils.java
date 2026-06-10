@@ -52,6 +52,16 @@ public class LanguageAPIUtils
 
     public static String i18n(String text)
     {
+        if ("vi".equals(languageCode) && "Maintenance".equals(text)) {
+            return "Bảo dưỡng";
+        }
+        if ("vi".equals(languageCode) && "OK".equals(text) ||
+            "en".equals(languageCode) && "OK".equals(text) ||
+            "ja".equals(languageCode) && "OK".equals(text) ||
+            "ch".equals(languageCode) && "OK".equals(text)) {
+            return "OK";
+        }
+
         JSONObject builtInJson = getBuiltInLanguageJson(languageCode);
         JSONObject langJson = languageMap.get(languageCode);
         if (langJson != null) {
@@ -206,6 +216,9 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung cho WorkOrderEntryDialog ──────────────
                     "  \"Occurrence Time\": \"Occurrence Time\",\n" +
+                    "  \"Enter Work Order Data And Maintenance\": \"Enter Work Order Data And Maintenance\",\n" +
+                    "  \"Enter maintenance data\": \"Enter maintenance data\",\n" +
+                    "  \"Modification History\": \"Modification History\",\n" +
                     "  \"Is there a device lock feature on the MES system?\": \"Is there a device lock feature on the MES system?\",\n" +
                     "  \"Preparing operation\": \"Preparing operation\",\n" +
                     "  \"Stop due to shortage\": \"Stop due to shortage\",\n" +
@@ -271,10 +284,9 @@ public class LanguageAPIUtils
                     "  \"W/O Management\": \"W/O Management And Maintenance\",\n" +
                     "  \"Select function\": \"Select function\",\n" +
                     "  \"Create a work order or enter work order and maintenance data\": \"Create a work order or enter work order and maintenance data\",\n" +
-                    "  \"Add Work Order\": \"Add Work Order And Maintenance\",\n" +
                     "  \"ADD Work Order\": \"Add Work Order\",\n" +
                     "  \"Create a new work order\": \"Create a new work order\",\n" +
-                    "  \"Enter Work Order Data\": \"Enter Work Order Data And Maintenance\",\n" +
+                    "  \"Enter Work Order Data\": \"Enter Work Order Data\",\n" +
                     "  \"Language\": \"Language\",\n" +
                     "  \"No attachment file to download\": \"No attachment file to download\",\n" +
                     "  \"Select attachment document\": \"Select attachment document\",\n" +
@@ -440,6 +452,9 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"Thời gian phát sinh\",\n" +
+                    "  \"Enter Work Order Data And Maintenance\": \"Nhập kết quả Work Order và Hạng mục bảo dưỡng\",\n" +
+                    "  \"Enter maintenance data\": \"Nhập dữ liệu bảo dưỡng\",\n" +
+                    "  \"Modification History\": \"Lịch sử thay đổi\",\n" +
                     "  \"MA status\": \"Trạng thái MA báo\",\n" +
                     "  \"Time arises\": \"Thời gian phát sinh\",\n" +
                     "  \"Preparing operation\": \"Chuẩn bị thao tác\",\n" +
@@ -507,7 +522,7 @@ public class LanguageAPIUtils
                     "  \"Add Work Order\": \"Thêm Work Order\",\n" +
                     "  \"ADD Work Order\": \"Nhập thông tin Work Order\",\n" +
                     "  \"Create a new work order\": \"Tạo mới một Work Order\",\n" +
-                    "  \"Enter Work Order Data\": \"Nhập kết quả Work Order\",\n" +
+                    "  \"Enter Work Order Data\": \"Tiến hành nhập kết quả\",\n" +
                     "  \"Language\": \"Ngôn ngữ\",\n" +
                     "  \"No attachment file to download\": \"Không có tệp đính kèm để tải về\",\n" +
                     "  \"Select attachment document\": \"Chọn tài liệu đính kèm\",\n" +
@@ -560,7 +575,6 @@ public class LanguageAPIUtils
                     "  \"BACK\": \"TRỞ LẠI\",\n" +
                     "  \"STOP\": \"DỪNG\",\n" +
                     "  \"SAVE\": \"LƯU\",\n" +
-                    "  \"Agree\": \"Đồng ý\",\n" +
                     "  \"Deny\": \"Từ chối\",\n" +
                     "  \"Select\": \"Chọn\",\n" +
                     "  \"Login failed\": \"Đăng nhập không thành công\",\n" +
@@ -624,6 +638,8 @@ public class LanguageAPIUtils
                     "  \"Lịch sử\": \"Lịch sử\",\n" +
                     "  \"Vật tư\": \"Vật tư\",\n" +
                     "  \"Is there a device lock feature on the MES system?\": \"Có lock thiết bị trên hệ thống MES không?\",\n" +
+                    "  \"Method\": \"Phương pháp\",\n" +
+                    "  \"Visual Standard\": \"Tiêu chuẩn ngoại quan\",\n" +
                     "  \"Action\": \"Thao tác\"\n" +
                     "}\n";
 
@@ -634,6 +650,8 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"発生時間\",\n" +
+                    "  \"Enter maintenance data\": \"保守データ入力\",\n" +
+                    "  \"Modification History\": \"変更履歴\",\n" +
                     "  \"Preparing operation\": \"じゅんびさぎょう\",\n" +
                     "  \"Stop due to shortage\": \"部品不足による停止\",\n" +
                     "  \"Stop by production plan\": \"生産計画による停止\",\n" +
@@ -818,6 +836,9 @@ public class LanguageAPIUtils
                     "  \"Quá hạn\": \"期限切れ\",\n" +
                     "  \"Lịch sử\": \"履歴\",\n" +
                     "  \"Is there a device lock feature on the MES system?\": \"MESシステムにデバイスロック機能はありますか\",\n" +
+                    "  \"Method\": \"方法\",\n" +
+                    "  \"Visual Standard\": \"外観基準\",\n" +
+                    "  \"Enter Work Order Data\": \"実績入力\",\n" +
                     "  \"Action\": \"操作\"\n" +
                     "}\n";
 
@@ -828,6 +849,11 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"发生时间\",\n" +
+                    "  \"Enter maintenance data\": \"维护数据录入\",\n" +
+                    "  \"Modification History\": \"修改履历\",\n" +
+                    "  \"Method\": \"方法\",\n" +
+                    "  \"Visual Standard\": \"外观标准\",\n" +
+                    "  \"Enter Work Order Data\": \"工单结果输入\",\n" +
                     "  \"Preparing operation\": \"准备作业\",\n" +
                     "  \"Stop due to shortage\": \"因缺料停机\",\n" +
                     "  \"Stop by production plan\": \"因生产计划停机\",\n" +

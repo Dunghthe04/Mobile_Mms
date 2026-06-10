@@ -155,20 +155,6 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_edit_plan"
-                    style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="32dp"
-                    android:layout_gravity="end"
-                    android:layout_marginTop="4dp"
-                    android:text="Edit"
-                    android:textColor="#01A789"
-                    android:textSize="12sp"
-                    app:iconSize="12dp"
-                    app:iconTint="#01A789"
-                    app:icon="@android:drawable/ic_menu_edit" />
-
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -185,33 +171,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="#F3F4F6"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="10dp">
-
-                    <TextView
-                        android:id="@+id/tv_checklist_header"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Checklist"
-                        android:textColor="#374151"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tv_table_indicator"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:text="Parent"
-                        android:textColor="#01A789"
-                        android:textSize="11sp"
-                        android:textStyle="italic" />
-                </RelativeLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_maintenance_items"
