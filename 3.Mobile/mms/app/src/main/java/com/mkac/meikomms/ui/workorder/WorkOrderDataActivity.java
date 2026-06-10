@@ -51,6 +51,18 @@ public class WorkOrderDataActivity extends AppCompatActivity {
     private static final String TAG_WORK_ORDER = "tab_work_order";
     private static final String TAG_MAINTENANCE = "tab_maintenance";
 
+    private static final String[] MAINT_GROUP_IDS = {"", "FE1", "FE2", "FE3", "FE4"};
+
+    public static String[] getLocalizedGroupLabels() {
+        return new String[]{
+                i18n("All"),
+                "FE1",
+                "FE2",
+                "FE3",
+                "FE4"
+        };
+    }
+
     private TextView btnTabWorkOrder;
     private TextView btnTabMaintenance;
     private AutoCompleteTextView autoSearchMachine;
@@ -61,6 +73,7 @@ public class WorkOrderDataActivity extends AppCompatActivity {
 
     private Spinner spinnerWoStatus;
     private Spinner spinnerMaintStatus;
+    private Spinner spinnerMaintGroup;
 
     private View btnFilterWoDate;
     private TextView tvFilterWoDateLabel;
@@ -100,6 +113,7 @@ public class WorkOrderDataActivity extends AppCompatActivity {
         lineTabMaintenance = findViewById(R.id.line_tab_maintenance);
         spinnerWoStatus = findViewById(R.id.spinner_filter_wo_status);
         spinnerMaintStatus = findViewById(R.id.spinner_filter_maint_status);
+        spinnerMaintGroup = findViewById(R.id.spinner_filter_maint_group);
 
         btnFilterWoDate = findViewById(R.id.btn_filter_wo_date);
         tvFilterWoDateLabel = findViewById(R.id.tv_filter_wo_date_label);
@@ -353,6 +367,19 @@ public class WorkOrderDataActivity extends AppCompatActivity {
                 @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
         }
+
+        if (spinnerMaintGroup != null) {
+            spinnerMaintGroup.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (maintenanceTabFragment != null && maintenanceTabFragment.isAdded()) {
+                        String selectedGroup = MAINT_GROUP_IDS[position];
+                        maintenanceTabFragment.filterByGroup(selectedGroup);
+                    }
+                }
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
+        }
     }
 
     private void populateStatusSpinnersWithI18n() {
@@ -380,6 +407,19 @@ public class WorkOrderDataActivity extends AppCompatActivity {
 
             if (currentMaintSelection >= 0 && currentMaintSelection < maintStatuses.length) {
                 spinnerMaintStatus.setSelection(currentMaintSelection);
+            }
+        }
+
+        if (spinnerMaintGroup != null) {
+            int currentGroupSelection = spinnerMaintGroup.getSelectedItemPosition();
+            String[] groupLabels = getLocalizedGroupLabels();
+
+            ArrayAdapter<String> groupAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, groupLabels);
+            groupAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerMaintGroup.setAdapter(groupAdapter);
+
+            if (currentGroupSelection >= 0 && currentGroupSelection < groupLabels.length) {
+                spinnerMaintGroup.setSelection(currentGroupSelection);
             }
         }
     }

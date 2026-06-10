@@ -3,6 +3,7 @@ package com.mkac.meikomms.ui.workorder;
 import static com.mkac.meikomms.common.LanguageAPIUtils.i18n;
 
 import android.content.Intent;
+import android.util.Log;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,6 +43,7 @@ public class MaintenanceTabFragment extends Fragment {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private int currentStatusPosition = 0;
     private String currentDateFilter = "";
+    private String currentGroupFilter = "";
 
     private String serverUrl = "";
     private String schemaCore = "";
@@ -116,6 +118,17 @@ public class MaintenanceTabFragment extends Fragment {
         }
     }
 
+    private String mapGroupToId(String groupName) {
+        if (groupName == null) return "";
+        switch (groupName.trim().toUpperCase()) {
+            case "FE1": return "00011";
+            case "FE2": return "00014";
+            case "FE3": return "00030";
+            case "FE4": return "00031";
+            default: return groupName;
+        }
+    }
+
     public void reloadData() {
         if (!isAdded() || binding == null) return;
 
@@ -123,9 +136,31 @@ public class MaintenanceTabFragment extends Fragment {
         long[] range = resolveRange();
 
         StringBuilder whereBuilder = new StringBuilder();
-        whereBuilder.append("1=1 AND (mt.Task_Date_Unix BETWEEN ").append(range[0]).append(" AND ").append(range[1]).append(") ")
-                .append("AND (mc.DEPARTMENT = 'FE' OR mt.TASK_TYPE = 1) ")
-                .append("AND (mt.TASK_TYPE != '0' OR (iss.ISSUE_STATUS IS NOT NULL AND iss.ISSUE_STATUS != '3')) ")
+        whereBuilder.append("1=1 AND (mt.Task_Date_Unix BETWEEN ").append(range[0]).append(" AND ").append(range[1]).append(") ");
+        
+        if (currentGroupFilter != null && !currentGroupFilter.trim().isEmpty() && !"ALL".equalsIgnoreCase(currentGroupFilter.trim())) {
+            String mappedGroup = mapGroupToId(currentGroupFilter);
+            whereBuilder.append("AND (mt.TASK_TYPE = 1 AND EXISTS (")
+                    .append("SELECT 1 FROM ").append(schemaMms).append(".FE_TEAM_MEMBER fm ")
+                    .append("LEFT JOIN ").append(schemaCore).append(".USERS ux ON (fm.USER_ID = ux.USER_NAME OR fm.USER_ID = TO_CHAR(ux.ID)) ")
+                    .append("WHERE fm.TEAM_ID = '").append(mappedGroup.replace("'", "''")).append("' ")
+                    .append("AND fm.DELETED = 0 AND ux.DELETED = 'N' ")
+                    .append("AND (")
+                    .append("ux.USER_NAME = mt.ISSUE_ID ")
+                    .append("OR ux.USER_NAME = u1.USER_NAME ")
+                    .append("OR ux.USER_NAME = u2.USER_NAME ")
+                    .append("OR TRIM(fm.USER_ID) = TRIM(mt.MAINTAINER_ID) ")
+                    .append("OR TRIM(fm.USER_ID) = TRIM(mt.ACTUAL_MAINTANER_ID) ")
+                    .append("OR TRIM(fm.USER_ID) = TRIM(mt.APPROVE_MAINTANER_ID) ")
+                    .append("OR TRIM(fm.USER_ID) = TRIM(mt.ISSUE_ID) ")
+                    .append("OR TRIM(fm.USER_ID) = TRIM(m.PERSON_IN_CHARGE)")
+                    .append(")")
+                    .append(")) ");
+        } else {
+            whereBuilder.append("AND (mc.DEPARTMENT = 'FE' OR mt.TASK_TYPE = 1) ");
+        }
+
+        whereBuilder.append("AND (mt.TASK_TYPE != '0' OR (iss.ISSUE_STATUS IS NOT NULL AND iss.ISSUE_STATUS != '3')) ")
                 .append("AND mt.STATUS != 4 AND mt.TASK_TYPE = 1");
 
         if (this.machineId != null && !this.machineId.trim().isEmpty()) {
@@ -141,14 +176,18 @@ public class MaintenanceTabFragment extends Fragment {
         android.content.Context appContext = requireContext().getApplicationContext();
 
         executorService.execute(() -> {
+            String mappedGroupForApi = mapGroupToId(currentGroupFilter);
             HttpClient.APIReturn rs = HttpClient.getMaintainTaskList(
-                    appContext, serverUrl, schemaMms, schemaCore, whereBuilder.toString(), 10000, 0, ""
+                    appContext, serverUrl, schemaMms, schemaCore, whereBuilder.toString(), 10000, 0, mappedGroupForApi
             );
 
             List<MaintenancePlan> newList = new ArrayList<>();
             String errorMsg = null;
 
             if (rs != null && rs.code == 200 && rs.data != null) {
+                if (!rs.data.isEmpty()) {
+                    Log.e("DEBUG_MAINT_ROW", "First row JSON keys/values: " + rs.data.get(0).toString());
+                }
                 List<String> seenTaskIds = new ArrayList<>();
                 for (JSONObject row : rs.data) {
                     MaintenancePlan plan = parsePlan(row);
@@ -289,6 +328,11 @@ public class MaintenanceTabFragment extends Fragment {
     public void filterByStatus(int position) {
         this.currentStatusPosition = position;
         applyCombinedFilters();
+    }
+
+    public void filterByGroup(String group) {
+        this.currentGroupFilter = group == null ? "" : group.trim();
+        reloadData();
     }
 
     private String safe(String value) {
