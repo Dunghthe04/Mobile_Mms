@@ -122,25 +122,21 @@ public class MaintenanceTabFragment extends Fragment {
         binding.swipeRefreshMaintenance.setRefreshing(true);
         long[] range = resolveRange();
 
-        if (this.machineId == null || this.machineId.trim().isEmpty()) {
-            binding.swipeRefreshMaintenance.setRefreshing(false);
-            planList.clear();
-            fullPlanList.clear();
-            if (adapter != null) {
-                adapter.notifyDataSetChanged();
-            }
-            return;
-        }
-
         StringBuilder whereBuilder = new StringBuilder();
         whereBuilder.append("1=1 AND (mt.Task_Date_Unix BETWEEN ").append(range[0]).append(" AND ").append(range[1]).append(") ")
                 .append("AND (mc.DEPARTMENT = 'FE' OR mt.TASK_TYPE = 1) ")
                 .append("AND (mt.TASK_TYPE != '0' OR (iss.ISSUE_STATUS IS NOT NULL AND iss.ISSUE_STATUS != '3')) ")
                 .append("AND mt.STATUS != 4 AND mt.TASK_TYPE = 1");
 
-        String escapedMachine = this.machineId.replace("'", "''");
-        whereBuilder.append(" AND (LOWER(m.Machine_Id) LIKE LOWER('%").append(escapedMachine).append("%') ")
-                .append("OR LOWER(m.Machine_Name) LIKE LOWER('%").append(escapedMachine).append("%'))");
+        if (this.machineId != null && !this.machineId.trim().isEmpty()) {
+            String cleanMachineId = this.machineId;
+            if (cleanMachineId.contains(" - ")) {
+                cleanMachineId = cleanMachineId.split(" - ")[0].trim();
+            }
+            String escapedMachine = cleanMachineId.replace("'", "''");
+            whereBuilder.append(" AND (LOWER(m.Machine_Id) LIKE LOWER('%").append(escapedMachine).append("%') ")
+                    .append("OR LOWER(m.Machine_Name) LIKE LOWER('%").append(escapedMachine).append("%'))");
+        }
 
         android.content.Context appContext = requireContext().getApplicationContext();
 

@@ -127,16 +127,12 @@ public class WorkOrderDataListFragment extends Fragment {
             swipeRefresh.setOnRefreshListener(this::reloadData);
         }
 
-        if (!machineId.isEmpty()) {
-            reloadData();
-        } else {
-            updateSummary(0, "--");
-        }
+        reloadData();
     }
 
     public void setMachineId(String machineId) {
         this.machineId = safeText(machineId);
-        updateSummary(0, this.machineId.isEmpty() ? "--" : this.machineId);
+        updateSummary(0, this.machineId);
         if (isAdded()) {
             reloadData();
         }
@@ -144,7 +140,7 @@ public class WorkOrderDataListFragment extends Fragment {
 
     public void reloadDataForMachineId(String machineId) {
         this.machineId = safeText(machineId);
-        updateSummary(0, this.machineId.isEmpty() ? "--" : this.machineId);
+        updateSummary(0, this.machineId);
 
         if (adapter != null) {
             adapter.setItems(new ArrayList<>());
@@ -160,13 +156,6 @@ public class WorkOrderDataListFragment extends Fragment {
 
         if (safeText(this.machineId).isEmpty()) {
             this.machineId = resolveMachineId();
-        }
-
-        if (safeText(this.machineId).isEmpty()) {
-            if (swipeRefresh != null) swipeRefresh.setRefreshing(false);
-            adapter.setItems(new ArrayList<>());
-            updateSummary(0, "--");
-            return;
         }
 
         initConfiguration();
@@ -192,14 +181,21 @@ public class WorkOrderDataListFragment extends Fragment {
         }
 
         HttpClient.initToken(token);
-        final String targetMachineId = this.machineId;
+        final String targetMachineId = safeText(this.machineId);
         final Context appContext = requireContext().getApplicationContext();
 
         new Thread(() -> {
             try {
-                HttpClient.APIReturn apiReturn = HttpClient.getAllWorkOrderByMachineId(
-                        appContext, serverDynamic, schemaData, schemaCore, targetMachineId, 0, 200
-                );
+                HttpClient.APIReturn apiReturn;
+                if (targetMachineId.isEmpty()) {
+                    apiReturn = HttpClient.getAllWorkOrder(
+                            appContext, serverDynamic, schemaData, schemaCore, "1=1", 0, 200
+                    );
+                } else {
+                    apiReturn = HttpClient.getAllWorkOrderByMachineId(
+                            appContext, serverDynamic, schemaData, schemaCore, targetMachineId, 0, 200
+                    );
+                }
 
                 Log.d(TAG, "API CODE = " + (apiReturn != null ? apiReturn.code : "NULL"));
                 final List<JSONObject> items = new ArrayList<>();
@@ -354,7 +350,7 @@ public class WorkOrderDataListFragment extends Fragment {
     private void updateSummary(int count, String currentMachine) {
         if (tvWorkOrderSummary != null) {
             tvWorkOrderSummary.setText(i18n("Machine Code") + ": " +
-                    (currentMachine.isEmpty() ? "--" : currentMachine) +
+                    (currentMachine.isEmpty() ? i18n("All") : currentMachine) +
                     " | " + i18n("Quantity") + ": " + count);
         }
     }

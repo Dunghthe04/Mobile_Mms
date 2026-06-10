@@ -7,10 +7,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -19,16 +24,23 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.mkac.meikomms.R;
 import com.mkac.meikomms.common.Barcode;
+import com.mkac.meikomms.common.ConfigManager;
+import com.mkac.meikomms.common.HttpClient;
 import com.mkac.meikomms.common.LanguageAPIUtils;
+import com.mkac.meikomms.common.PreferenceHandler;
+
+import org.json.JSONObject;
 
 import static com.mkac.meikomms.common.LanguageAPIUtils.i18n;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 
 public class WorkOrderDataActivity extends AppCompatActivity {
@@ -41,7 +53,7 @@ public class WorkOrderDataActivity extends AppCompatActivity {
 
     private TextView btnTabWorkOrder;
     private TextView btnTabMaintenance;
-    private TextView tvMachineScanValue;
+    private AutoCompleteTextView autoSearchMachine;
     private TextView tvTitle;
     private View lineTabWorkOrder;
     private View lineTabMaintenance;
@@ -82,7 +94,7 @@ public class WorkOrderDataActivity extends AppCompatActivity {
 
         btnTabWorkOrder = findViewById(R.id.btn_tab_work_order);
         btnTabMaintenance = findViewById(R.id.btn_tab_maintenance);
-        tvMachineScanValue = findViewById(R.id.tv_machine_scan_value);
+        autoSearchMachine = findViewById(R.id.auto_search_machine);
         btnScanMachine = findViewById(R.id.btn_scan_machine);
         lineTabWorkOrder = findViewById(R.id.line_tab_work_order);
         lineTabMaintenance = findViewById(R.id.line_tab_maintenance);
@@ -107,6 +119,9 @@ public class WorkOrderDataActivity extends AppCompatActivity {
         ImageView btnBack = findViewById(R.id.btn_back);
         if (btnBack != null) btnBack.setOnClickListener(v -> finish());
 
+        loadMachineListAndSetupAutocomplete();
+        setupSearchListeners();
+
         scanMachineLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -120,19 +135,8 @@ public class WorkOrderDataActivity extends AppCompatActivity {
                         return;
                     }
 
-                    if (currentSelectedTab == 0) {
-                        workOrderMachineId = machineId;
-                        updateMachineScanUi(workOrderMachineId);
-                        if (workOrderListFragment != null) {
-                            workOrderListFragment.reloadDataForMachineId(workOrderMachineId);
-                        }
-                    } else {
-                        maintenanceMachineId = machineId;
-                        updateMachineScanUi(maintenanceMachineId);
-                        if (maintenanceTabFragment != null) {
-                            maintenanceTabFragment.reloadDataForMachineId(maintenanceMachineId);
-                        }
-                    }
+                    updateMachineScanUi(machineId);
+                    filterListsByMachine(machineId);
                 }
         );
 
@@ -401,10 +405,185 @@ public class WorkOrderDataActivity extends AppCompatActivity {
         }
     }
 
+    private String serverUrl = "";
+    private String schemaCore = "";
+    private String schemaMms = "";
+    private String schemaData = "";
+    private boolean isProgrammaticChange = false;
+
     private void updateMachineScanUi(String machineId) {
-        if (tvMachineScanValue != null) {
-            tvMachineScanValue.setText(machineId.isEmpty() ? i18n("Machine not scanned") : machineId);
+        if (autoSearchMachine != null) {
+            isProgrammaticChange = true;
+            autoSearchMachine.setText(machineId);
+            if (machineId != null) {
+                autoSearchMachine.setSelection(machineId.length());
+            }
+            isProgrammaticChange = false;
         }
+    }
+
+    private void filterListsByMachine(String query) {
+        String cleanMachine = query.trim();
+        if (currentSelectedTab == 0) {
+            workOrderMachineId = cleanMachine;
+            if (workOrderListFragment != null) {
+                workOrderListFragment.reloadDataForMachineId(workOrderMachineId);
+            }
+        } else {
+            maintenanceMachineId = cleanMachine;
+            if (maintenanceTabFragment != null) {
+                maintenanceTabFragment.reloadDataForMachineId(maintenanceMachineId);
+            }
+        }
+    }
+
+    private void setupSearchListeners() {
+        if (autoSearchMachine == null) return;
+
+        autoSearchMachine.setOnItemClickListener((parent, view, position, id) -> {
+            String selected = (String) parent.getItemAtPosition(position);
+            filterListsByMachine(selected);
+        });
+
+        autoSearchMachine.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                    actionId == EditorInfo.IME_ACTION_DONE ||
+                    (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                
+                String query = autoSearchMachine.getText().toString().trim();
+                filterListsByMachine(query);
+                
+                android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) {
+                    imm.hideSoftInputFromWindow(autoSearchMachine.getWindowToken(), 0);
+                }
+                return true;
+            }
+            return false;
+        });
+
+        autoSearchMachine.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isProgrammaticChange) return;
+                if (s.toString().trim().isEmpty()) {
+                    filterListsByMachine("");
+                }
+            }
+        });
+    }
+
+    private void initConfiguration() {
+        PreferenceHandler handler = new PreferenceHandler(this);
+        ConfigManager configManager = new ConfigManager(this);
+
+        serverUrl = pickFirst(handler.getString("server_url"), configManager.getProperty("server_url"));
+        schemaCore = pickFirst(handler.getString("schema_core"), configManager.getProperty("schema_core"), "MES_CORE_MKHC");
+        schemaMms = pickFirst(handler.getString("schema_mms"), configManager.getProperty("schema_mms"), "MES_MMS_MKHC");
+        schemaData = pickFirst(handler.getString("schema_data"), configManager.getProperty("schema_data"), "MES_MMS_MKHC");
+    }
+
+    private String pickFirst(String... values) {
+        for (String v : values) {
+            if (v != null && !v.trim().isEmpty()) return v.trim();
+        }
+        return "";
+    }
+
+    private void loadMachineListAndSetupAutocomplete() {
+        initConfiguration();
+
+        new Thread(() -> {
+            try {
+                HttpClient.APIReturn resMachine = HttpClient.getMachineIdList(this, serverUrl, schemaCore, schemaMms, schemaData);
+                if (resMachine != null && resMachine.code == 200 && resMachine.data != null) {
+                    List<String> list = new ArrayList<>();
+                    for (JSONObject m : resMachine.data) {
+                        String mid = m.optString("Machine_Id", m.optString("machine_id"));
+                        String mname = m.optString("Machine_Name", m.optString("machine_name"));
+                        if (!mid.isEmpty()) {
+                            list.add(mid + " - " + mname);
+                        }
+                    }
+                    
+                    runOnUiThread(() -> {
+                        setupDropdownNew(autoSearchMachine, list);
+                    });
+                }
+            } catch (Exception e) {
+                Log.e("WorkOrderDataActivity", "Error loading machine list", e);
+            }
+        }).start();
+    }
+
+    private void setupDropdownNew(AutoCompleteTextView view, List<String> list) {
+        if (view == null || list == null || list.isEmpty()) return;
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_dropdown_item_1line, new ArrayList<>(list)) {
+            @NonNull
+            @Override
+            public android.widget.Filter getFilter() {
+                return new android.widget.Filter() {
+                    @Override
+                    protected FilterResults performFiltering(CharSequence constraint) {
+                        FilterResults results = new FilterResults();
+                        if (constraint == null || constraint.length() == 0) {
+                            results.values = list;
+                            results.count = list.size();
+                        } else {
+                            List<String> suggestions = new ArrayList<>();
+                            String filterPattern = constraint.toString().toLowerCase().trim();
+                            for (String item : list) {
+                                if (item.toLowerCase().contains(filterPattern)) {
+                                    suggestions.add(item);
+                                }
+                            }
+                            results.values = suggestions;
+                            results.count = suggestions.size();
+                        }
+                        return results;
+                    }
+
+                    @Override
+                    protected void publishResults(CharSequence constraint, FilterResults results) {
+                        clear();
+                        if (results != null && results.count > 0) {
+                            addAll((List<String>) results.values);
+                        }
+                        notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public CharSequence convertResultToString(Object resultValue) {
+                        return resultValue.toString();
+                    }
+                };
+            }
+        };
+
+        view.setAdapter(adapter);
+        view.setThreshold(0);
+
+        view.setOnTouchListener((v, event) -> {
+            if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                if (view.getText().toString().isEmpty()) {
+                    adapter.getFilter().filter(null);
+                }
+                view.showDropDown();
+            }
+            return false;
+        });
+
+        view.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                view.postDelayed(view::showDropDown, 200);
+            }
+        });
+
+        view.post(() -> view.setDropDownWidth(view.getWidth()));
     }
 
     private static String safeText(String value) {
