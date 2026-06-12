@@ -64,9 +64,11 @@ public class WorkOrderDataListFragment extends Fragment {
     private static final String[] FILTER_STATUS_KEYS = {
             "All",
             "Incomplete",
-            "Overdue",
+            "Overdue"
+            /*,
             "Completed",
             "Canceled"
+            */
     };
 
     public static String[] getLocalizedStatusLabels() {
@@ -410,22 +412,22 @@ public class WorkOrderDataListFragment extends Fragment {
 
             switch (status1Value) {
                 case "0":
-                    status1Display = i18n("Incomplete");
+                    status1Display = i18n("Incomplete"); // chưa thực hiện
                     status1BgColor = "#F3F4F6";
                     status1TextColor = "#4B5563";
                     break;
                 case "1":
-                    status1Display = i18n("Completed");
+                    status1Display = i18n("Completed"); // đã thực hiện
                     status1BgColor = "#D1FAE5";
                     status1TextColor = "#047857";
                     break;
                 case "6":
-                    status1Display = i18n("Canceled");
+                    status1Display = i18n("Canceled"); // đã hủy
                     status1BgColor = "#FEE2E2";
                     status1TextColor = "#B91C1C";
                     break;
                 case "5":
-                    status1Display = i18n("Overdue");
+                    status1Display = i18n("Overdue"); // quá hạn
                     status1BgColor = "#FFEEEE";
                     status1TextColor = "#E11D48";
                     break;
@@ -673,7 +675,10 @@ public class WorkOrderDataListFragment extends Fragment {
             boolean matchesStatus = false;
             switch (currentStatusPosition) {
                 case 0:
-                    matchesStatus = true;
+                    // Mặc định "Tất cả" hiển thị Chưa hoàn thành (0) và Quá hạn (5)
+                    if (status1.isEmpty() || "0".equals(status1) || "5".equals(status1)) {
+                        matchesStatus = true;
+                    }
                     break;
                 case 1:
                     if (status1.isEmpty() || "0".equals(status1)) {
@@ -685,6 +690,7 @@ public class WorkOrderDataListFragment extends Fragment {
                         matchesStatus = true;
                     }
                     break;
+                /*
                 case 3:
                     if ("1".equals(status1)) {
                         matchesStatus = true;
@@ -695,6 +701,7 @@ public class WorkOrderDataListFragment extends Fragment {
                         matchesStatus = true;
                     }
                     break;
+                */
             }
 
             if (matchesDate && matchesStatus) {

@@ -53,10 +53,12 @@ public class MaintenanceTabFragment extends Fragment {
     private static final String[] FILTER_STATUS_KEYS = {
             "All",
             "Incomplete",        //chưa hoàn thành
+            "Overdue"           //quá hạn
+            /*,
             "Approve",          //phê duyệt
             "Checksheet OK",    //Checksheet OK
-            "Checksheet NG",    //Checksheet NG
-            "Overdue"           //quá hạn
+            "Checksheet NG"    //Checksheet NG
+            */
     };
 
     public static String[] getLocalizedStatusLabels() {
@@ -379,15 +381,22 @@ public class MaintenanceTabFragment extends Fragment {
             boolean matchesStatus = false;
 
             if (currentStatusPosition == 0) {
-                matchesStatus = true;
+                // matchesStatus = true;
+                // Mặc định chỉ hiển thị "Chưa hoàn thành" (0) và "Quá hạn" (5)
+                if ("0".equals(plan.status) || "5".equals(plan.status)) {
+                    matchesStatus = true;
+                }
             } else {
                 String targetStatusCode = "";
                 switch (currentStatusPosition) {
                     case 1: targetStatusCode = "0"; break; // Chưa hoàn thành
+                    case 2: targetStatusCode = "5"; break; // Quá hạn
+                    /*
                     case 2: targetStatusCode = "1"; break; // Phê duyệt
                     case 3: targetStatusCode = "2"; break; // Checksheet OK
                     case 4: targetStatusCode = "3"; break; // Checksheet NG
                     case 5: targetStatusCode = "5"; break; // Quá hạn
+                    */
                 }
                 matchesStatus = targetStatusCode.equalsIgnoreCase(plan.status);
             }

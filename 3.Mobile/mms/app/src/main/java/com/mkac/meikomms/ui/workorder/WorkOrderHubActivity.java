@@ -179,7 +179,7 @@ public class WorkOrderHubActivity extends AppCompatActivity {
         }
 
         if (schemaCore == null || schemaCore.trim().isEmpty()) {
-            schemaCore = "MES_CORE";
+            schemaCore = "MES_CORE_MKHC";
         }
     }
 
@@ -199,12 +199,21 @@ public class WorkOrderHubActivity extends AppCompatActivity {
             return;
         }
 
+        if (isFeUser(userObj)) {
+            applyEnterWorkOrderDataState(btnEnterWorkOrderData, true);
+            return; // Nếu đã là FE thì mở khóa luôn, kết thúc hàm tại đây.
+        }
+
         String finalServerUrl = serverUrl;
         String finalSchemaCore = schemaCore;
         executorService.execute(() -> {
             boolean isFeDivision = false;
 
             try {
+                String token = handler.getString("api_key");
+                if (token != null && !token.isEmpty()) {
+                    HttpClient.initToken(token);
+                }
                 HttpClient.APIReturn response = HttpClient.getUserInfo(
                         WorkOrderHubActivity.this,
                         finalServerUrl,
@@ -212,10 +221,23 @@ public class WorkOrderHubActivity extends AppCompatActivity {
                         finalSchemaCore
                 );
 
+//                if (response != null && response.code == 200 && response.data != null && !response.data.isEmpty()) {
+//                    JSONObject userInfo = response.data.get(0);
+//                    String divisionName = resolveDivisionName(userInfo);
+//                    isFeDivision = "FE".equalsIgnoreCase(divisionName);
+//                }
+
                 if (response != null && response.code == 200 && response.data != null && !response.data.isEmpty()) {
-                    JSONObject userInfo = response.data.get(0);
-                    String divisionName = resolveDivisionName(userInfo);
-                    isFeDivision = "FE".equalsIgnoreCase(divisionName);
+                    // Vá lỗi ClassCastException: Xử lý an toàn kiểu dữ liệu trả về
+                    Object firstItem = response.data.get(0);
+                    if (firstItem instanceof JSONObject) {
+                        isFeDivision = isFeUser((JSONObject) firstItem);
+                    } else if (firstItem != null) {
+                        JSONObject userInfo = new JSONObject(firstItem.toString());
+                        isFeDivision = isFeUser(userInfo);
+                    }
+                } else {
+                    Log.e("WORK_ORDER_HUB", "API getUserInfo Error/Empty");
                 }
             } catch (Exception e) {
                 Log.e("WORK_ORDER_HUB", "updateEnterWorkOrderDataPermission error", e);
@@ -224,6 +246,25 @@ public class WorkOrderHubActivity extends AppCompatActivity {
             boolean finalAllowed = isFeDivision;
             runOnUiThread(() -> applyEnterWorkOrderDataState(btnEnterWorkOrderData, finalAllowed));
         });
+    }
+
+    private boolean isFeUser(JSONObject userObj) {
+        if (userObj == null) return false;
+
+        String[] keysToCheck = {
+                "Division_Name", "divisionName", "DIVISION_NAME",
+                "Department_Code", "Department", "DEPARTMENT", "DEPARTMENT_CODE"
+        };
+
+        for (String key : keysToCheck) {
+            if (userObj.has(key)) {
+                String val = userObj.optString(key, "").trim();
+                if ("FE".equalsIgnoreCase(val)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void applyEnterWorkOrderDataState(LinearLayout button, boolean enabled) {
