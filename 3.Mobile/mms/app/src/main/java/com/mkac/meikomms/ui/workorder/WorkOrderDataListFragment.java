@@ -438,6 +438,8 @@ public class WorkOrderDataListFragment extends Fragment {
                     break;
             }
 
+
+
             holder.tvTagEntryStatus.setText(status1Display);
             holder.tvTagEntryStatus.setTextColor(Color.parseColor(status1TextColor));
             androidx.core.view.ViewCompat.setBackgroundTintList(
@@ -456,23 +458,23 @@ public class WorkOrderDataListFragment extends Fragment {
             String statusColor;
 
             switch (status) {
-                case "0":
+                case "1":
                     statusDisplay = i18n("Machine Breakdown");
                     statusColor = "#B91C1C";
                     break;
-                case "1":
+                case "2":
                     statusDisplay = i18n("Preparing operation");
                     statusColor = "#2563EB";
                     break;
-                case "2":
+                case "3":
                     statusDisplay = i18n("Stop due to shortage");
                     statusColor = "#D97706";
                     break;
-                case "5":
+                case "4":
                     statusDisplay = i18n("Stop by production plan");
                     statusColor = "#4B5563";
                     break;
-                case "6":
+                case "5":
                     statusDisplay = i18n("Maintenance and repair");
                     statusColor = "#047857";
                     break;
@@ -485,11 +487,29 @@ public class WorkOrderDataListFragment extends Fragment {
             holder.tvSpecTarget.setText(i18n("Status") + ": " + statusDisplay);
             holder.tvSpecTarget.setTextColor(Color.parseColor(statusColor));
 
-            String creator = safeGet(data, "Creator", "CREATOR", "Create_By", "create_by", "Create_Full_Name", "Full_Name");
-            holder.tvActualValue.setText(i18n("Creator") + ": " + (creator.isEmpty() ? "—" : creator));
+            // --- Xử lý hiển thị Người tạo (Creator) ---
+            String createCode = safeGet(data, "Create_By", "create_by", "Creator", "CREATOR");
+            String createName = safeGet(data, "Create_Full_Name");
 
-            String requester = safeGet(data, "Request_User", "Request_user", "request_user", "Requester", "Request_By", "Full_Name");
-            holder.tvEntryMethod.setText(i18n("Requester") + ": " + (requester.isEmpty() ? "—" : requester));
+            String creatorDisplay = createCode;
+            if (!createCode.isEmpty() && !createName.isEmpty()) {
+                creatorDisplay = createCode + " - " + createName;
+            } else if (createCode.isEmpty() && !createName.isEmpty()) {
+                creatorDisplay = createName;
+            }
+            holder.tvActualValue.setText(i18n("Creator") + ": " + (creatorDisplay.isEmpty() ? "—" : creatorDisplay));
+
+            // --- Xử lý hiển thị Người yêu cầu (Requester) ---
+            String reqCode = safeGet(data, "Request_User", "Request_user", "request_user", "Requester", "Request_By");
+            String reqName = safeGet(data, "Full_Name");
+
+            String requesterDisplay = reqCode;
+            if (!reqCode.isEmpty() && !reqName.isEmpty()) {
+                requesterDisplay = reqCode + " - " + reqName;
+            } else if (reqCode.isEmpty() && !reqName.isEmpty()) {
+                requesterDisplay = reqName;
+            }
+            holder.tvEntryMethod.setText(i18n("Requester") + ": " + (requesterDisplay.isEmpty() ? "—" : requesterDisplay));
 
             // ĐÃ VÁ LỖI CÚ PHÁP: Gọi hàm độc lập tính toán số ngày trôi qua chuẩn xác
             String createDate = safeGet(
