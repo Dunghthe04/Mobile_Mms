@@ -77,7 +77,6 @@ public final class WorkOrderEntryDialogHelper {
             "Unknown Cause",
             "Other Cause"
     );
-
     public static void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 9999 && resultCode == android.app.Activity.RESULT_OK && data != null && data.getData() != null) {
             selectedFileUri = data.getData();
@@ -700,19 +699,26 @@ public final class WorkOrderEntryDialogHelper {
 
         int causePosition = 0;
         if (!rootCauseAnother.isEmpty()) {
-            // Bước 1: so khớp English key (cách lưu chuẩn)
-            for (int i = 0; i < rawCauseOptions.length; i++) {
-                if (rawCauseOptions[i].equalsIgnoreCase(rootCauseAnother)) {
-                    causePosition = i;
-                    break;
+            try {
+                int parsed = Integer.parseInt(rootCauseAnother);
+                if (parsed > 0 && parsed < rawCauseOptions.length) {
+                    causePosition = parsed;
                 }
-            }
-            // Bước 2: nếu chưa tìm thấy, so khớp chuỗi đã dịch (dữ liệu cũ)
-            if (causePosition == 0) {
-                for (int i = 0; i < causeOptions.length; i++) {
-                    if (causeOptions[i].equalsIgnoreCase(rootCauseAnother)) {
+            } catch (NumberFormatException e) {
+                // Bước 1: so khớp English key (cách lưu chuẩn cũ)
+                for (int i = 0; i < rawCauseOptions.length; i++) {
+                    if (rawCauseOptions[i].equalsIgnoreCase(rootCauseAnother)) {
                         causePosition = i;
                         break;
+                    }
+                }
+                // Bước 2: nếu chưa tìm thấy, so khớp chuỗi đã dịch (dữ liệu cũ)
+                if (causePosition == 0) {
+                    for (int i = 0; i < causeOptions.length; i++) {
+                        if (causeOptions[i].equalsIgnoreCase(rootCauseAnother)) {
+                            causePosition = i;
+                            break;
+                        }
                     }
                 }
             }
@@ -770,11 +776,11 @@ public final class WorkOrderEntryDialogHelper {
             String endTimeSecStr = convertDateTimeToUnix(etEnd.getText().toString().trim());
             String currentSit = etCurrentStatus.getText().toString().trim();
 
-            // Lưu English key vào DB (không lưu chuỗi đã dịch)
+            // Lưu giá trị từ 1-8 thay vì chuỗi
             int selectedCausePos = spinnerCause.getSelectedItemPosition();
             String selectedCause = "";
             if (selectedCausePos > 0 && selectedCausePos < rawCauseOptions.length) {
-                selectedCause = rawCauseOptions[selectedCausePos];
+                selectedCause = String.valueOf(selectedCausePos);
             }
 
             String causeDetail = etCause.getText().toString().trim();

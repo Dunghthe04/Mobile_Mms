@@ -227,12 +227,12 @@ public class LanguageAPIUtils
                     "  \"Editor\": \"Editor\",\n" +
                     "  \"Result\": \"Result\",\n" +
                     "  \"Select Cause\": \"Select Cause\",\n" +
-                    "  \"Component Wear\": \"Component Wear\",\n" +
+                    "  \"Component Wear\": \"Component wear and aging\",\n" +
                     "  \"Electrical Control Failure\": \"Electrical Control Failure\",\n" +
                     "  \"Operator Error\": \"Operator Error\",\n" +
-                    "  \"Initial Installation\": \"Initial Installation\",\n" +
-                    "  \"Setting Change\": \"Setting Change\",\n" +
-                    "  \"Misalignment\": \"Misalignment\",\n" +
+                    "  \"Initial Installation\": \"Initial installation and setup\",\n" +
+                    "  \"Setting Change\": \"Not configured or settings changed\",\n" +
+                    "  \"Misalignment\": \"Misalignment, looseness\",\n" +
                     "  \"Unknown Cause\": \"Unknown Cause\",\n" +
                     "  \"Other Cause\": \"Other Cause\",\n" +
                     "  \"Start Time\": \"Start Time\",\n" +
@@ -464,14 +464,14 @@ public class LanguageAPIUtils
                     "  \"Editor\": \"Người chỉnh sửa\",\n" +
                     "  \"Result\": \"Kết quả\",\n" +
                     "  \"Select Cause\": \"Chọn nguyên nhân\",\n" +
-                    "  \"Component Wear\": \"Mòn linh kiện\",\n" +
-                    "  \"Electrical Control Failure\": \"Lỗi điều khiển điện\",\n" +
-                    "  \"Operator Error\": \"Lỗi vận hành\",\n" +
-                    "  \"Initial Installation\": \"Lắp đặt ban đầu\",\n" +
-                    "  \"Setting Change\": \"Thay đổi cài đặt\",\n" +
-                    "  \"Misalignment\": \"Lệch căn chỉnh\",\n" +
-                    "  \"Unknown Cause\": \"Nguyên nhân không xác định\",\n" +
-                    "  \"Other Cause\": \"Nguyên nhân khác\",\n" +
+                    "  \"Component Wear\": \"Linh kiện hao mòn, lão hóa\",\n" +
+                    "  \"Electrical Control Failure\": \"Linh kiện điều khiển điện lỗi\",\n" +
+                    "  \"Operator Error\": \"Lỗi thao tác\",\n" +
+                    "  \"Initial Installation\": \"Lắp đặt, cài đặt ban đầu\",\n" +
+                    "  \"Setting Change\": \"Chưa thiết lập, thay đổi cài đặt\",\n" +
+                    "  \"Misalignment\": \"Lệch vị trí, lỏng\",\n" +
+                    "  \"Unknown Cause\": \"Không rõ nguyên nhân\",\n" +
+                    "  \"Other Cause\": \"Lý do khác\",\n" +
                     "  \"Start Time\": \"Thời gian bắt đầu thực hiện\",\n" +
                     "  \"End Time\": \"Thời gian kết thúc thực hiện\",\n" +
                     "  \"Current Status\": \"Hiện trạng\",\n" +
@@ -660,14 +660,14 @@ public class LanguageAPIUtils
                     "  \"Result\": \"結果\",\n" +
                     "  \"Start Time\": \"開始時間\",\n" +
                     "  \"Select Cause\": \"原因を選択\",\n" +
-                    "  \"Component Wear\": \"部品磨耗\",\n" +
-                    "  \"Electrical Control Failure\": \"電気制御不良\",\n" +
-                    "  \"Operator Error\": \"オペレーターミス\",\n" +
-                    "  \"Initial Installation\": \"初期取付\",\n" +
-                    "  \"Setting Change\": \"設定変更\",\n" +
-                    "  \"Misalignment\": \"芯ずれ\",\n" +
+                    "  \"Component Wear\": \"部品の摩耗および経年劣化\",\n" +
+                    "  \"Electrical Control Failure\": \"電気制御部品の故障\",\n" +
+                    "  \"Operator Error\": \"操作ミス\",\n" +
+                    "  \"Initial Installation\": \"初期設置および初期設定\",\n" +
+                    "  \"Setting Change\": \"未設定または設定変更\",\n" +
+                    "  \"Misalignment\": \"位置ずれ、緩み\",\n" +
                     "  \"Unknown Cause\": \"原因不明\",\n" +
-                    "  \"Other Cause\": \"その他の原因\",\n" +
+                    "  \"Other Cause\": \"その他の理由\",\n" +
                     "  \"End Time\": \"終了時間\",\n" +
                     "  \"Current Status\": \"現在の状況\",\n" +
                     "  \"Cause Category\": \"原因分類\",\n" +
@@ -865,12 +865,12 @@ public class LanguageAPIUtils
                     "  \"Current Status\": \"当前状态\",\n" +
                     "  \"Cause Category\": \"原因分类\",\n" +
                     "  \"Select Cause\": \"选择原因\",\n" +
-                    "  \"Component Wear\": \"零件磨损\",\n" +
-                    "  \"Electrical Control Failure\": \"电控故障\",\n" +
+                    "  \"Component Wear\": \"零部件磨损及老化\",\n" +
+                    "  \"Electrical Control Failure\": \"电气控制部件故障\",\n" +
                     "  \"Operator Error\": \"操作失误\",\n" +
-                    "  \"Initial Installation\": \"初次安装\",\n" +
-                    "  \"Setting Change\": \"参数变更\",\n" +
-                    "  \"Misalignment\": \"对位偏差\",\n" +
+                    "  \"Initial Installation\": \"初始安装与设置\",\n" +
+                    "  \"Setting Change\": \"未配置或设置已更改\",\n" +
+                    "  \"Misalignment\": \"位置偏移、松动\",\n" +
                     "  \"Unknown Cause\": \"原因不明\",\n" +
                     "  \"Other Cause\": \"其他原因\",\n" +
                     "  \"Root Cause\": \"根本原因\",\n" +
