@@ -338,6 +338,8 @@ public class LanguageAPIUtils
                     "  \"OK\": \"OK\",\n" +
                     "  \"YES\": \"YES\",\n" +
                     "  \"NO\": \"NO\",\n" +
+                    "  \"Yes\": \"Yes\",\n" +
+                    "  \"No\": \"No\",\n" +
                     "  \"CANCEL\": \"CANCEL\",\n" +
                     "  \"CONTINUE\": \"CONTINUE\",\n" +
                     "  \"BACK\": \"BACK\",\n" +
@@ -434,6 +436,7 @@ public class LanguageAPIUtils
                     "  \"Enter request reason\": \"Enter request reason\",\n" +
                     "  \"Enter work order content\": \"Enter work order content\",\n" +
                     "  \"MA Status\": \"MA Status\",\n" +
+                    "  \"Passed Date\": \"Passed Date\",\n" +
                     "  \"Completed\": \"Completed\",\n" +
                     "  \"Incomplete\": \"Incomplete\",\n" +
                     "  \"Canceled\": \"Canceled\",\n" +
@@ -456,6 +459,8 @@ public class LanguageAPIUtils
                     "  \"Enter maintenance data\": \"Nhập dữ liệu bảo dưỡng\",\n" +
                     "  \"Modification History\": \"Lịch sử thay đổi\",\n" +
                     "  \"MA status\": \"Trạng thái MA báo\",\n" +
+                    "  \"MA Status\": \"Trạng thái MA báo\",\n" +
+                    "  \"Passed Date\": \"Ngày trải qua\",\n" +
                     "  \"Time arises\": \"Thời gian phát sinh\",\n" +
                     "  \"Preparing operation\": \"Chuẩn bị thao tác\",\n" +
                     "  \"Stop due to shortage\": \"Dừng thiếu tồn\",\n" +
@@ -571,6 +576,8 @@ public class LanguageAPIUtils
                     "  \"OK\": \"OK\",\n" +
                     "  \"YES\": \"CÓ\",\n" +
                     "  \"NO\": \"KHÔNG\",\n" +
+                    "  \"Yes\": \"Có\",\n" +
+                    "  \"No\": \"Không\",\n" +
                     "  \"CANCEL\": \"THOÁT\",\n" +
                     "  \"BACK\": \"TRỞ LẠI\",\n" +
                     "  \"STOP\": \"DỪNG\",\n" +
@@ -767,6 +774,8 @@ public class LanguageAPIUtils
                     "  \"OK\": \"OK\",\n" +
                     "  \"YES\": \"はい\",\n" +
                     "  \"NO\": \"いいえ\",\n" +
+                    "  \"Yes\": \"はい\",\n" +
+                    "  \"No\": \"いいえ\",\n" +
                     "  \"CANCEL\": \"キャンセル\",\n" +
                     "  \"BACK\": \"戻る\",\n" +
                     "  \"STOP\": \"停止\",\n" +
@@ -807,6 +816,7 @@ public class LanguageAPIUtils
                     "  \"Enter request reason\": \"依頼理由を入力\",\n" +
                     "  \"Enter work order content\": \"W/O内容を入力\",\n" +
                     "  \"MA Status\": \"MA報告状態\",\n" +
+                    "  \"Passed Date\": \"経過日数\",\n" +
                     "  \"Completed\": \"完了\",\n" +
                     "  \"Incomplete\": \"未完了\",\n" +
                     "  \"Overdue\": \"期限切れ\",\n" +
@@ -969,6 +979,8 @@ public class LanguageAPIUtils
                     "  \"OK\": \"确定\",\n" +
                     "  \"YES\": \"是\",\n" +
                     "  \"NO\": \"否\",\n" +
+                    "  \"Yes\": \"是\",\n" +
+                    "  \"No\": \"否\",\n" +
                     "  \"CANCEL\": \"取消\",\n" +
                     "  \"BACK\": \"返回\",\n" +
                     "  \"STOP\": \"停止\",\n" +
@@ -1007,6 +1019,7 @@ public class LanguageAPIUtils
                     "  \"Enter request reason\": \"输入申请原因\",\n" +
                     "  \"Enter work order content\": \"输入工单内容\",\n" +
                     "  \"MA Status\": \"MA报告状态\",\n" +
+                    "  \"Passed Date\": \"已过天数\",\n" +
                     "  \"Incomplete\": \"未完成\",\n" +
                     "  \"Completed\": \"完了\",\n" +
                     "  \"Canceled\": \"已取消\",\n" +
