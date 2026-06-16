@@ -276,8 +276,10 @@ public class HttpClient
             return new APIReturn(code, message, dataList);
 
         } catch (IOException e) {
+            Log.e("WO_WORK_ORDER", "executeRequest IOException: " + e.getMessage(), e);
             return new APIReturn(403, "IOException|| " + e.getMessage(), null);
         } catch (JSONException e) {
+            Log.e("WO_WORK_ORDER", "executeRequest JSONException: " + e.getMessage(), e);
             return new APIReturn(404, "JSONException|| " + e.getMessage(), null);
         }
     }

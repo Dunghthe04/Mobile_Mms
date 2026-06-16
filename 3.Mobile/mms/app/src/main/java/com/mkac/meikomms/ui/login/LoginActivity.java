@@ -442,10 +442,10 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    // Hàm khi Login sẽ vào ListWorkOrder
+    // Hàm khi Login sẽ vào màn hình chọn hệ thống
     private void proceedLogin() {
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            Intent intent = new Intent(this, com.mkac.meikomms.ui.workorder.WorkOrderHubActivity.class);
+            Intent intent = new Intent(this, com.mkac.meikomms.ui.home.SystemSelectionActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             finish();

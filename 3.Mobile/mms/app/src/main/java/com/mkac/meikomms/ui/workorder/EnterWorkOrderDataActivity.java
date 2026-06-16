@@ -386,19 +386,25 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
 
         currentChildAdapter = childAdapter;
 
-        executorService.execute(() -> {
-            HttpClient.APIReturn rs = HttpClient.getChildMaintenanceItems(this, serverUrl, schemaMms, parentItem.checkId, taskId);
-            if (rs.code == 200 && rs.data != null) {
-                List<MaintenanceItem> loadedChildren = new ArrayList<>();
-                for (JSONObject row : rs.data) loadedChildren.add(parseItem(row, parentItem.checkId));
-                runOnUiThread(() -> {
-                    childItems.clear();
-                    childItems.addAll(loadedChildren);
-                    childItemsByParent.put(parentItem.checkId, new ArrayList<>(childItems));
-                    childAdapter.notifyDataSetChanged();
-                });
-            }
-        });
+        if (childItemsByParent.containsKey(parentItem.checkId) && childItemsByParent.get(parentItem.checkId) != null && !childItemsByParent.get(parentItem.checkId).isEmpty()) {
+            childItems.clear();
+            childItems.addAll(childItemsByParent.get(parentItem.checkId));
+            childAdapter.notifyDataSetChanged();
+        } else {
+            executorService.execute(() -> {
+                HttpClient.APIReturn rs = HttpClient.getChildMaintenanceItems(this, serverUrl, schemaMms, parentItem.checkId, taskId);
+                if (rs.code == 200 && rs.data != null) {
+                    List<MaintenanceItem> loadedChildren = new ArrayList<>();
+                    for (JSONObject row : rs.data) loadedChildren.add(parseItem(row, parentItem.checkId));
+                    runOnUiThread(() -> {
+                        childItems.clear();
+                        childItems.addAll(loadedChildren);
+                        childItemsByParent.put(parentItem.checkId, new ArrayList<>(childItems));
+                        childAdapter.notifyDataSetChanged();
+                    });
+                }
+            });
+        }
 
         bottomSheetDialog.setOnDismissListener(dialog -> currentChildAdapter = null);
 

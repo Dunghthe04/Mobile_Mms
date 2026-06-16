@@ -256,11 +256,21 @@
             tools:text="STEP_ID_102" />
 
         <!-- Footer -->
+        <TextView
+            android:id="@+id/tv_content_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Nội dung W/O"
+            android:textColor="#6B7280"
+            android:textSize="13sp"
+            android:textStyle="normal" />
+
         <LinearLayout
             android:id="@+id/ll_footer_row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="2dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 

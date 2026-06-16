@@ -391,8 +391,19 @@ public class WorkOrderDataListFragment extends Fragment {
             String woCode = safeGet(data, "WO_CODE", "Wo_Code", "wo_code", "WO_Code_Today");
             holder.tvParamName.setText(woCode.isEmpty() ? "—" : woCode);
 
-            String machineInline = safeGet(data, "Machine_Id", "MACHINE_ID", "machine_id", "MachineId", "Machine_Name");
-            holder.tvTagParamType.setText(machineInline.isEmpty() ? i18n("Machine") : machineInline);
+            String machineId = safeGet(data, "Machine_Id", "MACHINE_ID", "machine_id", "MachineId");
+            String machineName = safeGet(data, "Machine_Name", "MACHINE_NAME", "machine_name", "MachineName");
+            String machineInline;
+            if (!machineId.isEmpty() && !machineName.isEmpty()) {
+                machineInline = machineId + " - " + machineName;
+            } else if (!machineId.isEmpty()) {
+                machineInline = machineId;
+            } else if (!machineName.isEmpty()) {
+                machineInline = machineName;
+            } else {
+                machineInline = i18n("Machine");
+            }
+            holder.tvTagParamType.setText(machineInline);
 
             String workTypeInline = safeGet(data, "Work_Type", "WORK_TYPE", "work_type", "WorkType");
             holder.tvTagUom.setText(workTypeInline.isEmpty() ? "BM" : workTypeInline);
@@ -520,8 +531,9 @@ public class WorkOrderDataListFragment extends Fragment {
             String elapsed = calculateElapsedDays(reqDate);
             holder.tvDeviationAlert.setText(i18n("Elapsed days") + ": " + elapsed);
 
+            if (holder.tvContentLabel != null) holder.tvContentLabel.setText(i18n("Work Order Content") + ":");
             String content = safeGet(data, "Request_Reason", "REQUEST_REASON", "Content", "content", "Note");
-            holder.tvEntryInstruction.setText(content.isEmpty() ? i18n("Request reason") : content);
+            holder.tvEntryInstruction.setText(content.isEmpty() ? "" : content);
 
             holder.tvHiddenParamId.setText(woCode);
 
@@ -539,6 +551,7 @@ public class WorkOrderDataListFragment extends Fragment {
             TextView tvTagEntryStatus, tvSpecMin, tvSpecMax, tvSpecTarget;
             TextView tvActualValue, tvEntryMethod, tvDeviationAlert;
             TextView tvHiddenParamId, tvHiddenStepId, tvEntryInstruction, tvBtnEnterWo;
+            TextView tvContentLabel;
 
             VH(@NonNull View itemView) {
                 super(itemView);
@@ -559,6 +572,7 @@ public class WorkOrderDataListFragment extends Fragment {
                 tvHiddenStepId = itemView.findViewById(R.id.tv_hidden_step_id);
                 tvEntryInstruction = itemView.findViewById(R.id.tv_entry_instruction);
                 tvBtnEnterWo = itemView.findViewById(R.id.tv_btn_enter_wo);
+                tvContentLabel = itemView.findViewById(R.id.tv_content_label);
             }
         }
 
