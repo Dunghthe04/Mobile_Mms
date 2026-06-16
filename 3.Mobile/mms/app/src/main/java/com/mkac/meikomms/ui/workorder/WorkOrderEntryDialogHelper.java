@@ -59,7 +59,8 @@ public final class WorkOrderEntryDialogHelper {
 
     private WorkOrderEntryDialogHelper() {}
 
-    private static Uri selectedFileUri = null;
+//    private static Uri selectedFileUri = null;
+    private static List<Uri> selectedFileUris = new ArrayList<>();
     private static String uploadedFileName = "";
     private static TextView tvAttachmentStatusView = null;
     private static ImageView imgAttachmentIconView = null;
@@ -77,12 +78,39 @@ public final class WorkOrderEntryDialogHelper {
             "Unknown Cause",
             "Other Cause"
     );
+//    public static void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        if (requestCode == 9999 && resultCode == android.app.Activity.RESULT_OK && data != null && data.getData() != null) {
+//            selectedFileUri = data.getData();
+//            if (tvAttachmentStatusView != null && dialogContext != null) {
+//                String fileName = getFileName(dialogContext, selectedFileUri);
+//                tvAttachmentStatusView.setText(fileName);
+//                tvAttachmentStatusView.setPaintFlags(tvAttachmentStatusView.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+//                if (imgAttachmentIconView != null) {
+//                    imgAttachmentIconView.setImageResource(R.drawable.ic_paperclip);
+//                }
+//            }
+//        }
+//    }
+
     public static void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 9999 && resultCode == android.app.Activity.RESULT_OK && data != null && data.getData() != null) {
-            selectedFileUri = data.getData();
-            if (tvAttachmentStatusView != null && dialogContext != null) {
-                String fileName = getFileName(dialogContext, selectedFileUri);
-                tvAttachmentStatusView.setText(fileName);
+        if (requestCode == 9999 && resultCode == android.app.Activity.RESULT_OK && data != null) {
+            selectedFileUris.clear();
+
+            // Trường hợp chọn nhiều file cùng lúc
+            if (data.getClipData() != null) {
+                int count = data.getClipData().getItemCount();
+                for (int i = 0; i < count; i++) {
+                    selectedFileUris.add(data.getClipData().getItemAt(i).getUri());
+                }
+            }
+            // Trường hợp chỉ chọn 1 file
+            else if (data.getData() != null) {
+                selectedFileUris.add(data.getData());
+            }
+
+            // Hiển thị trạng thái lên UI
+            if (!selectedFileUris.isEmpty() && tvAttachmentStatusView != null && dialogContext != null) {
+                tvAttachmentStatusView.setText(buildAttachmentSummaryText(dialogContext, selectedFileUris));
                 tvAttachmentStatusView.setPaintFlags(tvAttachmentStatusView.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
                 if (imgAttachmentIconView != null) {
                     imgAttachmentIconView.setImageResource(R.drawable.ic_paperclip);
@@ -90,6 +118,8 @@ public final class WorkOrderEntryDialogHelper {
             }
         }
     }
+
+
 
     private static String getFileName(Context context, Uri uri) {
         String result = null;
@@ -118,8 +148,66 @@ public final class WorkOrderEntryDialogHelper {
         return result;
     }
 
+    private static String buildAttachmentSummaryText(Context context, List<Uri> fileUris) {
+        if (fileUris == null || fileUris.isEmpty()) {
+            return "";
+        }
+
+        if (fileUris.size() == 1) {
+            return getFileName(context, fileUris.get(0));
+        }
+
+        String firstName = getFileName(context, fileUris.get(0));
+        return firstName + " + " + (fileUris.size() - 1) + " more";
+    }
+
+    private static String buildUploadedSummaryText(List<JSONObject> uploadedFiles) {
+        if (uploadedFiles == null || uploadedFiles.isEmpty()) {
+            return "";
+        }
+
+        String firstFileName = "";
+        int fileCount = 0;
+        for (JSONObject item : uploadedFiles) {
+            if (item == null) continue;
+            String fileName = item.optString("value");
+            if (fileName.isEmpty()) continue;
+            if (firstFileName.isEmpty()) {
+                firstFileName = fileName;
+            }
+            fileCount++;
+        }
+
+        if (firstFileName.isEmpty()) {
+            return "";
+        }
+
+        if (fileCount <= 1) {
+            return firstFileName;
+        }
+
+        return firstFileName + " + " + (fileCount - 1) + " more";
+    }
+
+    private static String extractFirstUploadedFileName(List<JSONObject> uploadedFiles) {
+        if (uploadedFiles == null || uploadedFiles.isEmpty()) {
+            return "";
+        }
+
+        for (JSONObject item : uploadedFiles) {
+            if (item == null) continue;
+            String fileName = item.optString("value");
+            if (!fileName.isEmpty()) {
+                return fileName;
+            }
+        }
+
+        return "";
+    }
+
     private static void clearState() {
-        selectedFileUri = null;
+//        selectedFileUri = null;
+        selectedFileUris.clear();
         uploadedFileName = "";
         tvAttachmentStatusView = null;
         imgAttachmentIconView = null;
@@ -221,7 +309,8 @@ public final class WorkOrderEntryDialogHelper {
         imgAttachmentIconView = dialogView.findViewById(R.id.img_attachment_icon);
 
         dialogContext = context;
-        selectedFileUri = null;
+//        selectedFileUri = null;
+        selectedFileUris.clear();
         uploadedFileName = "";
 
         String existingFile = safeGet(workOrder, "File_Wo");
@@ -289,15 +378,17 @@ public final class WorkOrderEntryDialogHelper {
         btnChooseFile.setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             intent.setType("*/*");
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             if (context instanceof android.app.Activity) {
                 ((android.app.Activity) context).startActivityForResult(
-                        Intent.createChooser(intent, i18n("Select attachment document")), 9999);
+                        Intent.createChooser(intent, i18n("Select one or more photos")), 9999);
             }
         });
 
         btnUploadFile.setOnClickListener(v -> {
-            if (selectedFileUri == null) {
+            if (selectedFileUris.isEmpty()) {
                 Toast.makeText(context, i18n("Please select a file before uploading"), Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -332,20 +423,22 @@ public final class WorkOrderEntryDialogHelper {
                         context,
                         finalServerDynamicUrl,
                         finalTaskId,
-                        selectedFileUri
+//                        selectedFileUri
+                        selectedFileUris
                 );
 
                 new Handler(Looper.getMainLooper()).post(() -> {
                     uploadProgress.dismiss();
+
                     if (result != null && result.code == 200 && result.data != null && !result.data.isEmpty()) {
-                        String fileVal = result.data.get(0).optString("value");
+                        String fileVal = extractFirstUploadedFileName(result.data);
                         if (!fileVal.isEmpty()) {
                             uploadedFileName = fileVal;
                             if (tvAttachmentStatusView != null) {
-                                tvAttachmentStatusView.setText(fileVal);
+                                tvAttachmentStatusView.setText(buildUploadedSummaryText(result.data));
                                 tvAttachmentStatusView.setPaintFlags(tvAttachmentStatusView.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
                             }
-                            Toast.makeText(context, i18n("Document uploaded successfully"), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, i18n("Photos uploaded successfully"), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(context, i18n("Uploaded successfully but failed to get file name"), Toast.LENGTH_SHORT).show();
                         }

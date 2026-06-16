@@ -10,6 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -49,6 +51,15 @@ public class MaintenanceTabFragment extends Fragment {
     private String schemaCore = "";
     private String schemaMms = "";
     private String machineId = "";
+    private final ActivityResultLauncher<Intent> enterWorkOrderLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == android.app.Activity.RESULT_OK && isAdded()) {
+                    // Làm mới dữ liệu tab bảo trì ngay khi lưu thành công
+                    reloadData();
+                }
+            }
+    );
 
     private static final String[] FILTER_STATUS_KEYS = {
             "All",
@@ -262,7 +273,9 @@ public class MaintenanceTabFragment extends Fragment {
             intent.putExtra("STATUS", safe(plan.status));
             intent.putExtra("ASSIGNEE_NAME", safe(plan.assigneeName));
             intent.putExtra("EXECUTOR_NAME", safe(plan.executorName));
-            startActivity(intent);
+//            startActivity(intent);
+
+            enterWorkOrderLauncher.launch(intent);
         });
         binding.rvMaintenanceTasks.setAdapter(adapter);
     }

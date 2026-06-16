@@ -16,6 +16,9 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.model.GlideUrl;
+import com.bumptech.glide.load.model.LazyHeaders;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
@@ -72,13 +75,94 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
     private MaintenanceItem pendingUploadItem;
     private String lastSaveErrorMessage = null;
     private final ActivityResultLauncher<String> imagePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.GetContent(),
-            uri -> {
-                if (uri != null && pendingUploadItem != null) {
-                    uploadImageForItem(pendingUploadItem, uri);
+            new ActivityResultContracts.GetMultipleContents(),
+            uris -> {
+                if (uris != null && !uris.isEmpty() && pendingUploadItem != null) {
+                    uploadMultipleImagesForItem(pendingUploadItem, uris);
                 }
             }
     );
+
+    private void uploadMultipleImagesForItem(MaintenanceItem item, List<Uri> uris) {
+        if (item == null || uris == null || uris.isEmpty()) return;
+
+        Toast.makeText(this, i18n("Uploading " + uris.size() + " images..."), Toast.LENGTH_SHORT).show();
+
+        // Display local images immediately in the preview list
+        runOnUiThread(() -> {
+            item.ensureImagePaths();
+            for (Uri uri : uris) {
+                item.addImagePath(uri.toString());
+            }
+            item.refreshChangedState();
+            if (currentChildAdapter != null) currentChildAdapter.notifyDataSetChanged();
+            if (parentAdapter != null) parentAdapter.notifyDataSetChanged();
+        });
+
+        executorService.execute(() -> {
+            HttpClient.APIReturn rs = HttpClient.uploadMultiplePreventiveImages(this, serverUrl, taskId, item.checkId, uris);
+
+            if (rs != null && rs.code == 200 && rs.data != null) {
+                List<String> uploadedReferences = new ArrayList<>();
+
+                try {
+                    for (JSONObject obj : rs.data) {
+                        String rawJsonStr = obj.optString("value");
+                        if (rawJsonStr.isEmpty()) {
+                            rawJsonStr = obj.toString();
+                        }
+
+                        if (rawJsonStr.contains("[")) {
+                            int start = rawJsonStr.indexOf("[");
+                            int end = rawJsonStr.lastIndexOf("]") + 1;
+                            String finalJsonArray = rawJsonStr.substring(start, end);
+
+                            JSONArray arr = new JSONArray(finalJsonArray);
+                            for (int i = 0; i < arr.length(); i++) {
+                                String rawPath = arr.optString(i);
+                                if (!rawPath.isEmpty()) {
+                                    uploadedReferences.add(normalizeImageReference(rawPath));
+                                }
+                            }
+                        } else if (!rawJsonStr.isEmpty() && !rawJsonStr.startsWith("{")) {
+                            uploadedReferences.add(normalizeImageReference(rawJsonStr));
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e("MAINTENANCE_UPLOAD_PARSE_ERR", "Lỗi phân rã chuỗi JSON Array trả về từ Server", e);
+                }
+
+                if (!uploadedReferences.isEmpty()) {
+                    runOnUiThread(() -> {
+                        // Remove temporary local Uris
+                        for (Uri uri : uris) {
+                            item.imagePaths.remove(uri.toString());
+                        }
+                        // Merge the verified server URLs
+                        mergeUploadedImages(item, uploadedReferences);
+
+                        if (currentChildAdapter != null) currentChildAdapter.notifyDataSetChanged();
+                        if (parentAdapter != null) parentAdapter.notifyDataSetChanged();
+                        Toast.makeText(this, i18n("Uploaded successfully " + uploadedReferences.size() + " images for: ") + item.checkName, Toast.LENGTH_SHORT).show();
+                    });
+                    return;
+                }
+            }
+
+            // Rollback local Uris if upload failed
+            runOnUiThread(() -> {
+                for (Uri uri : uris) {
+                    item.imagePaths.remove(uri.toString());
+                }
+                item.refreshChangedState();
+                if (currentChildAdapter != null) currentChildAdapter.notifyDataSetChanged();
+                if (parentAdapter != null) parentAdapter.notifyDataSetChanged();
+            });
+
+            String errMsg = (rs != null) ? rs.message : i18n("No response from server");
+            runOnUiThread(() -> Toast.makeText(this, i18n("Images upload error") + ": " + errMsg, Toast.LENGTH_LONG).show());
+        });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +179,10 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         loadParentCheckList();
 
         binding.btnSaveMaintenance.setOnClickListener(v -> executeSaveAction());
+        if (binding.btnCreateWmsRequest != null) {
+            binding.btnCreateWmsRequest.setText(i18n("Tạo yêu cầu xuất kho"));
+            binding.btnCreateWmsRequest.setOnClickListener(v -> createWmsRequestFromActivity());
+        }
     }
 
     private void loadConfiguration() {
@@ -275,6 +363,14 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         DialogChildMaintenanceItemsBinding dialogBinding = DialogChildMaintenanceItemsBinding.inflate(getLayoutInflater());
         bottomSheetDialog.setContentView(dialogBinding.getRoot());
         LanguageAPIUtils.setLang(dialogBinding.getRoot());
+
+        if (dialogBinding.btnCreateWmsRequestChild != null) {
+            dialogBinding.btnCreateWmsRequestChild.setText(i18n("Create Warehouse Request"));
+        }
+        if (dialogBinding.btnConfirmChildData != null) {
+            dialogBinding.btnConfirmChildData.setText(i18n("CONFIRM CHILD ITEMS"));
+        }
+
         dialogBinding.tvDialogParentTitle.setText(parentItem.checkName);
         dialogBinding.rvChildItems.setLayoutManager(new LinearLayoutManager(this));
         List<MaintenanceItem> childItems = new ArrayList<>();
@@ -305,6 +401,101 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         });
 
         bottomSheetDialog.setOnDismissListener(dialog -> currentChildAdapter = null);
+
+        if (dialogBinding.btnCreateWmsRequestChild != null) {
+            dialogBinding.btnCreateWmsRequestChild.setOnClickListener(v -> {
+                PreferenceHandler prefHandler = new PreferenceHandler(this);
+                String username = prefHandler.getString("Userlogin");
+                JSONObject userProfile = prefHandler.getJsonObject("user");
+                if (username.isEmpty() && userProfile != null) {
+                    username = userProfile.optString("username", userProfile.optString("User_Name", ""));
+                }
+
+                if (childItems.isEmpty()) {
+                    Toast.makeText(this, i18n("No child materials available to create warehouse request"), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                List<JSONObject> addMaterialsList = new ArrayList<>();
+                try {
+                    for (MaintenanceItem child : childItems) {
+                        String matId = child.checkId;
+                        if (matId == null || matId.isEmpty()) continue;
+
+                        JSONObject matObj = new JSONObject();
+                        matObj.put("Item_Id", matId);
+                        matObj.put("Item_Qty", "1");
+                        matObj.put("Machine_Id", machineId);
+                        matObj.put("Purpose", "Maintain");
+                        matObj.put("User_Export", username);
+                        addMaterialsList.add(matObj);
+                    }
+                } catch (Exception e) {
+                    Toast.makeText(this, i18n("Error parsing material list") + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (addMaterialsList.isEmpty()) {
+                    Toast.makeText(this, i18n("No valid materials found for warehouse release"), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String displayMachine = machineName.isEmpty() ? machineId : machineId + "-" + machineName;
+                String requestNote = i18n("Warehouse request for maintenance machine") + " " + displayMachine;
+                String requestDateUnixStr = String.valueOf(System.currentTimeMillis() / 1000L);
+
+                String serverUrlStr = prefHandler.getString("server_url");
+                if (serverUrlStr.isEmpty()) {
+                    ConfigManager config = new ConfigManager(this);
+                    // SỬA LỖI TẠI ĐÂY: Sử dụng 1 tham số theo cấu trúc hàm getProperty() nguyên bản
+                    serverUrlStr = config.getProperty("server_url");
+                    if (serverUrlStr == null || serverUrlStr.isEmpty()) {
+                        serverUrlStr = "http://192.86.0.225";
+                    }
+                }
+
+                dialogBinding.btnCreateWmsRequestChild.setEnabled(false);
+                dialogBinding.btnCreateWmsRequestChild.setAlpha(0.5f);
+
+                android.app.ProgressDialog wmsProgress = new android.app.ProgressDialog(this);
+                wmsProgress.setMessage(i18n("Creating warehouse release request..."));
+                wmsProgress.setCancelable(false);
+                wmsProgress.show();
+
+                final String finalUsername = username;
+                final String finalServerUrl = serverUrlStr;
+                final List<JSONObject> finalMaterials = addMaterialsList;
+
+                executorService.execute(() -> {
+                    String generatedRequestId = "REQ_001_" + requestDateUnixStr + "_" + (int)(Math.random() * 100);
+
+                    HttpClient.APIReturn result = HttpClient.saveRequestMaterialMaintenance(
+                            this,
+                            requestDateUnixStr,
+                            "FE",
+                            requestNote,
+                            finalMaterials,
+                            finalServerUrl,
+                            finalUsername,
+                            "Maintain",
+                            machineId,
+                            generatedRequestId
+                    );
+
+                    runOnUiThread(() -> {
+                        wmsProgress.dismiss();
+                        dialogBinding.btnCreateWmsRequestChild.setEnabled(true);
+                        dialogBinding.btnCreateWmsRequestChild.setAlpha(1.0f);
+                        if (result != null && result.code == 200) {
+                            Toast.makeText(this, i18n("Warehouse release request created successfully!"), Toast.LENGTH_SHORT).show();
+                        } else {
+                            String errMsg = (result != null) ? result.message : i18n("No response from server");
+                            Toast.makeText(this, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
+                        }
+                    });
+                });
+            });
+        }
 
         dialogBinding.btnConfirmChildData.setOnClickListener(v -> {
             syncParentFromChildren(parentItem, childItems);
@@ -449,6 +640,125 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                 Log.e("SAVE_ACTION_ERROR", "Lỗi trong quá trình thực thi save", e);
                 runOnUiThread(() -> Toast.makeText(this, i18n("System error while saving") + ": " + e.getLocalizedMessage(), Toast.LENGTH_SHORT).show());
             }
+        });
+     }
+
+    private void createWmsRequestFromActivity() {
+        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(this);
+        progressDialog.setMessage(i18n("Creating warehouse release request..."));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        executorService.execute(() -> {
+            PreferenceHandler prefHandler = new PreferenceHandler(this);
+            String username = prefHandler.getString("Userlogin");
+            JSONObject userProfile = prefHandler.getJsonObject("user");
+            if (username.isEmpty() && userProfile != null) {
+                username = userProfile.optString("username", userProfile.optString("User_Name", ""));
+            }
+            if (username.isEmpty()) {
+                username = currentUserId;
+            }
+
+            List<MaintenanceItem> allChildItems = new ArrayList<>();
+            boolean fetchSuccess = true;
+            String errorMsg = null;
+
+            for (MaintenanceItem parent : parentItems) {
+                if (parent.childCount > 0) {
+                    List<MaintenanceItem> children = childItemsByParent.get(parent.checkId);
+                    if (children == null) {
+                        HttpClient.APIReturn rs = HttpClient.getChildMaintenanceItems(this, serverUrl, schemaMms, parent.checkId, taskId);
+                        if (rs != null && rs.code == 200 && rs.data != null) {
+                            children = new ArrayList<>();
+                            for (JSONObject row : rs.data) {
+                                children.add(parseItem(row, parent.checkId));
+                            }
+                            childItemsByParent.put(parent.checkId, children);
+                        } else {
+                            fetchSuccess = false;
+                            errorMsg = (rs != null) ? rs.message : "Error fetching children for " + parent.checkName;
+                            break;
+                        }
+                    }
+                    if (children != null) {
+                        allChildItems.addAll(children);
+                    }
+                }
+            }
+
+            if (!fetchSuccess) {
+                final String finalErr = errorMsg;
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    Toast.makeText(this, i18n("Error fetching child materials") + ": " + finalErr, Toast.LENGTH_LONG).show();
+                });
+                return;
+            }
+
+            if (allChildItems.isEmpty()) {
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    Toast.makeText(this, i18n("No materials available to create warehouse request"), Toast.LENGTH_SHORT).show();
+                });
+                return;
+            }
+
+            // Group by Item_Id and sum the quantities
+            java.util.Map<String, Integer> materialQuantities = new java.util.HashMap<>();
+            for (MaintenanceItem child : allChildItems) {
+                String matId = child.checkId;
+                if (matId == null || matId.isEmpty()) continue;
+                int currentQty = materialQuantities.containsKey(matId) ? materialQuantities.get(matId) : 0;
+                materialQuantities.put(matId, currentQty + 1);
+            }
+
+            List<JSONObject> addMaterialsList = new ArrayList<>();
+            try {
+                for (java.util.Map.Entry<String, Integer> entry : materialQuantities.entrySet()) {
+                    JSONObject matObj = new JSONObject();
+                    matObj.put("Item_Id", entry.getKey());
+                    matObj.put("Item_Qty", entry.getValue());
+                    matObj.put("Machine_Id", machineId);
+                    matObj.put("Purpose", "Maintain");
+                    matObj.put("User_Export", username);
+                    addMaterialsList.add(matObj);
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    Toast.makeText(this, i18n("Error parsing material list") + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+                return;
+            }
+
+            String displayMachine = machineName.isEmpty() ? machineId : machineId + "-" + machineName;
+            String requestNote = "Yêu cầu xuất kho cho bảo dưỡng máy " + displayMachine;
+            String requestDateUnixStr = String.valueOf(System.currentTimeMillis() / 1000L);
+            String generatedRequestId = "REQ_001_" + new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date()) + "_" + (int)(Math.random() * 100);
+
+            HttpClient.APIReturn result = HttpClient.createWmsExportRequest(
+                    this,
+                    requestDateUnixStr,
+                    "FE",
+                    requestNote,
+                    addMaterialsList,
+                    serverUrl,
+                    username,
+                    "Maintain",
+                    machineId,
+                    generatedRequestId
+            );
+
+            runOnUiThread(() -> {
+                progressDialog.dismiss();
+                if (result != null && result.code == 200) {
+                    Toast.makeText(this, i18n("Warehouse release request created successfully!"), Toast.LENGTH_SHORT).show();
+                } else {
+                    String errMsg = (result != null) ? result.message : i18n("No response from server");
+                    Toast.makeText(this, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
+                }
+            });
         });
     }
 
@@ -1008,44 +1318,35 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
             btnClose.setOnClickListener(v -> dialog.dismiss());
             layout.setOnClickListener(v -> dialog.dismiss());
 
-            final String cleanPath = imagePath.trim();
+            final String cleanPath = normalizeImageReference(imagePath.trim());
 
-            // LUỒNG 1: Nếu là ảnh liên kết từ máy chủ Web (Hỗ trợ khi reload hoặc vào lại lệnh bảo trì)
+            Object loadModel = cleanPath;
             if (cleanPath.startsWith("http://") || cleanPath.startsWith("https://")) {
-                executorService.execute(() -> {
-                    try {
-                        java.net.URL url = new java.net.URL(cleanPath);
-                        java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-                        conn.setDoInput(true);
-                        conn.setConnectTimeout(8000);
-                        conn.connect();
-
-                        java.io.InputStream input = conn.getInputStream();
-                        final android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(input);
-
-                        runOnUiThread(() -> {
-                            if (bitmap != null) {
-                                imageView.setImageBitmap(bitmap);
-                            } else {
-                                Toast.makeText(EnterWorkOrderDataActivity.this, i18n("Image load error"), Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    } catch (Exception e) {
-                        Log.e("IMAGE_PREVIEW_NET_ERR", "Lỗi tải ảnh từ Web URL: " + cleanPath, e);
-                        runOnUiThread(() -> Toast.makeText(EnterWorkOrderDataActivity.this, i18n("Image connection error"), Toast.LENGTH_SHORT).show());
-                    }
-                });
-            }
-            // LUỒNG 2: Nếu là ảnh bộ nhớ đệm cục bộ thiết bị (Hỗ trợ xem ngay lập tức khi vừa upload xong)
-            else {
-                try {
-                    Uri localUri = Uri.parse(cleanPath);
-                    imageView.setImageURI(localUri);
-                } catch (Exception e) {
-                    Log.e("IMAGE_PREVIEW_LOCAL_ERR", "Lỗi nạp cấu trúc URI ảnh nội bộ: " + cleanPath, e);
-                    Toast.makeText(EnterWorkOrderDataActivity.this, i18n("Image format invalid"), Toast.LENGTH_SHORT).show();
+                String token = HttpClient.getToken();
+                if (token != null && !token.trim().isEmpty()) {
+                    loadModel = new GlideUrl(cleanPath, new LazyHeaders.Builder()
+                            .addHeader("Authorization", "Bearer " + token.trim())
+                            .build());
                 }
             }
+
+            Glide.with(EnterWorkOrderDataActivity.this)
+                    .load(loadModel)
+                    .fitCenter()
+                    .listener(new com.bumptech.glide.request.RequestListener<android.graphics.drawable.Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(com.bumptech.glide.load.engine.GlideException e, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
+                            Log.e("IMAGE_PREVIEW_LOAD_ERR", "Lỗi tải ảnh preview: " + String.valueOf(model), e);
+                            runOnUiThread(() -> Toast.makeText(EnterWorkOrderDataActivity.this, i18n("Image load error"), Toast.LENGTH_SHORT).show());
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, com.bumptech.glide.request.target.Target<android.graphics.drawable.Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                            return false;
+                        }
+                    })
+                    .into(imageView);
 
             dialog.show();
         });
@@ -1156,38 +1457,55 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         String cleaned = cleanNull(value);
         if (cleaned.isEmpty()) return "";
 
+        if (cleaned.startsWith("[")) {
+            try {
+                JSONArray arr = new JSONArray(cleaned);
+                if (arr.length() > 0) cleaned = arr.optString(0).trim();
+            } catch (Exception ignored) {}
+        }
+
         int queryIndex = cleaned.indexOf('?');
         if (queryIndex >= 0) {
             cleaned = cleaned.substring(0, queryIndex);
         }
 
-        int slashIndex = Math.max(cleaned.lastIndexOf('/'), cleaned.lastIndexOf('\\'));
-        if (slashIndex >= 0 && slashIndex < cleaned.length() - 1) {
-            return cleaned.substring(slashIndex + 1).trim();
+        int lastSlash = cleaned.lastIndexOf('/');
+        int lastBackslash = cleaned.lastIndexOf('\\');
+        int cutIndex = Math.max(lastSlash, lastBackslash);
+
+        if (cutIndex >= 0 && cutIndex < cleaned.length() - 1) {
+            String fileName = cleaned.substring(cutIndex + 1).replace("\"", "").trim();
+            return fileName;
         }
-        return cleaned.trim();
+
+        return cleaned.replace("\"", "").trim();
     }
 
     private String resolveUploadedImageReference(HttpClient.APIReturn rs, Uri fallbackUri) {
         if (rs != null && rs.data != null) {
             for (JSONObject row : rs.data) {
                 String candidate = cleanNull(pickFirst(
+                        row.optString("Images_1"),
+                        row.optString("Images"),
+                        row.optString("Image_List"),
                         row.optString("value"),
                         row.optString("Value"),
                         row.optString("fileName"),
-                        row.optString("FileName"),
-                        row.optString("filename"),
-                        row.optString("file"),
-                        row.optString("File"),
-                        row.optString("image"),
-                        row.optString("Image"),
-                        row.optString("path"),
-                        row.optString("Path"),
-                        row.optString("url"),
-                        row.optString("Url")
+                        row.optString("filename")
                 ));
+
                 if (!candidate.isEmpty()) {
-                    return normalizeImageReference(candidate);
+                    if (candidate.startsWith("[")) {
+                        try {
+                            JSONArray arr = new JSONArray(candidate);
+                            if (arr.length() > 0) {
+                                candidate = arr.optString(0); // Lấy phần tử đầu tiên vừa upload
+                            }
+                        } catch (Exception ignored) {}
+                    }
+
+                    String finalRef = normalizeImageReference(candidate);
+                    if (!finalRef.isEmpty()) return finalRef;
                 }
             }
         }

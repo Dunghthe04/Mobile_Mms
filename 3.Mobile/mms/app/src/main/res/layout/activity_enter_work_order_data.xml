@@ -195,6 +195,18 @@
                         tools:visibility="visible" />
 
                     <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_create_wms_request"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_toStartOf="@id/btn_save_maintenance"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="#2563EB"
+                        android:text="Tạo yêu cầu xuất kho"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        app:cornerRadius="4dp" />
+
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_save_maintenance"
                         android:layout_width="130dp"
                         android:layout_height="44dp"

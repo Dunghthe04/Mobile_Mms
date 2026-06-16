@@ -353,6 +353,21 @@ public class MaintenanceCheckAdapter extends RecyclerView.Adapter<MaintenanceChe
         return d;
     }
 
+//    private void bindImagePreviews(ViewHolder holder, MaintenanceItem item) {
+//        if (holder.previewAdapter == null) {
+//            holder.binding.rvCheckPreviews.setLayoutManager(
+//                    new LinearLayoutManager(holder.itemView.getContext(), LinearLayoutManager.HORIZONTAL, false)
+//            );
+//            holder.binding.rvCheckPreviews.setNestedScrollingEnabled(false);
+//            holder.previewAdapter = new MaintenanceImagePreviewAdapter(holder.itemView.getContext());
+//            holder.binding.rvCheckPreviews.setAdapter(holder.previewAdapter);
+//        }
+//
+//        java.util.List<String> images = item.getImagePathsSnapshot();
+//        holder.previewAdapter.submitImages(images);
+//        holder.binding.rvCheckPreviews.setVisibility(images.isEmpty() ? View.GONE : View.VISIBLE);
+//    }
+
     private void bindImagePreviews(ViewHolder holder, MaintenanceItem item) {
         if (holder.previewAdapter == null) {
             holder.binding.rvCheckPreviews.setLayoutManager(
@@ -363,9 +378,19 @@ public class MaintenanceCheckAdapter extends RecyclerView.Adapter<MaintenanceChe
             holder.binding.rvCheckPreviews.setAdapter(holder.previewAdapter);
         }
 
-        java.util.List<String> images = item.getImagePathsSnapshot();
+        List<String> images = item.getImagePathsSnapshot();
+
+        // Đổ danh sách ảnh mới vào Adapter Preview
         holder.previewAdapter.submitImages(images);
-        holder.binding.rvCheckPreviews.setVisibility(images.isEmpty() ? View.GONE : View.VISIBLE);
+
+        // Đảm bảo cập nhật lại trạng thái hiển thị của RecyclerView Preview một cách chính xác
+        if (images.isEmpty()) {
+            holder.binding.rvCheckPreviews.setVisibility(View.GONE);
+        } else {
+            holder.binding.rvCheckPreviews.setVisibility(View.VISIBLE);
+            // Cải tiến thêm: Buộc adapter preview vẽ lại giao diện danh sách ảnh mới ngay lập tức
+            holder.previewAdapter.notifyDataSetChanged();
+        }
     }
 
     private void validateNumericInputsRealtime(ViewHolder holder, MaintenanceItem item) {

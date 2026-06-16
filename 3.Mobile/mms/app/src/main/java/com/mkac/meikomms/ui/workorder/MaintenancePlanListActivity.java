@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -61,6 +63,16 @@ public class MaintenancePlanListActivity extends AppCompatActivity {
         }
     }
 
+    private final ActivityResultLauncher<Intent> enterWorkOrderLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    // Tự động reload lại danh sách kế hoạch bảo trì khi nhấn Save từ màn hình nhập liệu
+                    loadMaintenancePlans();
+                }
+            }
+    );
+
     private void setupRecyclerView() {
         binding.rvMaintenancePlans.setLayoutManager(new LinearLayoutManager(this));
         adapter = new MaintenancePlanAdapter(planList, plan -> {
@@ -72,7 +84,9 @@ public class MaintenancePlanListActivity extends AppCompatActivity {
             intent.putExtra("CATEGORY_NAME", safe(plan.categoryName));
             intent.putExtra("TASK_DATE_UNIX", plan.taskDateUnix);
             intent.putExtra("STATUS", safe(plan.status));
-            startActivity(intent);
+//            startActivity(intent);
+
+            enterWorkOrderLauncher.launch(intent);
         });
         binding.rvMaintenancePlans.setAdapter(adapter);
     }

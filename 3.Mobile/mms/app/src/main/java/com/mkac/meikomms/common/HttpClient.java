@@ -90,7 +90,58 @@ public class HttpClient
         // Gửi request không đồng bộ
         return executeRequest(request);
     }
-    public static APIReturn uploadWorkOrderFile(Context context, String server_url, String taskId, Uri fileUri) {
+
+    /**upload một ảnh*/
+//    public static APIReturn uploadWorkOrderFile(Context context, String server_url, String taskId, Uri fileUri) {
+//        PreferenceHandler handler = new PreferenceHandler(context);
+//        token = handler.getString("api_key");
+//        try {
+//            String finalUrl = server_url;
+//            if (finalUrl.contains("://")) {
+//                String protocol = finalUrl.split("://")[0];
+//                String addressWithPort = finalUrl.split("://")[1];
+//                if (addressWithPort.contains(":")) {
+//                    finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+//                } else {
+//                    finalUrl = protocol + "://" + addressWithPort;
+//                }
+//            }
+//            if (finalUrl.endsWith("/")) {
+//                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+//            }
+//            finalUrl = finalUrl + ":9101/api/v1/mms_file-img/upload-file-task";
+//
+//            MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+//            builder.addFormDataPart("taskId", taskId);
+//
+//            String fileName = getFileNameFromUri(fileUri, context);
+//            byte[] fileBytes = readFileFromUri(fileUri, context);
+//            if (fileBytes != null) {
+//                builder.addFormDataPart("files", fileName,
+//                        RequestBody.create(MediaType.parse(getMimeType(fileName)), fileBytes));
+//            }
+//
+//            RequestBody requestBody = builder.build();
+//            Request request = new Request.Builder()
+//                    .url(finalUrl)
+//                    .header("Authorization", "Bearer " + token)
+//                    .post(requestBody)
+//                    .build();
+//
+//            APIReturn apiReturn = executeRequest(request);
+//            // Extra debug: log upload response details for easier troubleshooting
+//            try {
+//                Log.d("UPLOAD_IMAGE_DBG", "uploadPreventiveImage -> response code=" + (apiReturn == null ? "null" : apiReturn.code) + ", msg=" + (apiReturn == null ? "null" : apiReturn.message) + ", data=" + (apiReturn == null || apiReturn.data == null ? "null" : apiReturn.data.toString()));
+//            } catch (Exception ignored) {}
+//            return apiReturn;
+//        } catch (Exception e) {
+//            Log.e("Exception", e.getMessage());
+//            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+//        }
+//    }
+
+    /**upload nhiều ảnh*/
+    public static APIReturn uploadWorkOrderFile(Context context, String server_url, String taskId, List<Uri> fileUris) {
         PreferenceHandler handler = new PreferenceHandler(context);
         token = handler.getString("api_key");
         try {
@@ -112,11 +163,15 @@ public class HttpClient
             MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
             builder.addFormDataPart("taskId", taskId);
 
-            String fileName = getFileNameFromUri(fileUri, context);
-            byte[] fileBytes = readFileFromUri(fileUri, context);
-            if (fileBytes != null) {
-                builder.addFormDataPart("files", fileName,
-                        RequestBody.create(MediaType.parse(getMimeType(fileName)), fileBytes));
+            if (fileUris != null && !fileUris.isEmpty()) {
+                for (Uri fileUri : fileUris) {
+                    String fileName = getFileNameFromUri(fileUri, context);
+                    byte[] fileBytes = readFileFromUri(fileUri, context);
+                    if (fileBytes != null) {
+                        builder.addFormDataPart("files", fileName,
+                                RequestBody.create(MediaType.parse(getMimeType(fileName)), fileBytes));
+                    }
+                }
             }
 
             RequestBody requestBody = builder.build();
@@ -127,9 +182,8 @@ public class HttpClient
                     .build();
 
             APIReturn apiReturn = executeRequest(request);
-            // Extra debug: log upload response details for easier troubleshooting
             try {
-                Log.d("UPLOAD_IMAGE_DBG", "uploadPreventiveImage -> response code=" + (apiReturn == null ? "null" : apiReturn.code) + ", msg=" + (apiReturn == null ? "null" : apiReturn.message) + ", data=" + (apiReturn == null || apiReturn.data == null ? "null" : apiReturn.data.toString()));
+                Log.d("UPLOAD_IMAGE_DBG", "uploadWorkOrderFile -> response code=" + (apiReturn == null ? "null" : apiReturn.code) + ", msg=" + (apiReturn == null ? "null" : apiReturn.message) + ", data=" + (apiReturn == null || apiReturn.data == null ? "null" : apiReturn.data.toString()));
             } catch (Exception ignored) {}
             return apiReturn;
         } catch (Exception e) {
@@ -201,9 +255,22 @@ public class HttpClient
                     } else {
                         String arr = dataArray.optString(i, null);
                         if (arr != null) {
-                            dataList.add(new JSONObject("{ \"value\": \"" + arr + "\"}"));
+                            JSONObject wrapper = new JSONObject();
+                            try {
+                                wrapper.put("value", arr);
+                                dataList.add(wrapper);
+                            } catch (JSONException ignored) {}
                         }
                     }
+                }
+            } else if (rawData != null && !JSONObject.NULL.equals(rawData)) {
+                String strVal = rawData.toString().trim();
+                if (!strVal.isEmpty()) {
+                    JSONObject wrapper = new JSONObject();
+                    try {
+                        wrapper.put("value", strVal);
+                        dataList.add(wrapper);
+                    } catch (JSONException ignored) {}
                 }
             }
             return new APIReturn(code, message, dataList);
@@ -1644,5 +1711,187 @@ public class HttpClient
             Log.e("Exception", e.getMessage());
             return new APIReturn(400, "Exception|| " + e.getMessage(), null);
         }
+    }
+
+    public static APIReturn uploadMultiplePreventiveImages(Context context, String server_url, String taskId, String checkId, List<Uri> fileUris) {
+        PreferenceHandler handler = new PreferenceHandler(context);
+        token = handler.getString("api_key");
+        try {
+            String finalUrl = server_url;
+            if (finalUrl.contains("://")) {
+                String protocol = finalUrl.split("://")[0];
+                String addressWithPort = finalUrl.split("://")[1];
+                if (addressWithPort.contains(":")) {
+                    finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+                } else {
+                    finalUrl = protocol + "://" + addressWithPort;
+                }
+            }
+            if (finalUrl.endsWith("/")) {
+                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+            }
+
+            finalUrl = finalUrl + ":9101/api/v1/mms_file-img/uploadImagesComponentForPreventive";
+
+            MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+            String tId = taskId == null ? "" : taskId;
+            String cId = checkId == null ? "" : checkId;
+            builder.addFormDataPart("taskId", tId);
+            builder.addFormDataPart("checkId", cId);
+            builder.addFormDataPart("Task_Id", tId);
+            builder.addFormDataPart("Check_Id", cId);
+
+            if (fileUris != null && !fileUris.isEmpty()) {
+                for (Uri fileUri : fileUris) {
+                    String fileName = getFileNameFromUri(fileUri, context);
+                    byte[] fileBytes = readFileFromUri(fileUri, context);
+                    if (fileBytes != null) {
+                        RequestBody fileBody = RequestBody.create(MediaType.parse(getMimeType(fileName)), fileBytes);
+
+                        builder.addFormDataPart("file", fileName, fileBody);
+                        builder.addFormDataPart("files", fileName, fileBody);
+                    }
+                }
+            }
+
+            builder.addFormDataPart("param", "");
+
+            RequestBody requestBody = builder.build();
+            Request request = new Request.Builder()
+                    .url(finalUrl)
+                    .header("Authorization", "Bearer " + token)
+                    .post(requestBody)
+                    .build();
+
+            return executeRequest(request);
+        } catch (Exception e) {
+            Log.e("Exception", e.getMessage());
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    public static APIReturn saveRequestMaterialMaintenance(
+            Context context,
+            String requestDateUnix,
+            String whId,
+            String requestNote,
+            List<JSONObject> addMaterials,
+            String serverUrl,
+            String userId,
+            String purpose,
+            String machineId,
+            String requestId
+    ) {
+        PreferenceHandler handler = new PreferenceHandler(context);
+        String token = handler.getString("api_key");
+        try {
+
+            String baseUrl = serverUrl;
+            if (baseUrl.contains("://")) {
+                String protocol = baseUrl.split("://")[0];
+                String addressWithPort = baseUrl.split("://")[1];
+                if (addressWithPort.contains(":")) {
+                    baseUrl = protocol + "://" + addressWithPort.split(":")[0];
+                } else {
+                    baseUrl = protocol + "://" + addressWithPort;
+                }
+            }
+            if (baseUrl.endsWith("/")) {
+                baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
+            }
+
+            String finalUrl = baseUrl + ":3500/api/v1/WMS_FE/import";
+
+            long unixTime = 0;
+            try {
+                unixTime = Long.parseLong(requestDateUnix);
+            } catch (Exception ignored) {}
+
+            JSONArray addMaterialsArray = new JSONArray();
+            if (addMaterials != null) {
+                for (JSONObject mat : addMaterials) {
+
+                    JSONObject childMat = new JSONObject();
+                    childMat.put("Item_Id", mat.optString("Item_Id"));
+
+                    int qty = 1;
+                    try {
+                        qty = Integer.parseInt(mat.optString("Item_Qty", "1"));
+                    } catch (Exception e) {
+                        qty = (int) mat.optDouble("Item_Qty", 1.0);
+                    }
+                    childMat.put("Item_Qty", qty);
+                    childMat.put("Machine_Id", mat.optString("Machine_Id"));
+                    childMat.put("Purpose", "Maintain"); // Đồng bộ chữ 'Maintain' theo API mới
+                    childMat.put("User_Export", mat.optString("User_Export"));
+
+                    addMaterialsArray.put(childMat);
+                }
+            }
+
+            JSONObject requestBodyJson = new JSONObject();
+            requestBodyJson.put("Type", "Add");
+            requestBodyJson.put("Trans_Code", "001");
+            requestBodyJson.put("Request_Id", requestId);
+            requestBodyJson.put("Request_Note", requestNote);
+            requestBodyJson.put("Request_Purpose", "Maintain"); // Chữ 'Maintain' viết hoa đầu từ
+            requestBodyJson.put("User_Id", userId);
+            requestBodyJson.put("Request_Date_Unix", unixTime);
+            requestBodyJson.put("Wh_Id", whId);
+            requestBodyJson.put("Machine_Id", machineId);
+            requestBodyJson.put("AddMaterials", addMaterialsArray);
+            requestBodyJson.put("UpdateMaterials", new JSONArray()); // Mảng rỗng dự phòng
+            requestBodyJson.put("DeleteMaterials", new JSONArray()); // Mảng rỗng dự phòng
+
+            // 6. Thực hiện đóng gói Request và đẩy lên Server bằng phương thức POST
+            RequestBody body = RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    requestBodyJson.toString()
+            );
+
+            Request request = new Request.Builder()
+                    .url(finalUrl)
+                    .header("Authorization", "Bearer " + token)
+                    .post(body)
+                    .build();
+
+            APIReturn apiReturn = executeRequest(request);
+
+            Log.d("WMS_FE_IMPORT_DBG", "URL: " + finalUrl);
+            Log.d("WMS_FE_IMPORT_DBG", "Payload: " + requestBodyJson.toString());
+            Log.d("WMS_FE_IMPORT_DBG", "Response Code: " + (apiReturn != null ? apiReturn.code : "null"));
+
+            return apiReturn;
+
+        } catch (Exception e) {
+            Log.e("WMS_FE_IMPORT_ERR", "Exception || " + e.getMessage());
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    public static APIReturn createWmsExportRequest(
+            Context context,
+            String requestDateUnix,
+            String whId,
+            String requestNote,
+            List<JSONObject> addMaterials,
+            String serverUrl,
+            String userId,
+            String purpose,
+            String machineId,
+            String requestId
+    ) {
+        return saveRequestMaterialMaintenance(
+                context,
+                requestDateUnix,
+                whId,
+                requestNote,
+                addMaterials,
+                serverUrl,
+                userId,
+                purpose,
+                machineId,
+                requestId
+        );
     }
 }

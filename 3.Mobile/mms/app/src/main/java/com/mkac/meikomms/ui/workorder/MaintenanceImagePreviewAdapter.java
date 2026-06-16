@@ -13,7 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.model.GlideUrl;
 import com.bumptech.glide.load.model.LazyHeaders;
+import com.mkac.meikomms.common.ConfigManager;
 import com.mkac.meikomms.common.HttpClient;
+import com.mkac.meikomms.common.PreferenceHandler;
 import com.mkac.meikomms.R;
 
 import java.util.ArrayList;
@@ -53,22 +55,23 @@ public class MaintenanceImagePreviewAdapter extends RecyclerView.Adapter<Mainten
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         String imagePath = imagePaths.get(position);
         Log.d("PREVIEW_LOAD_DBG", "attempt load preview pos=" + position + " url=" + imagePath);
-        Object loadModel = imagePath;
+        String resolvedPath = normalizeImageReference(imagePath);
+        Object loadModel = resolvedPath;
 
-        if (imagePath != null && (imagePath.startsWith("http://") || imagePath.startsWith("https://"))) {
+        if (resolvedPath != null && (resolvedPath.startsWith("http://") || resolvedPath.startsWith("https://"))) {
             String token = HttpClient.getToken();
             if (token != null && !token.trim().isEmpty()) {
-            GlideUrl gUrl = new GlideUrl(imagePath, new LazyHeaders.Builder()
-                .addHeader("Authorization", "Bearer " + token)
-                .build());
-            loadModel = gUrl;
+                GlideUrl gUrl = new GlideUrl(resolvedPath, new LazyHeaders.Builder()
+                    .addHeader("Authorization", "Bearer " + token)
+                    .build());
+                loadModel = gUrl;
             }
         }
 
         holder.itemView.setOnClickListener(v -> {
             Context viewContext = holder.itemView.getContext();
             if (viewContext instanceof EnterWorkOrderDataActivity) {
-                ((EnterWorkOrderDataActivity) viewContext).showLargeImagePreview(imagePath);
+                ((EnterWorkOrderDataActivity) viewContext).showLargeImagePreview(resolvedPath);
             }
         });
 
@@ -115,5 +118,99 @@ public class MaintenanceImagePreviewAdapter extends RecyclerView.Adapter<Mainten
             super(itemView);
             imageView = itemView.findViewById(R.id.img_preview);
         }
+    }
+
+    private String normalizeImageReference(String reference) {
+        String cleaned = cleanNull(reference);
+        if (cleaned.isEmpty()) return "";
+
+        if (cleaned.startsWith("http://") || cleaned.startsWith("https://")) {
+            if (isMalformedMaintenanceImageUrl(cleaned)) {
+                String fileName = extractImageFileName(cleaned);
+                return fileName.isEmpty() ? cleaned : buildMaintenanceImageUrl(fileName);
+            }
+            return cleaned;
+        }
+
+        if (cleaned.startsWith("content:") || cleaned.startsWith("file:") || cleaned.startsWith("android.resource:")) {
+            return cleaned;
+        }
+
+        String fileName = extractImageFileName(cleaned);
+        return fileName.isEmpty() ? "" : buildMaintenanceImageUrl(fileName);
+    }
+
+    private boolean isMalformedMaintenanceImageUrl(String value) {
+        return value.contains("/mms_file-img/") && value.matches(".*[A-Za-z]:/.*");
+    }
+
+    private String extractImageFileName(String value) {
+        String cleaned = cleanNull(value);
+        if (cleaned.isEmpty()) return "";
+
+        int queryIndex = cleaned.indexOf('?');
+        if (queryIndex >= 0) {
+            cleaned = cleaned.substring(0, queryIndex);
+        }
+
+        int slashIndex = Math.max(cleaned.lastIndexOf('/'), cleaned.lastIndexOf('\\'));
+        if (slashIndex >= 0 && slashIndex < cleaned.length() - 1) {
+            return cleaned.substring(slashIndex + 1).trim();
+        }
+        return cleaned.trim();
+    }
+
+    private String buildMaintenanceImageUrl(String fileName) {
+        if (fileName == null) return "";
+        String cleanName = fileName.trim();
+        if (cleanName.isEmpty()) return "";
+        if (cleanName.startsWith("http://") || cleanName.startsWith("https://")) {
+            return cleanName;
+        }
+
+        String baseUrl = resolveServerUrl();
+        String publicBaseUrl = buildPublicImageBaseUrl(baseUrl);
+        if (publicBaseUrl.isEmpty()) {
+            return "/public/imagesForComponentPreventive/" + cleanName;
+        }
+        return publicBaseUrl + "/public/imagesForComponentPreventive/" + cleanName;
+    }
+
+    private String buildPublicImageBaseUrl(String baseUrl) {
+        String value = baseUrl == null ? "" : baseUrl.trim();
+        if (value.isEmpty()) return "";
+
+        try {
+            String protocol = value.contains("://") ? value.substring(0, value.indexOf("://")) : "http";
+            String hostPart = value.contains("://") ? value.substring(value.indexOf("://") + 3) : value;
+            if (hostPart.contains("/")) {
+                hostPart = hostPart.substring(0, hostPart.indexOf('/'));
+            }
+            if (hostPart.contains(":")) {
+                hostPart = hostPart.substring(0, hostPart.indexOf(':'));
+            }
+            return protocol + "://" + hostPart + ":9100";
+        } catch (Exception e) {
+            return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
+        }
+    }
+
+    private String resolveServerUrl() {
+        try {
+            PreferenceHandler handler = new PreferenceHandler(context);
+            ConfigManager configManager = new ConfigManager(context);
+            String serverUrl = handler.getString("server_url");
+            if (serverUrl == null || serverUrl.trim().isEmpty()) {
+                serverUrl = configManager.getProperty("server_url");
+            }
+            return serverUrl == null ? "" : serverUrl.trim();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private String cleanNull(String value) {
+        if (value == null || "null".equalsIgnoreCase(value.trim())) return "";
+        return value.trim();
     }
 }

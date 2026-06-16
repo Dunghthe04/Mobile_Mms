@@ -66,23 +66,42 @@
         android:layout_height="1dp"
         android:background="#E5E7EB" />
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:paddingHorizontal="24dp"
-        android:paddingTop="14dp">
+        android:paddingTop="14dp"
+        android:weightSum="2">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_create_wms_request_child"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="#F3F4F6"
+            android:text="Create Warehouse Request"
+            android:textColor="#1F2937"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            app:cornerRadius="6dp"
+            app:strokeColor="#D1D5DB"
+            app:strokeWidth="1dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_confirm_child_data"
-            android:layout_width="160dp"
+            android:layout_width="0dp"
             android:layout_height="48dp"
-            android:layout_alignParentEnd="true"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
             android:backgroundTint="#01A789"
-            android:text="XÁC NHẬN"
+            android:text="CONFIRM"
             android:textColor="@color/white"
             android:textSize="15sp"
             android:textStyle="bold"
             app:cornerRadius="6dp" />
-    </RelativeLayout>
+
+    </LinearLayout>
 
 </LinearLayout>
