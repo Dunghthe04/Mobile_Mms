@@ -64,12 +64,12 @@ public class MaintenanceTabFragment extends Fragment {
     private static final String[] FILTER_STATUS_KEYS = {
             "All",
             "Incomplete",        //chưa hoàn thành
-            "Overdue"           //quá hạn
-            /*,
-            "Approve",          //phê duyệt
-            "Checksheet OK",    //Checksheet OK
+            "Overdue",          //quá hạn
+
+//            "Approve",          //phê duyệt
+//            "Checksheet OK",    //Checksheet OK
             "Checksheet NG"    //Checksheet NG
-            */
+
     };
 
     public static String[] getLocalizedStatusLabels() {
@@ -94,6 +94,17 @@ public class MaintenanceTabFragment extends Fragment {
 
         initConfiguration();
         setupRecyclerView();
+
+        if (currentGroupFilter == null || currentGroupFilter.isEmpty()) {
+            WorkOrderDataActivity activity = (WorkOrderDataActivity) getActivity();
+            if (activity != null) {
+                int selectedIndex = activity.getSelectedGroupIndex();
+                String[] groupIds = {"", "FE1", "FE2", "FE3", "FE4"};
+                if (selectedIndex >= 0 && selectedIndex < groupIds.length) {
+                    currentGroupFilter = groupIds[selectedIndex];
+                }
+            }
+        }
 
         binding.swipeRefreshMaintenance.setColorSchemeResources(R.color.green);
         binding.swipeRefreshMaintenance.setOnRefreshListener(this::reloadData);
@@ -273,6 +284,7 @@ public class MaintenanceTabFragment extends Fragment {
             intent.putExtra("STATUS", safe(plan.status));
             intent.putExtra("ASSIGNEE_NAME", safe(plan.assigneeName));
             intent.putExtra("EXECUTOR_NAME", safe(plan.executorName));
+            intent.putExtra("IS_WAREHOUSE_REQUEST", safe(plan.isWarehouseRequest));
 //            startActivity(intent);
 
             enterWorkOrderLauncher.launch(intent);
@@ -292,6 +304,7 @@ public class MaintenanceTabFragment extends Fragment {
         plan.executorName = pickFirst(row.optString("Full_Name"), row.optString("Maintainer_Id"), row.optString("Actual_Maintaner_Id"));
         plan.status = pickFirst(row.optString("Status"), row.optString("status"), row.optString("Status_Check"));
         plan.taskDateUnix = parseLong(pickFirst(row.optString("Task_Date_Unix"), row.optString("taskDateUnix")));
+        plan.isWarehouseRequest = pickFirst(row.optString("Is_Warehouse_Request"), row.optString("isWarehouseRequest"), row.optString("IS_WAREHOUSE_REQUEST"));
 
         String doneUnix = pickFirst(row.optString("After_Approve_Task_Date_Unix"), row.optString("Approve_Task_Date_Unix"));
         if (!doneUnix.isEmpty() && !"0".equals(doneUnix)) {
@@ -358,9 +371,15 @@ public class MaintenanceTabFragment extends Fragment {
     }
 
     public void filterByGroup(String group) {
-        this.currentGroupFilter = group == null ? "" : group.trim();
+        String newGroup = group == null ? "" : group.trim();
+        if (newGroup.equalsIgnoreCase(this.currentGroupFilter)) {
+            return;
+        }
+        this.currentGroupFilter = newGroup;
         reloadData();
     }
+
+
 
     private String safe(String value) {
         return value == null ? "" : value;
@@ -404,12 +423,12 @@ public class MaintenanceTabFragment extends Fragment {
                 switch (currentStatusPosition) {
                     case 1: targetStatusCode = "0"; break; // Chưa hoàn thành
                     case 2: targetStatusCode = "5"; break; // Quá hạn
-                    /*
-                    case 2: targetStatusCode = "1"; break; // Phê duyệt
-                    case 3: targetStatusCode = "2"; break; // Checksheet OK
-                    case 4: targetStatusCode = "3"; break; // Checksheet NG
-                    case 5: targetStatusCode = "5"; break; // Quá hạn
-                    */
+
+//                    case 2: targetStatusCode = "1"; break; // Phê duyệt
+//                    case 3: targetStatusCode = "2"; break; // Checksheet OK
+                    case 3: targetStatusCode = "3"; break; // Checksheet NG
+//                    case 5: targetStatusCode = "5"; break; // Quá hạn
+
                 }
                 matchesStatus = targetStatusCode.equalsIgnoreCase(plan.status);
             }

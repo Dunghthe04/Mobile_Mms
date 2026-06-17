@@ -13,6 +13,7 @@ public class MaintenancePlan {
     public String status;
     public long taskDateUnix;
     public String completedDate;
+    public String isWarehouseRequest;
 
     public String getStatusLabel() {
         if (status == null) return i18n("Incomplete");

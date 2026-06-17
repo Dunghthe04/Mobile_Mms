@@ -84,6 +84,7 @@ public class MaintenancePlanListActivity extends AppCompatActivity {
             intent.putExtra("CATEGORY_NAME", safe(plan.categoryName));
             intent.putExtra("TASK_DATE_UNIX", plan.taskDateUnix);
             intent.putExtra("STATUS", safe(plan.status));
+            intent.putExtra("IS_WAREHOUSE_REQUEST", safe(plan.isWarehouseRequest));
 //            startActivity(intent);
 
             enterWorkOrderLauncher.launch(intent);
@@ -157,6 +158,7 @@ public class MaintenancePlanListActivity extends AppCompatActivity {
         plan.status = pickFirst(row.optString("Status"), row.optString("status"), row.optString("Task_Status"));
         plan.taskDateUnix = parseLong(pickFirst(row.optString("Task_Date_Unix"), row.optString("taskDateUnix"), row.optString("TASK_DATE_UNIX")));
         plan.completedDate = pickFirst(row.optString("Completed_Date"), row.optString("Complete_Date"), row.optString("completedDate"), row.optString("Done_Date"));
+        plan.isWarehouseRequest = pickFirst(row.optString("Is_Warehouse_Request"), row.optString("isWarehouseRequest"), row.optString("IS_WAREHOUSE_REQUEST"));
         return plan;
     }
 

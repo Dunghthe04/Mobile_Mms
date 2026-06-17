@@ -21,6 +21,7 @@ public class MaintenanceItem {
     public String initialStatus;
     public String imagePath;
     public final List<String> imagePaths = new ArrayList<>();
+    public String isWarehouseRequest;
     
     public String originalCheckValue;
     public String originalCheckValue2;

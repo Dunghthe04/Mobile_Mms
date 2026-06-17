@@ -71,6 +71,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
     private String categoryName = "";
     private long taskDateUnix = 0L;
     private String taskStatus = "";
+    private String isWarehouseRequestFromIntent = "";
 
     private MaintenanceItem pendingUploadItem;
     private String lastSaveErrorMessage = null;
@@ -181,6 +182,14 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         binding.btnSaveMaintenance.setOnClickListener(v -> executeSaveAction());
         if (binding.btnCreateWmsRequest != null) {
             binding.btnCreateWmsRequest.setText(i18n("Tạo yêu cầu xuất kho"));
+            PreferenceHandler prefHandler = new PreferenceHandler(this);
+            boolean isAlreadyWmsCreated = prefHandler.getBoolean("wms_request_created_" + taskId)
+                    || "1".equals(isWarehouseRequestFromIntent);
+            if (isAlreadyWmsCreated) {
+                binding.btnCreateWmsRequest.setEnabled(false);
+                binding.btnCreateWmsRequest.setClickable(false);
+                binding.btnCreateWmsRequest.setAlpha(0.35f);
+            }
             binding.btnCreateWmsRequest.setOnClickListener(v -> createWmsRequestFromActivity());
         }
     }
@@ -212,6 +221,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         categoryName = safe(getIntent().getStringExtra("CATEGORY_NAME"));
         taskDateUnix = getIntent().getLongExtra("TASK_DATE_UNIX", 0L);
         taskStatus = safe(getIntent().getStringExtra("STATUS"));
+        isWarehouseRequestFromIntent = safe(getIntent().getStringExtra("IS_WAREHOUSE_REQUEST"));
 
         String assignee = safe(getIntent().getStringExtra("ASSIGNEE_NAME"));
         String executor = safe(getIntent().getStringExtra("EXECUTOR_NAME"));
@@ -408,99 +418,123 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
 
         bottomSheetDialog.setOnDismissListener(dialog -> currentChildAdapter = null);
 
+        PreferenceHandler prefHandler = new PreferenceHandler(this);
         if (dialogBinding.btnCreateWmsRequestChild != null) {
-            dialogBinding.btnCreateWmsRequestChild.setOnClickListener(v -> {
-                PreferenceHandler prefHandler = new PreferenceHandler(this);
-                String username = prefHandler.getString("Userlogin");
-                JSONObject userProfile = prefHandler.getJsonObject("user");
-                if (username.isEmpty() && userProfile != null) {
-                    username = userProfile.optString("username", userProfile.optString("User_Name", ""));
-                }
-
-                if (childItems.isEmpty()) {
-                    Toast.makeText(this, i18n("No child materials available to create warehouse request"), Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                List<JSONObject> addMaterialsList = new ArrayList<>();
-                try {
-                    for (MaintenanceItem child : childItems) {
-                        String matId = child.checkId;
-                        if (matId == null || matId.isEmpty()) continue;
-
-                        JSONObject matObj = new JSONObject();
-                        matObj.put("Item_Id", matId);
-                        matObj.put("Item_Qty", "1");
-                        matObj.put("Machine_Id", machineId);
-                        matObj.put("Purpose", "Maintain");
-                        matObj.put("User_Export", username);
-                        addMaterialsList.add(matObj);
-                    }
-                } catch (Exception e) {
-                    Toast.makeText(this, i18n("Error parsing material list") + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (addMaterialsList.isEmpty()) {
-                    Toast.makeText(this, i18n("No valid materials found for warehouse release"), Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                String displayMachine = machineName.isEmpty() ? machineId : machineId + "-" + machineName;
-                String requestNote = i18n("Warehouse request for maintenance machine") + " " + displayMachine;
-                String requestDateUnixStr = String.valueOf(System.currentTimeMillis() / 1000L);
-
-                String serverUrlStr = prefHandler.getString("server_url");
-                if (serverUrlStr.isEmpty()) {
-                    ConfigManager config = new ConfigManager(this);
-                    // SỬA LỖI TẠI ĐÂY: Sử dụng 1 tham số theo cấu trúc hàm getProperty() nguyên bản
-                    serverUrlStr = config.getProperty("server_url");
-                    if (serverUrlStr == null || serverUrlStr.isEmpty()) {
-                        serverUrlStr = "http://192.86.0.225";
-                    }
-                }
-
+            boolean isChildWmsCreated = prefHandler.getBoolean("wms_request_created_child_" + taskId + "_" + parentItem.checkId)
+                    || "1".equals(parentItem.isWarehouseRequest)
+                    || "1".equals(isWarehouseRequestFromIntent);
+            if (isChildWmsCreated) {
                 dialogBinding.btnCreateWmsRequestChild.setEnabled(false);
-                dialogBinding.btnCreateWmsRequestChild.setAlpha(0.5f);
+                dialogBinding.btnCreateWmsRequestChild.setAlpha(0.35f);
+            } else {
+                dialogBinding.btnCreateWmsRequestChild.setOnClickListener(v -> {
+                    String username = prefHandler.getString("Userlogin");
+                    JSONObject userProfile = prefHandler.getJsonObject("user");
+                    if (username.isEmpty() && userProfile != null) {
+                        username = userProfile.optString("username", userProfile.optString("User_Name", ""));
+                    }
 
-                android.app.ProgressDialog wmsProgress = new android.app.ProgressDialog(this);
-                wmsProgress.setMessage(i18n("Creating warehouse release request..."));
-                wmsProgress.setCancelable(false);
-                wmsProgress.show();
+                    if (childItems.isEmpty()) {
+                        Toast.makeText(this, i18n("No child materials available to create warehouse request"), Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
-                final String finalUsername = username;
-                final String finalServerUrl = serverUrlStr;
-                final List<JSONObject> finalMaterials = addMaterialsList;
+                    List<JSONObject> addMaterialsList = new ArrayList<>();
+                    try {
+                        for (MaintenanceItem child : childItems) {
+                            String matId = child.checkId;
+                            if (matId == null || matId.isEmpty()) continue;
 
-                executorService.execute(() -> {
-                    String generatedRequestId = "REQ_001_" + requestDateUnixStr + "_" + (int)(Math.random() * 100);
-
-                    HttpClient.APIReturn result = HttpClient.saveRequestMaterialMaintenance(
-                            this,
-                            requestDateUnixStr,
-                            "FE",
-                            requestNote,
-                            finalMaterials,
-                            finalServerUrl,
-                            finalUsername,
-                            "Maintain",
-                            machineId,
-                            generatedRequestId
-                    );
-
-                    runOnUiThread(() -> {
-                        wmsProgress.dismiss();
-                        dialogBinding.btnCreateWmsRequestChild.setEnabled(true);
-                        dialogBinding.btnCreateWmsRequestChild.setAlpha(1.0f);
-                        if (result != null && result.code == 200) {
-                            Toast.makeText(this, i18n("Warehouse release request created successfully!"), Toast.LENGTH_SHORT).show();
-                        } else {
-                            String errMsg = (result != null) ? result.message : i18n("No response from server");
-                            Toast.makeText(this, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
+                            JSONObject matObj = new JSONObject();
+                            matObj.put("Item_Id", matId);
+                            matObj.put("Item_Qty", "1");
+                            matObj.put("Machine_Id", machineId);
+                            matObj.put("Purpose", "Maintain");
+                            matObj.put("User_Export", username);
+                            addMaterialsList.add(matObj);
                         }
+                    } catch (Exception e) {
+                        Toast.makeText(this, i18n("Error parsing material list") + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (addMaterialsList.isEmpty()) {
+                        Toast.makeText(this, i18n("No valid materials found for warehouse release"), Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    String displayMachine = machineName.isEmpty() ? machineId : machineId + "-" + machineName;
+                    String requestNote = i18n("Warehouse request for maintenance machine") + " " + displayMachine;
+                    String requestDateUnixStr = String.valueOf(System.currentTimeMillis() / 1000L);
+
+                    String serverUrlStr = prefHandler.getString("server_url");
+                    if (serverUrlStr.isEmpty()) {
+                        ConfigManager config = new ConfigManager(this);
+                        serverUrlStr = config.getProperty("server_url");
+                        if (serverUrlStr == null || serverUrlStr.isEmpty()) {
+                            serverUrlStr = "http://192.86.0.225";
+                        }
+                    }
+
+                    dialogBinding.btnCreateWmsRequestChild.setEnabled(false);
+                    dialogBinding.btnCreateWmsRequestChild.setAlpha(0.5f);
+
+                    android.app.ProgressDialog wmsProgress = new android.app.ProgressDialog(this);
+                    wmsProgress.setMessage(i18n("Creating warehouse release request..."));
+                    wmsProgress.setCancelable(false);
+                    wmsProgress.show();
+
+                    final String finalUsername = username;
+                    final String finalServerUrl = serverUrlStr;
+                    final List<JSONObject> finalMaterials = addMaterialsList;
+
+                    executorService.execute(() -> {
+                        String generatedRequestId = "REQ_001_" + requestDateUnixStr + "_" + (int)(Math.random() * 100);
+
+                        HttpClient.APIReturn result = HttpClient.saveRequestMaterialMaintenance(
+                                this,
+                                requestDateUnixStr,
+                                "FE",
+                                requestNote,
+                                finalMaterials,
+                                finalServerUrl,
+                                finalUsername,
+                                "Maintain",
+                                machineId,
+                                generatedRequestId
+                        );
+
+                        if (result != null && result.code == 200) {
+                            try {
+                                JSONObject updateCondition = new JSONObject();
+                                updateCondition.put("Schema_Mms", schemaMms);
+                                updateCondition.put("taskId", taskId);
+
+                                HttpClient.callDynamics(
+                                        this, finalServerUrl, "mes_mms", "UPDATE_TASK_WAREHOUSE_REQUEST", updateCondition
+                                );
+                            } catch (Exception e) {
+                                Log.e("WMS_UPDATE", "Error updating maintenance task warehouse request", e);
+                            }
+                        }
+
+                        runOnUiThread(() -> {
+                            wmsProgress.dismiss();
+                            if (result != null && result.code == 200) {
+                                Toast.makeText(this, i18n("Warehouse release request created successfully!"), Toast.LENGTH_SHORT).show();
+                                prefHandler.setBoolean("wms_request_created_child_" + taskId + "_" + parentItem.checkId, true);
+                                dialogBinding.btnCreateWmsRequestChild.setEnabled(false);
+                                dialogBinding.btnCreateWmsRequestChild.setAlpha(0.35f);
+                            } else {
+                                dialogBinding.btnCreateWmsRequestChild.setEnabled(true);
+                                dialogBinding.btnCreateWmsRequestChild.setAlpha(1.0f);
+                                String errMsg = (result != null) ? result.message : i18n("No response from server");
+                                Toast.makeText(this, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
+                            }
+                        });
                     });
                 });
-            });
+            }
         }
 
         dialogBinding.btnConfirmChildData.setOnClickListener(v -> {
@@ -756,10 +790,31 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                     generatedRequestId
             );
 
+            if (result != null && result.code == 200) {
+                try {
+                    JSONObject updateCondition = new JSONObject();
+                    updateCondition.put("Schema_Mms", schemaMms);
+                    updateCondition.put("taskId", taskId);
+
+                    HttpClient.callDynamics(
+                            this, serverUrl, "mes_mms", "UPDATE_TASK_WAREHOUSE_REQUEST", updateCondition
+                    );
+                } catch (Exception e) {
+                    Log.e("WMS_UPDATE", "Error updating maintenance task warehouse request", e);
+                }
+            }
+
             runOnUiThread(() -> {
                 progressDialog.dismiss();
                 if (result != null && result.code == 200) {
                     Toast.makeText(this, i18n("Warehouse release request created successfully!"), Toast.LENGTH_SHORT).show();
+                    PreferenceHandler prefHandler2 = new PreferenceHandler(this);
+                    prefHandler2.setBoolean("wms_request_created_" + taskId, true);
+                    if (binding.btnCreateWmsRequest != null) {
+                        binding.btnCreateWmsRequest.setEnabled(false);
+                        binding.btnCreateWmsRequest.setClickable(false);
+                        binding.btnCreateWmsRequest.setAlpha(0.35f);
+                    }
                 } else {
                     String errMsg = (result != null) ? result.message : i18n("No response from server");
                     Toast.makeText(this, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
@@ -1025,6 +1080,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         item.testContent = pickFirst(row.optString("Test_Content"), row.optString("testContent"), row.optString("Visual_Standard"));
         item.unit = pickFirst(row.optString("Unit"), row.optString("unit"));
         item.subDesc = ""; // Bỏ trống chuỗi tĩnh cũ
+        item.isWarehouseRequest = pickFirst(row.optString("Is_Warehouse_Request"), row.optString("isWarehouseRequest"), row.optString("IS_WAREHOUSE_REQUEST"));
 
         item.initialStatus = resolveInitialStatus(item);
         if (item.childCount > 0) {

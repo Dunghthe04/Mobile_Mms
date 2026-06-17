@@ -458,7 +458,15 @@ public final class WorkOrderEntryDialogHelper {
         PreferenceHandler initialPrefHandler = new PreferenceHandler(context);
         String initialWoCode = safeGet(workOrder, "WO_CODE");
         if (initialWoCode.isEmpty()) initialWoCode = safeGet(workOrder, "Wo_Code");
-        if (initialPrefHandler.getBoolean("wms_request_created_" + initialWoCode)) {
+        
+        String isWarehouseReqVal = safeGet(workOrder, "IS_WAREHOUSE_REQUEST");
+        if (isWarehouseReqVal.isEmpty()) isWarehouseReqVal = safeGet(workOrder, "Is_Warehouse_Request");
+        if (isWarehouseReqVal.isEmpty()) isWarehouseReqVal = safeGet(workOrder, "is_warehouse_request");
+
+        boolean isAlreadyCreated = initialPrefHandler.getBoolean("wms_request_created_" + initialWoCode)
+                || "1".equals(isWarehouseReqVal);
+
+        if (isAlreadyCreated) {
             btnCreateWmsRequest.setEnabled(false);
             btnCreateWmsRequest.setClickable(false);
             btnCreateWmsRequest.setAlpha(0.35f);
@@ -582,11 +590,35 @@ public final class WorkOrderEntryDialogHelper {
             final String finalMachineId = machineIdVal;
             final String finalWoCodeVal = woCodeVal;
 
+            String tempTaskId = safeGet(workOrder, "TASK_ID");
+            if (tempTaskId.isEmpty()) tempTaskId = safeGet(workOrder, "Task_Id");
+            if (tempTaskId.isEmpty()) tempTaskId = safeGet(workOrder, "taskId");
+            if (tempTaskId.isEmpty()) tempTaskId = safeGet(workOrder, "Task_ID");
+            final String finalTaskIdVal = tempTaskId.isEmpty() ? woCodeVal : tempTaskId;
+
             new Thread(() -> {
                 HttpClient.APIReturn result = HttpClient.save_request_material(
                         context, finalRequestDateUnix, "FE", finalRequestNote, finalMaterials,
                         finalServerUrl, finalUsername, finalRequestPurpose, finalMachineId
                 );
+
+                if (result != null && result.code == 200) {
+                    try {
+                        ConfigManager configManager = new ConfigManager(context);
+                        String schemaMms = configManager.getProperty("schema_mms");
+                        if (schemaMms.isEmpty()) schemaMms = "MES_MMS_MKHC";
+
+                        JSONObject updateCondition = new JSONObject();
+                        updateCondition.put("Schema_Mms", schemaMms);
+                        updateCondition.put("taskId", finalTaskIdVal);
+
+                        HttpClient.callDynamics(
+                                context, finalServerUrl, "mes_mms", "UPDATE_TASK_WAREHOUSE_REQUEST", updateCondition
+                        );
+                    } catch (Exception e) {
+                        android.util.Log.e("WMS_UPDATE", "Error updating task warehouse request", e);
+                    }
+                }
 
                 new Handler(Looper.getMainLooper()).post(() -> {
                     wmsProgress.dismiss();
