@@ -55,6 +55,15 @@ public class LanguageAPIUtils
         if ("vi".equals(languageCode) && "Maintenance".equals(text)) {
             return "Bảo dưỡng";
         }
+        if ("vi".equals(languageCode) && "Canceled".equals(text)) {
+            return "Đã hủy";
+        }
+        if ("ja".equals(languageCode) && "Canceled".equals(text)) {
+            return "キャンセル";
+        }
+        if ("ch".equals(languageCode) && "Canceled".equals(text)) {
+            return "已取消";
+        }
         if ("vi".equals(languageCode) && "OK".equals(text) ||
             "en".equals(languageCode) && "OK".equals(text) ||
             "ja".equals(languageCode) && "OK".equals(text) ||
@@ -281,7 +290,7 @@ public class LanguageAPIUtils
                     "  \"Scan\": \"Scan\",\n" +
                     "  \"Preventive Maintenance Plan (Tablet)\": \"Preventive Maintenance Plan (Tablet)\",\n" +
                     "  \"Search by name or machine code...\": \"Search by name or machine code...\",\n" +
-                    "  \"W/O Management\": \"W/O Management And Maintenance\",\n" +
+                    "  \"W/O Management\": \"W/O Management\",\n" +
                     "  \"Select function\": \"Select function\",\n" +
                     "  \"Create a work order or enter work order and maintenance data\": \"Create a work order or enter work order and maintenance data\",\n" +
                     "  \"ADD Work Order\": \"Add Work Order\",\n" +
@@ -409,12 +418,28 @@ public class LanguageAPIUtils
                     "  \"Month\": \"Month\",\n" +
                     "  \"You do not have permission to edit this Work Order or it is already Done\": \"You do not have permission to edit this Work Order or it is already Done\",\n" +
                     "  \"You do not have permission to delete this Work Order or it is already Done\": \"You do not have permission to delete this Work Order or it is already Done\",\n" +
+                    "  \"You do not have permission to cancel this Work Order or it is already Done\": \"You do not have permission to cancel this Work Order or it is already Done\",\n" +
                     "  \"Delete Work Order\": \"Delete Work Order\",\n" +
+                    "  \"Cancel Work Order\": \"Cancel Work Order\",\n" +
                     "  \"Do you confirm deleting WorkOrder %s?\": \"Do you confirm deleting WorkOrder %s?\",\n" +
+                    "  \"Do you confirm canceling WorkOrder %s?\": \"Do you confirm canceling WorkOrder %s?\",\n" +
                     "  \"Deleting Work Order...\": \"Deleting Work Order...\",\n" +
+                    "  \"Canceling Work Order...\": \"Canceling Work Order...\",\n" +
                     "  \"Delete successful\": \"Delete successful\",\n" +
+                    "  \"Cancel successful\": \"Cancel successful\",\n" +
                     "  \"Delete failed: %s\": \"Delete failed: %s\",\n" +
+                    "  \"Cancel failed: %s\": \"Cancel failed: %s\",\n" +
                     "  \"Delete error: %s\": \"Delete error: %s\",\n" +
+                    "  \"Cancel error: %s\": \"Cancel error: %s\",\n" +
+                    "  \"Cancel Reason\": \"Cancel Reason\",\n" +
+                    "  \"Cancel Reason is required\": \"Cancel Reason is required\",\n" +
+                    "  \"Enter cancellation reason...\": \"Enter cancellation reason...\",\n" +
+                    "  \"Agree\": \"Agree\",\n" +
+                    "  \"No\": \"No\",\n" +
+                    "  \"Close\": \"Close\",\n" +
+                    "  \"Canceled By\": \"Canceled By\",\n" +
+                    "  \"Canceled At\": \"Canceled At\",\n" +
+                    "  \"View Cancel Details\": \"View Cancel Details\",\n" +
                     "  \"Load completed\": \"Load completed\",\n" +
                     "  \"Please enter Machine and Requester\": \"Please enter Machine and Requester\",\n" +
                     "  \"Processing data...\": \"Processing data...\",\n" +
@@ -522,7 +547,7 @@ public class LanguageAPIUtils
                     "  \"Scan\": \"Quét\",\n" +
                     "  \"Preventive Maintenance Plan (Tablet)\": \"Kế Hoạch Bảo Dưỡng Định Kỳ (Tablet)\",\n" +
                     "  \"Search by name or machine code...\": \"Tìm kiếm theo tên hoặc mã máy...\",\n" +
-                    "  \"W/O Management\": \"Quản lý Work Order và Hạng mục bảo dưỡng\",\n" +
+                    "  \"W/O Management\": \"Quản lý Work Order\",\n" +
                     "  \"Select function\": \"Chọn chức năng\",\n" +
                     "  \"Add Work Order\": \"Thêm Work Order\",\n" +
                     "  \"ADD Work Order\": \"Nhập thông tin Work Order\",\n" +
@@ -595,11 +620,27 @@ public class LanguageAPIUtils
                     "  \"Week\": \"Tuần\",\n" +
                     "  \"Month\": \"Tháng\",\n" +
                     "  \"Delete Work Order\": \"Xóa Work Order\",\n" +
+                    "  \"Cancel Work Order\": \"Hủy Work Order\",\n" +
                     "  \"Do you confirm deleting WorkOrder %s?\": \"Bạn có xác nhận xóa WorkOrder %s?\",\n" +
+                    "  \"Do you confirm canceling WorkOrder %s?\": \"Bạn có xác nhận hủy WorkOrder %s?\",\n" +
                     "  \"Deleting Work Order...\": \"Đang xóa Work Order...\",\n" +
+                    "  \"Canceling Work Order...\": \"Đang hủy Work Order...\",\n" +
                     "  \"Delete successful\": \"Xóa thành công\",\n" +
+                    "  \"Cancel successful\": \"Hủy thành công\",\n" +
                     "  \"Delete failed: %s\": \"Xóa thất bại: %s\",\n" +
+                    "  \"Cancel failed: %s\": \"Hủy thất bại: %s\",\n" +
                     "  \"Delete error: %s\": \"Lỗi xóa: %s\",\n" +
+                    "  \"Cancel error: %s\": \"Lỗi hủy: %s\",\n" +
+                    "  \"Cancel Reason\": \"Lý do hủy\",\n" +
+                    "  \"Cancel Reason is required\": \"Vui lòng nhập lý do hủy\",\n" +
+                    "  \"Enter cancellation reason...\": \"Nhập lý do hủy...\",\n" +
+                    "  \"Agree\": \"Đồng ý\",\n" +
+                    "  \"No\": \"Không\",\n" +
+                    "  \"Close\": \"Đóng\",\n" +
+                    "  \"Canceled By\": \"Người hủy\",\n" +
+                    "  \"Canceled At\": \"Thời gian hủy\",\n" +
+                    "  \"View Cancel Details\": \"Chi tiết hủy\",\n" +
+                    "  \"You do not have permission to cancel this Work Order or it is already Done\": \"Bạn không có quyền hủy Work Order này hoặc nó đã hoàn thành\",\n" +
                     "  \"Load completed\": \"Load xong dữ liệu\",\n" +
                     "  \"Please enter Machine and Requester\": \"Vui lòng nhập đầy đủ Máy và Người yêu cầu!\",\n" +
                     "  \"Processing data...\": \"Đang xử lý dữ liệu...\",\n" +
@@ -720,7 +761,7 @@ public class LanguageAPIUtils
                     "  \"Scan\": \"スキャン\",\n" +
                     "  \"Preventive Maintenance Plan (Tablet)\": \"定期保守計画 (タブレット)\",\n" +
                     "  \"Search by name or machine code...\": \"名前または機械コードで検索...\",\n" +
-                    "  \"W/O Management\": \"ワークオーダーおよび保守項目の管理\",\n" +
+                    "  \"W/O Management\": \"ワークオーダー管理\",\n" +
                     "  \"Select function\": \"機能を選択\",\n" +
                     "  \"Add Work Order\": \"新しいWork Orderを作成\",\n" +
                     "  \"Enter Work Order Data\": \"作業データ入力\",\n" +
@@ -794,11 +835,27 @@ public class LanguageAPIUtils
                     "  \"Week\": \"週\",\n" +
                     "  \"Month\": \"月\",\n" +
                     "  \"Delete Work Order\": \"Work Order削除\",\n" +
+                    "  \"Cancel Work Order\": \"Work Orderキャンセル\",\n" +
                     "  \"Do you confirm deleting WorkOrder %s?\": \"WorkOrder %s を削除してもよろしいですか？\",\n" +
+                    "  \"Do you confirm canceling WorkOrder %s?\": \"WorkOrder %s をキャンセルしてもよろしいですか？\",\n" +
                     "  \"Deleting Work Order...\": \"Work Orderを削除中...\",\n" +
+                    "  \"Canceling Work Order...\": \"Work Orderをキャンセル中...\",\n" +
                     "  \"Delete successful\": \"削除成功\",\n" +
+                    "  \"Cancel successful\": \"キャンセル成功\",\n" +
                     "  \"Delete failed: %s\": \"削除失敗: %s\",\n" +
+                    "  \"Cancel failed: %s\": \"キャンセル失敗: %s\",\n" +
                     "  \"Delete error: %s\": \"削除エラー: %s\",\n" +
+                    "  \"Cancel error: %s\": \"キャンセルエラー: %s\",\n" +
+                    "  \"Cancel Reason\": \"キャンセル理由\",\n" +
+                    "  \"Cancel Reason is required\": \"キャンセル理由は必須です\",\n" +
+                    "  \"Enter cancellation reason...\": \"キャンセル理由を入力してください...\",\n" +
+                    "  \"Agree\": \"同意\",\n" +
+                    "  \"No\": \"いいえ\",\n" +
+                    "  \"Close\": \"閉じる\",\n" +
+                    "  \"Canceled By\": \"キャンセル者\",\n" +
+                    "  \"Canceled At\": \"キャンセル日時\",\n" +
+                    "  \"View Cancel Details\": \"キャンセル詳細\",\n" +
+                    "  \"You do not have permission to cancel this Work Order or it is already Done\": \"このWork Orderをキャンセルする権限がないか、すでに完了しています\",\n" +
                     "  \"Load completed\": \"データの読み込みが完了しました\",\n" +
                     "  \"Please enter Machine and Requester\": \"設備と依頼者を入力してください\",\n" +
                     "  \"Processing data...\": \"データ処理中...\",\n" +
@@ -925,7 +982,7 @@ public class LanguageAPIUtils
                     "  \"Scan\": \"扫描\",\n" +
                     "  \"Preventive Maintenance Plan (Tablet)\": \"定期保养计划 (平板)\",\n" +
                     "  \"Search by name or machine code...\": \"按名称或设备代码搜索...\",\n" +
-                    "  \"W/O Management\": \"工单与保养项目管理\",\n" +
+                    "  \"W/O Management\": \"工单管理\",\n" +
                     "  \"Select function\": \"选择功能\",\n" +
                     "  \"Add Work Order\": \"新增工单\",\n" +
                     "  \"Enter Work Order Data\": \"录入工单与保养项目结果\",\n" +
@@ -998,11 +1055,27 @@ public class LanguageAPIUtils
                     "  \"Week\": \"周\",\n" +
                     "  \"Month\": \"月\",\n" +
                     "  \"Delete Work Order\": \"删除Work Order\",\n" +
+                    "  \"Cancel Work Order\": \"取消Work Order\",\n" +
                     "  \"Do you confirm deleting WorkOrder %s?\": \"您确认删除WorkOrder %s 吗？\",\n" +
+                    "  \"Do you confirm canceling WorkOrder %s?\": \"您确认取消WorkOrder %s 吗？\",\n" +
                     "  \"Deleting Work Order...\": \"正在删除Work Order...\",\n" +
+                    "  \"Canceling Work Order...\": \"正在取消Work Order...\",\n" +
                     "  \"Delete successful\": \"删除成功\",\n" +
+                    "  \"Cancel successful\": \"取消成功\",\n" +
                     "  \"Delete failed: %s\": \"删除失败: %s\",\n" +
+                    "  \"Cancel failed: %s\": \"取消失败: %s\",\n" +
                     "  \"Delete error: %s\": \"删除错误: %s\",\n" +
+                    "  \"Cancel error: %s\": \"取消错误: %s\",\n" +
+                    "  \"Cancel Reason\": \"取消原因\",\n" +
+                    "  \"Cancel Reason is required\": \"必须输入取消原因\",\n" +
+                    "  \"Enter cancellation reason...\": \"请输入取消原因...\",\n" +
+                    "  \"Agree\": \"同意\",\n" +
+                    "  \"No\": \"否\",\n" +
+                    "  \"Close\": \"关闭\",\n" +
+                    "  \"Canceled By\": \"取消者\",\n" +
+                    "  \"Canceled At\": \"取消时间\",\n" +
+                    "  \"View Cancel Details\": \"查看取消详情\",\n" +
+                    "  \"You do not have permission to cancel this Work Order or it is already Done\": \"您没有权限取消此Work Order或该工单已完成\",\n" +
                     "  \"Please enter Machine and Requester\": \"请输入完整的机器和申请人信息\",\n" +
                     "  \"Processing data...\": \"正在处理数据...\",\n" +
                     "  \"Add Work Order successful\": \"新增Work Order成功！\",\n" +

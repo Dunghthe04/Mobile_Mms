@@ -458,6 +458,25 @@ public class WorkOrderDataListFragment extends Fragment {
                     android.content.res.ColorStateList.valueOf(Color.parseColor(status1BgColor))
             );
 
+            boolean hasCancelData = false;
+            if ("6".equals(status1Value)) {
+                String cancelReason = safeGet(data, "CANCEL_REASON", "Cancel_Reason", "cancel_reason");
+                if (!cancelReason.isEmpty()) {
+                    hasCancelData = true;
+                }
+            }
+
+            if (hasCancelData && holder.ivCancelInfo != null) {
+                holder.ivCancelInfo.setVisibility(View.VISIBLE);
+                holder.ivCancelInfo.setOnClickListener(v -> {
+                    Context context = v.getContext();
+                    showCancelDetailsDialog(context, data);
+                });
+            } else if (holder.ivCancelInfo != null) {
+                holder.ivCancelInfo.setVisibility(View.GONE);
+                holder.ivCancelInfo.setOnClickListener(null);
+            }
+
             String process = safeGet(data, "Physical_Group_Name", "Physical_group_name", "physical_group_name", "Process", "PROCESS", "process_name");
             holder.tvSpecMin.setText(i18n("Process") + ": " + (process.isEmpty() ? "—" : process));
 
@@ -546,12 +565,117 @@ public class WorkOrderDataListFragment extends Fragment {
         @Override
         public int getItemCount() { return items.size(); }
 
+        private static String translate(String key, String fallbackVi, String fallbackEn) {
+            String lang = LanguageAPIUtils.getLanguageCode();
+            String translated = i18n(key);
+            if (translated.equals(key)) {
+                if ("vi".equals(lang)) return fallbackVi;
+                return fallbackEn;
+            }
+            return translated;
+        }
+
+        private static void showCancelDetailsDialog(Context context, JSONObject data) {
+            String cancelBy = safeGet(data, "CANCEL_BY", "Cancel_By", "cancel_by");
+            if (cancelBy.isEmpty()) cancelBy = "N/A";
+            
+            String cancelReason = safeGet(data, "CANCEL_REASON", "Cancel_Reason", "cancel_reason");
+            if (cancelReason.isEmpty()) cancelReason = "-";
+            
+            String rawCancelAt = safeGet(data, "CANCEL_AT", "Cancel_At", "cancel_at");
+            String cancelAt = "N/A";
+            if (!rawCancelAt.isEmpty()) {
+                cancelAt = rawCancelAt;
+            }
+
+            android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
+            layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+            int padding = dpToPx(context, 16);
+            layout.setPadding(padding, padding, padding, padding);
+
+            android.widget.TextView labelBy = createLabelTextView(context, translate("Canceled By", "Người hủy", "Canceled By"));
+            android.widget.TextView valueBy = createValueTextView(context, cancelBy);
+            
+            android.widget.TextView labelAt = createLabelTextView(context, translate("Canceled At", "Thời gian hủy", "Canceled At"));
+            android.widget.TextView valueAt = createValueTextView(context, cancelAt);
+            
+            android.widget.TextView labelReason = createLabelTextView(context, translate("Cancel Reason", "Lý do hủy", "Cancel Reason"));
+            android.widget.TextView valueReason = createValueTextView(context, cancelReason);
+
+            layout.addView(labelBy);
+            layout.addView(valueBy);
+            layout.addView(createSpacer(context, 8));
+            layout.addView(labelAt);
+            layout.addView(valueAt);
+            layout.addView(createSpacer(context, 8));
+            layout.addView(labelReason);
+            layout.addView(valueReason);
+
+            new androidx.appcompat.app.AlertDialog.Builder(context)
+                    .setTitle(translate("View Cancel Details", "Chi tiết hủy", "View Cancel Details"))
+                    .setView(layout)
+                    .setPositiveButton(i18n("Close"), (dialog, which) -> dialog.dismiss())
+                    .show();
+        }
+
+        private static android.widget.TextView createLabelTextView(Context context, String text) {
+            android.widget.TextView tv = new android.widget.TextView(context);
+            tv.setText(text);
+            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13);
+            tv.setTextColor(Color.parseColor("#4B5563"));
+            tv.setTypeface(null, android.graphics.Typeface.BOLD);
+            android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            lp.setMargins(0, 0, 0, dpToPx(context, 4));
+            tv.setLayoutParams(lp);
+            return tv;
+        }
+
+        private static android.widget.TextView createValueTextView(Context context, String text) {
+            android.widget.TextView tv = new android.widget.TextView(context);
+            tv.setText(text);
+            tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14);
+            tv.setTextColor(Color.parseColor("#111827"));
+            tv.setPadding(dpToPx(context, 10), dpToPx(context, 10), dpToPx(context, 10), dpToPx(context, 10));
+            
+            android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+            gd.setColor(Color.parseColor("#F9FAFB"));
+            gd.setCornerRadius(dpToPx(context, 4));
+            gd.setStroke(dpToPx(context, 1), Color.parseColor("#E5E7EB"));
+            tv.setBackground(gd);
+            
+            android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            tv.setLayoutParams(lp);
+            return tv;
+        }
+
+        private static View createSpacer(Context context, int dp) {
+            View view = new View(context);
+            android.widget.LinearLayout.LayoutParams lp = new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT,
+                    dpToPx(context, dp)
+            );
+            view.setLayoutParams(lp);
+            return view;
+        }
+
+        private static int dpToPx(Context context, int dp) {
+            float density = context.getResources().getDisplayMetrics().density;
+            return Math.round((float) dp * density);
+        }
+
         static class VH extends RecyclerView.ViewHolder {
             TextView tvItemIndex, tvParamName, tvTagParamType, tvTagUom, tvLabelLastValue, tvTagLastValue;
             TextView tvTagEntryStatus, tvSpecMin, tvSpecMax, tvSpecTarget;
             TextView tvActualValue, tvEntryMethod, tvDeviationAlert;
             TextView tvHiddenParamId, tvHiddenStepId, tvEntryInstruction, tvBtnEnterWo;
             TextView tvContentLabel;
+            ImageView ivCancelInfo;
 
             VH(@NonNull View itemView) {
                 super(itemView);
@@ -573,6 +697,7 @@ public class WorkOrderDataListFragment extends Fragment {
                 tvEntryInstruction = itemView.findViewById(R.id.tv_entry_instruction);
                 tvBtnEnterWo = itemView.findViewById(R.id.tv_btn_enter_wo);
                 tvContentLabel = itemView.findViewById(R.id.tv_content_label);
+                ivCancelInfo = itemView.findViewById(R.id.iv_cancel_info);
             }
         }
 

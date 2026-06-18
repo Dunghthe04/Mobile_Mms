@@ -51,16 +51,147 @@ public class WorkOrderDataActivity extends AppCompatActivity {
     private static final String TAG_WORK_ORDER = "tab_work_order";
     private static final String TAG_MAINTENANCE = "tab_maintenance";
 
-    private static final String[] MAINT_GROUP_IDS = {"", "FE1", "FE2", "FE3", "FE4"};
+    public static class FeTeam {
+        public String teamId;
+        public String teamName;
+        public FeTeam(String teamId, String teamName) {
+            this.teamId = teamId;
+            this.teamName = teamName;
+        }
+    }
 
-    public static String[] getLocalizedGroupLabels() {
-        return new String[]{
-                i18n("All"),
-                "FE1",
-                "FE2",
-                "FE3",
-                "FE4"
-        };
+    private final List<FeTeam> dynamicMaintGroups = new ArrayList<>();
+    private int selectedWoStatusIndex = -2;
+    private int selectedMaintStatusIndex = -2;
+    private int selectedGroupIndex = -2;
+
+    private int getDefaultGroupSelectionIndex() {
+        return 0; // Default to "All" initially, fetched dynamically
+    }
+
+    public int getSelectedGroupIndex() {
+        return selectedGroupIndex;
+    }
+
+    public List<FeTeam> getDynamicMaintGroups() {
+        return dynamicMaintGroups;
+    }
+
+    private void fetchFeTeams() {
+        PreferenceHandler handler = new PreferenceHandler(this);
+        JSONObject userObj = handler.getJsonObject("user");
+        String userName = handler.getString("Userlogin").trim();
+        if (userName.isEmpty() && userObj != null) {
+            userName = userObj.optString("username", "").trim();
+        }
+        final String finalUserName = userName;
+
+        initConfiguration();
+        new Thread(() -> {
+            try {
+                // 1. Fetch all teams first
+                JSONObject allCondition = new JSONObject();
+                allCondition.put("USER_ID", "'admin'");
+                allCondition.put("Schema_Core", schemaCore);
+                allCondition.put("Schema_Mms", schemaMms);
+
+                HttpClient.APIReturn resAll = HttpClient.callDynamics(this, serverUrl, "mes_mms", "MMS_GET_FE_TEAM", allCondition);
+                List<FeTeam> loadedTeams = new ArrayList<>();
+                loadedTeams.add(new FeTeam("", i18n("All")));
+
+                if (resAll != null && resAll.code == 200 && resAll.data != null) {
+                    for (JSONObject teamObj : resAll.data) {
+                        String teamId = teamObj.optString("Team_Id", teamObj.optString("TEAM_ID", "")).trim();
+                        String teamName = teamObj.optString("Team_Name", teamObj.optString("TEAM_NAME", "")).trim();
+                        if (!teamId.isEmpty() && !teamName.isEmpty()) {
+                            boolean exists = false;
+                            for (FeTeam t : loadedTeams) {
+                                if (t.teamId.equalsIgnoreCase(teamId)) {
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                            if (!exists) {
+                                loadedTeams.add(new FeTeam(teamId, teamName));
+                            }
+                        }
+                    }
+                }
+
+                // If loading failed or empty, fallback to static list to avoid breaking UI
+                if (loadedTeams.size() <= 1) {
+                    loadedTeams.add(new FeTeam("00011", "FE1"));
+                    loadedTeams.add(new FeTeam("00014", "FE2"));
+                    loadedTeams.add(new FeTeam("00030", "FE3"));
+                    loadedTeams.add(new FeTeam("00031", "FE4"));
+                }
+
+                // 2. Fetch the user's specific team to select the default one
+                String userTeamId = "";
+                String userTeamName = "";
+                if (!finalUserName.isEmpty()) {
+                    JSONObject userCondition = new JSONObject();
+                    userCondition.put("USER_ID", "'" + finalUserName + "'");
+                    userCondition.put("Schema_Core", schemaCore);
+                    userCondition.put("Schema_Mms", schemaMms);
+
+                    HttpClient.APIReturn resUser = HttpClient.callDynamics(this, serverUrl, "mes_mms", "MMS_GET_FE_TEAM", userCondition);
+                    if (resUser != null && resUser.code == 200 && resUser.data != null && !resUser.data.isEmpty()) {
+                        JSONObject userTeamObj = resUser.data.get(0);
+                        userTeamId = userTeamObj.optString("Team_Id", userTeamObj.optString("TEAM_ID", "")).trim();
+                        userTeamName = userTeamObj.optString("Team_Name", userTeamObj.optString("TEAM_NAME", "")).trim();
+                    }
+                }
+
+                // Find index of user's team
+                int matchedIndex = 0; // Default to "All" (index 0)
+                if (!userTeamId.isEmpty() || !userTeamName.isEmpty()) {
+                    for (int i = 0; i < loadedTeams.size(); i++) {
+                        FeTeam t = loadedTeams.get(i);
+                        if ((!userTeamId.isEmpty() && t.teamId.equalsIgnoreCase(userTeamId)) ||
+                            (!userTeamName.isEmpty() && t.teamName.equalsIgnoreCase(userTeamName))) {
+                            matchedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                final List<FeTeam> finalTeams = loadedTeams;
+                final int finalIndex = matchedIndex;
+                final String finalTeamId = finalTeams.get(matchedIndex).teamId;
+
+                runOnUiThread(() -> {
+                    dynamicMaintGroups.clear();
+                    dynamicMaintGroups.addAll(finalTeams);
+                    selectedGroupIndex = finalIndex;
+
+                    if (currentSelectedTab == 1) {
+                        populateMaintSpinners();
+                    }
+                    if (maintenanceTabFragment != null && maintenanceTabFragment.isAdded()) {
+                        maintenanceTabFragment.filterByGroup(finalTeamId);
+                    }
+                });
+
+            } catch (Exception e) {
+                Log.e("WorkOrderDataActivity", "Error loading dynamic FE teams", e);
+                runOnUiThread(() -> {
+                    if (dynamicMaintGroups.isEmpty()) {
+                        dynamicMaintGroups.add(new FeTeam("", i18n("All")));
+                        dynamicMaintGroups.add(new FeTeam("00011", "FE1"));
+                        dynamicMaintGroups.add(new FeTeam("00014", "FE2"));
+                        dynamicMaintGroups.add(new FeTeam("00030", "FE3"));
+                        dynamicMaintGroups.add(new FeTeam("00031", "FE4"));
+                    }
+                    if (selectedGroupIndex == -2) {
+                        selectedGroupIndex = 0;
+                    }
+                    if (currentSelectedTab == 1) {
+                        populateMaintSpinners();
+                    }
+                });
+            }
+        }).start();
     }
 
     private TextView btnTabWorkOrder;
@@ -125,9 +256,7 @@ public class WorkOrderDataActivity extends AppCompatActivity {
         workOrderMachineId = initialMachineId;
         maintenanceMachineId = initialMachineId;
 
-        // Đảm bảo nạp ngôn ngữ từ điển và thiết lập bộ lắng nghe sự kiện kích hoạt Spinner thành công
-        applyLanguage();
-        setupSpinnerSelectionListeners();
+        // Đảm bảo thiết lập bộ lắng nghe lọc ngày thành công
         setupDateFilterListeners();
 
         ImageView btnBack = findViewById(R.id.btn_back);
@@ -184,6 +313,12 @@ public class WorkOrderDataActivity extends AppCompatActivity {
             workOrderListFragment = (WorkOrderDataListFragment) getSupportFragmentManager().findFragmentByTag(TAG_WORK_ORDER);
             maintenanceTabFragment = (MaintenanceTabFragment) getSupportFragmentManager().findFragmentByTag(TAG_MAINTENANCE);
         }
+
+        // Khởi tạo việc tải danh sách nhóm FE động từ cơ sở dữ liệu
+        fetchFeTeams();
+
+        // Populate spinners after fragments are attached and added
+        applyLanguage();
 
         selectTab(0);
     }
@@ -280,6 +415,7 @@ public class WorkOrderDataActivity extends AppCompatActivity {
 
         spinnerWoStatus = findViewById(R.id.spinner_filter_wo_status);
         spinnerMaintStatus = findViewById(R.id.spinner_filter_maint_status);
+        spinnerMaintGroup = findViewById(R.id.spinner_filter_maint_group);
 
         if (index == 0) {
             if (workOrderListFragment != null) tx.show(workOrderListFragment);
@@ -291,6 +427,8 @@ public class WorkOrderDataActivity extends AppCompatActivity {
             // hiển thị bộ lọc
             if (filtersWorkOrder != null) filtersWorkOrder.setVisibility(View.VISIBLE);
             if (filtersMaintenance != null) filtersMaintenance.setVisibility(View.GONE);
+
+            populateWoSpinners();
         } else {
             if (workOrderListFragment != null) tx.hide(workOrderListFragment);
             if (maintenanceTabFragment != null) tx.show(maintenanceTabFragment);
@@ -301,6 +439,8 @@ public class WorkOrderDataActivity extends AppCompatActivity {
             // hiển thị bộ lọc
             if (filtersWorkOrder != null) filtersWorkOrder.setVisibility(View.GONE);
             if (filtersMaintenance != null) filtersMaintenance.setVisibility(View.VISIBLE);
+
+            populateMaintSpinners();
         }
         tx.commitNowAllowingStateLoss();
     }
@@ -337,90 +477,116 @@ public class WorkOrderDataActivity extends AppCompatActivity {
             LanguageAPIUtils.setLang(rootView);
         }
 
-        populateStatusSpinnersWithI18n();
+        if (currentSelectedTab == 0) {
+            populateWoSpinners();
+        } else {
+            populateMaintSpinners();
+        }
 
         String activeMachineId = (currentSelectedTab == 0) ? workOrderMachineId : maintenanceMachineId;
         updateMachineScanUi(activeMachineId);
     }
 
-    private void setupSpinnerSelectionListeners() {
+    private void populateWoSpinners() {
+        int currentWoSelection = selectedWoStatusIndex == -2 ? 0 : selectedWoStatusIndex;
         if (spinnerWoStatus != null) {
-            spinnerWoStatus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    if (workOrderListFragment != null && workOrderListFragment.isAdded()) {
-                        workOrderListFragment.filterByStatus(position);
-                    }
+            String[] woStatuses = WorkOrderDataListFragment.getLocalizedStatusLabels();
+            ArrayAdapter<String> woAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, woStatuses);
+            woAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            
+            spinnerWoStatus.setOnItemSelectedListener(null);
+            spinnerWoStatus.setAdapter(woAdapter);
+            if (currentWoSelection >= 0 && currentWoSelection < woStatuses.length) {
+                spinnerWoStatus.setSelection(currentWoSelection);
+            }
+            
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                if (spinnerWoStatus != null) {
+                    spinnerWoStatus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                            selectedWoStatusIndex = position;
+                            if (workOrderListFragment != null && workOrderListFragment.isAdded()) {
+                                workOrderListFragment.filterByStatus(position);
+                            }
+                        }
+                        @Override public void onNothingSelected(AdapterView<?> parent) {}
+                    });
                 }
-                @Override public void onNothingSelected(AdapterView<?> parent) {}
-            });
-        }
-
-        if (spinnerMaintStatus != null) {
-            spinnerMaintStatus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    if (maintenanceTabFragment != null && maintenanceTabFragment.isAdded()) {
-                        maintenanceTabFragment.filterByStatus(position);
-                    }
-                }
-                @Override public void onNothingSelected(AdapterView<?> parent) {}
-            });
-        }
-
-        if (spinnerMaintGroup != null) {
-            spinnerMaintGroup.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    if (maintenanceTabFragment != null && maintenanceTabFragment.isAdded()) {
-                        String selectedGroup = MAINT_GROUP_IDS[position];
-                        maintenanceTabFragment.filterByGroup(selectedGroup);
-                    }
-                }
-                @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
         }
     }
 
-    private void populateStatusSpinnersWithI18n() {
-        int currentWoSelection = spinnerWoStatus != null ? spinnerWoStatus.getSelectedItemPosition() : 0;
-        int currentMaintSelection = spinnerMaintStatus != null ? spinnerMaintStatus.getSelectedItemPosition() : 0;
-
-        if (spinnerWoStatus != null) {
-            String[] woStatuses = WorkOrderDataListFragment.getLocalizedStatusLabels();
-
-            ArrayAdapter<String> woAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, woStatuses);
-            woAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinnerWoStatus.setAdapter(woAdapter);
-
-            if (currentWoSelection >= 0 && currentWoSelection < woStatuses.length) {
-                spinnerWoStatus.setSelection(currentWoSelection);
-            }
-        }
+    private void populateMaintSpinners() {
+        int currentMaintSelection = selectedMaintStatusIndex == -2 ? 0 : selectedMaintStatusIndex;
+        int currentGroupSelection = selectedGroupIndex == -2 ? getDefaultGroupSelectionIndex() : selectedGroupIndex;
 
         if (spinnerMaintStatus != null) {
             String[] maintStatuses = MaintenanceTabFragment.getLocalizedStatusLabels();
-
             ArrayAdapter<String> maintAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, maintStatuses);
             maintAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            
+            spinnerMaintStatus.setOnItemSelectedListener(null);
             spinnerMaintStatus.setAdapter(maintAdapter);
-
             if (currentMaintSelection >= 0 && currentMaintSelection < maintStatuses.length) {
                 spinnerMaintStatus.setSelection(currentMaintSelection);
             }
+
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                if (spinnerMaintStatus != null) {
+                    spinnerMaintStatus.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                            selectedMaintStatusIndex = position;
+                            if (maintenanceTabFragment != null && maintenanceTabFragment.isAdded()) {
+                                maintenanceTabFragment.filterByStatus(position);
+                            }
+                        }
+                        @Override public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                }
+            });
         }
 
         if (spinnerMaintGroup != null) {
-            int currentGroupSelection = spinnerMaintGroup.getSelectedItemPosition();
-            String[] groupLabels = getLocalizedGroupLabels();
-
+            if (selectedGroupIndex == -2) {
+                selectedGroupIndex = currentGroupSelection;
+            }
+            String[] groupLabels;
+            if (dynamicMaintGroups.isEmpty()) {
+                groupLabels = new String[]{ i18n("All") };
+            } else {
+                groupLabels = new String[dynamicMaintGroups.size()];
+                for (int i = 0; i < dynamicMaintGroups.size(); i++) {
+                    groupLabels[i] = dynamicMaintGroups.get(i).teamName;
+                }
+            }
             ArrayAdapter<String> groupAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, groupLabels);
             groupAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            
+            spinnerMaintGroup.setOnItemSelectedListener(null);
             spinnerMaintGroup.setAdapter(groupAdapter);
-
-            if (currentGroupSelection >= 0 && currentGroupSelection < groupLabels.length) {
-                spinnerMaintGroup.setSelection(currentGroupSelection);
+            if (selectedGroupIndex >= 0 && selectedGroupIndex < groupLabels.length) {
+                spinnerMaintGroup.setSelection(selectedGroupIndex);
             }
+
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                if (spinnerMaintGroup != null) {
+                    spinnerMaintGroup.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                            selectedGroupIndex = position;
+                            if (maintenanceTabFragment != null && maintenanceTabFragment.isAdded()) {
+                                if (dynamicMaintGroups.size() > position) {
+                                    String selectedGroupId = dynamicMaintGroups.get(position).teamId;
+                                    maintenanceTabFragment.filterByGroup(selectedGroupId);
+                                }
+                            }
+                        }
+                        @Override public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                }
+            });
         }
     }
 

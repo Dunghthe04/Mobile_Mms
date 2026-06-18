@@ -137,6 +137,17 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
+                <ImageView
+                    android:id="@+id/iv_cancel_info"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:padding="4dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@android:drawable/ic_dialog_info"
+                    android:tint="#2563EB"
+                    android:visibility="gone"
+                    android:contentDescription="Cancel Info" />
+
                 <TextView
                     android:id="@+id/tv_tag_entry_status"
                     android:layout_width="wrap_content"

@@ -153,6 +153,18 @@
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_trash"
                     android:tint="@android:color/transparent" />
+
+                <ImageView
+                    android:id="@+id/btn_card_cancel_info"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_action_icon_edit"
+                    android:padding="6dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/circle_information"
+                    android:tint="#2563EB"
+                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
 

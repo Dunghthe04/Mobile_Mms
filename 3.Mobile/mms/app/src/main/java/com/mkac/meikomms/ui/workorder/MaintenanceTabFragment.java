@@ -99,9 +99,9 @@ public class MaintenanceTabFragment extends Fragment {
             WorkOrderDataActivity activity = (WorkOrderDataActivity) getActivity();
             if (activity != null) {
                 int selectedIndex = activity.getSelectedGroupIndex();
-                String[] groupIds = {"", "FE1", "FE2", "FE3", "FE4"};
-                if (selectedIndex >= 0 && selectedIndex < groupIds.length) {
-                    currentGroupFilter = groupIds[selectedIndex];
+                List<WorkOrderDataActivity.FeTeam> teams = activity.getDynamicMaintGroups();
+                if (selectedIndex >= 0 && selectedIndex < teams.size()) {
+                    currentGroupFilter = teams.get(selectedIndex).teamId;
                 }
             }
         }
@@ -144,6 +144,15 @@ public class MaintenanceTabFragment extends Fragment {
 
     private String mapGroupToId(String groupName) {
         if (groupName == null) return "";
+        WorkOrderDataActivity activity = (WorkOrderDataActivity) getActivity();
+        if (activity != null) {
+            List<WorkOrderDataActivity.FeTeam> teams = activity.getDynamicMaintGroups();
+            for (WorkOrderDataActivity.FeTeam t : teams) {
+                if (t.teamName.equalsIgnoreCase(groupName.trim()) || t.teamId.equalsIgnoreCase(groupName.trim())) {
+                    return t.teamId;
+                }
+            }
+        }
         switch (groupName.trim().toUpperCase()) {
             case "FE1": return "00011";
             case "FE2": return "00014";

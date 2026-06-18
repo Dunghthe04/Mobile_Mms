@@ -7,6 +7,7 @@ import static com.mkac.meikomms.common.LanguageAPIUtils.i18n;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -18,11 +19,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.provider.Settings;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -31,7 +35,10 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -87,9 +94,9 @@ public class ListWorkOrderActivity extends AppCompatActivity {
     private TextView tvStartDate, tvEndDate, tvCountdown;
     private TextView btnFilterDay, btnFilterWeek, btnFilterMonth;
     private TextView btnResetFilter;
-    private CheckBox cbChuaThucHien, cbQuaHan, cbDaThucHien;
-    private TextView tvCountChua, tvCountQuaHan, tvCountDaThucHien;
-    private TextView tvProgressChua, tvProgressQuaHan, tvProgressDaThucHien;
+    private CheckBox cbChuaThucHien, cbQuaHan, cbDaThucHien, cbDaHuy;
+    private TextView tvCountChua, tvCountQuaHan, tvCountDaThucHien, tvCountDaHuy;
+    private TextView tvProgressChua, tvProgressQuaHan, tvProgressDaThucHien, tvProgressDaHuy;
     private TextView tvUsernameDisplay;
     private RecyclerView rvWorkOrder;
     private LinearLayout headerFixedContainer;
@@ -338,14 +345,17 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         cbChuaThucHien = findViewById(R.id.cb_chua_thuc_hien);
         cbQuaHan = findViewById(R.id.cb_qua_han);
         cbDaThucHien = findViewById(R.id.cb_da_thuc_hien);
+        cbDaHuy = findViewById(R.id.cb_da_huy);
 
         tvCountChua = findViewById(R.id.tv_count_chua_thuc_hien);
         tvCountQuaHan = findViewById(R.id.tv_count_qua_han);
         tvCountDaThucHien = findViewById(R.id.tv_count_da_thuc_hien);
+        tvCountDaHuy = findViewById(R.id.tv_count_da_huy);
 
         tvProgressChua = findViewById(R.id.tv_progress_chua_thuc_hien);
         tvProgressQuaHan = findViewById(R.id.tv_progress_qua_han);
         tvProgressDaThucHien = findViewById(R.id.tv_progress_da_thuc_hien);
+        tvProgressDaHuy = findViewById(R.id.tv_progress_da_huy);
 
         tvUsernameDisplay = findViewById(R.id.tv_username_display);
         displayUserInfo();
@@ -402,6 +412,7 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         if (findViewById(R.id.ln_chua_thuc_hien) != null) findViewById(R.id.ln_chua_thuc_hien).setOnClickListener(v -> { if(cbChuaThucHien != null) cbChuaThucHien.toggle(); statusToggle.onClick(v); });
         if (findViewById(R.id.ln_qua_han) != null) findViewById(R.id.ln_qua_han).setOnClickListener(v -> { if(cbQuaHan != null) cbQuaHan.toggle(); statusToggle.onClick(v); });
         if (findViewById(R.id.ln_da_thuc_hien) != null) findViewById(R.id.ln_da_thuc_hien).setOnClickListener(v -> { if(cbDaThucHien != null) cbDaThucHien.toggle(); statusToggle.onClick(v); });
+        if (findViewById(R.id.ln_da_huy) != null) findViewById(R.id.ln_da_huy).setOnClickListener(v -> { if(cbDaHuy != null) cbDaHuy.toggle(); statusToggle.onClick(v); });
 
         if (findViewById(R.id.btn_add_wo) != null) {
             findViewById(R.id.btn_add_wo).setOnClickListener(v -> {
@@ -516,14 +527,18 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         if (cbChuaThucHien != null) cbChuaThucHien.setChecked(true);
         if (cbQuaHan != null) cbQuaHan.setChecked(true);
         if (cbDaThucHien != null) cbDaThucHien.setChecked(true);
+        if (cbDaHuy != null) cbDaHuy.setChecked(true);
         updateSelectedStatuses();
     }
 
     private void updateSelectedStatuses() {
         selectedStatuses.clear();
-        if (cbChuaThucHien != null && cbChuaThucHien.isChecked()) selectedStatuses.add("CHUA_THUC_HIEN");
+        if (cbChuaThucHien != null && cbChuaThucHien.isChecked()) {
+            selectedStatuses.add("CHUA_THUC_HIEN");
+        }
         if (cbQuaHan != null && cbQuaHan.isChecked()) selectedStatuses.add("QUA_HAN");
         if (cbDaThucHien != null && cbDaThucHien.isChecked()) selectedStatuses.add("DA_THUC_HIEN");
+        if (cbDaHuy != null && cbDaHuy.isChecked()) selectedStatuses.add("DA_HUY");
     }
 
 
@@ -601,6 +616,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
                 return "DA_THUC_HIEN";
             case 5:
                 return "QUA_HAN";
+            case 6:
+                return "DA_HUY";
             case 0:
             default:
                 return "CHUA_THUC_HIEN";
@@ -628,23 +645,26 @@ public class ListWorkOrderActivity extends AppCompatActivity {
     }
 
     private void updateSummary(List<JSONObject> list) {
-        int cChua = 0, cQua = 0, cXong = 0;
+        int cChua = 0, cQua = 0, cXong = 0, cDaHuy = 0;
         for (JSONObject obj : list) {
             if (obj == null) continue;
             String type = getStatusType(obj);
             if (type.equals("CHUA_THUC_HIEN")) cChua++;
             else if (type.equals("QUA_HAN")) cQua++;
             else if (type.equals("DA_THUC_HIEN")) cXong++;
+            else if (type.equals("DA_HUY")) cDaHuy++;
         }
 
         if (tvCountChua != null) tvCountChua.setText(i18n("Incomplete") + ": " + cChua);
         if (tvCountQuaHan != null) tvCountQuaHan.setText(i18n("Overdue") + ": " + cQua);
         if (tvCountDaThucHien != null) tvCountDaThucHien.setText(i18n("Completed") + ": " + cXong);
+        if (tvCountDaHuy != null) tvCountDaHuy.setText(i18n("Canceled") + ": " + cDaHuy);
 
         int total = list.size();
         updateProgressPart(tvProgressChua, cChua, total);
         updateProgressPart(tvProgressQuaHan, cQua, total);
         updateProgressPart(tvProgressDaThucHien, cXong, total);
+        updateProgressPart(tvProgressDaHuy, cDaHuy, total);
     }
 
     private void updateProgressPart(TextView tv, int count, int total) {
@@ -926,6 +946,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
                         holder.cells[i].setTextColor(Color.parseColor("#FF9800"));
                     } else if ("DA_THUC_HIEN".equals(dto.typeCode)) {
                         holder.cells[i].setTextColor(Color.parseColor("#2196F3"));
+                    } else if ("DA_HUY".equals(dto.typeCode)) {
+                        holder.cells[i].setTextColor(Color.parseColor("#F44336"));
                     }
                     holder.cells[i].setTypeface(null, android.graphics.Typeface.BOLD);
                 } else {
@@ -938,6 +960,25 @@ public class ListWorkOrderActivity extends AppCompatActivity {
             }
 
             applyActions(holder.btnEdit, holder.btnDelete, canEditRow, canDeleteRow, holder.getAdapterPosition());
+
+            boolean isCanceled = "DA_HUY".equals(dto.typeCode);
+            if (isCanceled) {
+                if (holder.btnCancelInfo != null) {
+                    holder.btnCancelInfo.setVisibility(View.VISIBLE);
+                    holder.btnCancelInfo.setOnClickListener(v -> showCancelDetailsDialog(v.getContext(), data));
+                }
+                if (holder.dividerCancelInfo != null) {
+                    holder.dividerCancelInfo.setVisibility(View.VISIBLE);
+                }
+            } else {
+                if (holder.btnCancelInfo != null) {
+                    holder.btnCancelInfo.setVisibility(View.GONE);
+                    holder.btnCancelInfo.setOnClickListener(null);
+                }
+                if (holder.dividerCancelInfo != null) {
+                    holder.dividerCancelInfo.setVisibility(View.GONE);
+                }
+            }
 
             holder.itemView.setOnClickListener(v -> selectRow(holder.getAdapterPosition()));
             holder.layoutForeground.setOnClickListener(v -> selectRow(holder.getAdapterPosition()));
@@ -978,6 +1019,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
                 statusColor = Color.parseColor("#F59E0B");
             } else if ("DA_THUC_HIEN".equals(dto.typeCode)) {
                 statusColor = Color.parseColor("#2563EB");
+            } else if ("DA_HUY".equals(dto.typeCode)) {
+                statusColor = Color.parseColor("#EF4444");
             }
             holder.tvWoStatus.setBackgroundTintList(ColorStateList.valueOf(statusColor));
             holder.tvWoStatus.setTextColor(Color.WHITE);
@@ -990,6 +1033,19 @@ public class ListWorkOrderActivity extends AppCompatActivity {
             holder.cardRoot.setOnClickListener(v -> selectRow(holder.getAdapterPosition()));
 
             applyActions(holder.btnEdit, holder.btnDelete, canEditRow, canDeleteRow, holder.getAdapterPosition());
+
+            boolean isCanceled = "DA_HUY".equals(dto.typeCode);
+            if (isCanceled) {
+                if (holder.btnCancelInfo != null) {
+                    holder.btnCancelInfo.setVisibility(View.VISIBLE);
+                    holder.btnCancelInfo.setOnClickListener(v -> showCancelDetailsDialog(v.getContext(), data));
+                }
+            } else {
+                if (holder.btnCancelInfo != null) {
+                    holder.btnCancelInfo.setVisibility(View.GONE);
+                    holder.btnCancelInfo.setOnClickListener(null);
+                }
+            }
         }
 
         private void applyActions(ImageView btnEdit, ImageView btnDelete, boolean canEditRow, boolean canDeleteRow, int adapterPosition) {
@@ -1041,7 +1097,7 @@ public class ListWorkOrderActivity extends AppCompatActivity {
             ensureRowSelected(adapterPosition);
             if (!canDelete(item)) {
                 Toast.makeText(ListWorkOrderActivity.this,
-                        i18n("You do not have permission to delete this Work Order or it is already Done"),
+                        i18n("You do not have permission to cancel this Work Order or it is already Done"),
                         Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -1053,23 +1109,45 @@ public class ListWorkOrderActivity extends AppCompatActivity {
             checkDeletePermissionAsync(item, allowed -> runOnUiThread(() -> {
                 if (!allowed) {
                     Toast.makeText(ListWorkOrderActivity.this,
-                            i18n("You do not have permission to delete this Work Order or it is already Done"),
+                            i18n("You do not have permission to cancel this Work Order or it is already Done"),
                             Toast.LENGTH_LONG).show();
                     return;
                 }
 
                 String confirmMsg = String.format(
                         Locale.getDefault(),
-                        i18n("Do you confirm deleting WorkOrder %s?"),
+                        i18n("Do you confirm canceling WorkOrder %s?"),
                         woCode
                 );
 
-                new AlertDialog.Builder(clickedView.getContext())
-                        .setTitle(i18n("Delete Work Order"))
-                        .setMessage(confirmMsg)
-                        .setPositiveButton(i18n("Agree"), (dialog, which) -> deleteWorkOrder(item))
-                        .setNegativeButton(i18n("No"), null)
-                        .show();
+                final Dialog confirmDialog = new Dialog(clickedView.getContext());
+                confirmDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                confirmDialog.setContentView(R.layout.layout_dialog_yesno);
+
+                TextView btncancel = (TextView) confirmDialog.findViewById(R.id.btnclose);
+                TextView btnOK = (TextView) confirmDialog.findViewById(R.id.btnlogout);
+                TextView txtnoidung = (TextView) confirmDialog.findViewById(R.id.txtnoidung);
+                TextView tvTitle = (TextView) confirmDialog.findViewById(R.id.tvTitle);
+                ImageView btn_close = (ImageView) confirmDialog.findViewById(R.id.btn_close);
+
+                txtnoidung.setText(confirmMsg);
+                tvTitle.setText(i18n("Cancel Work Order"));
+                btnOK.setText(i18n("Agree"));
+                btncancel.setText(i18n("No"));
+
+                btn_close.setOnClickListener(v -> confirmDialog.dismiss());
+                btncancel.setOnClickListener(v -> confirmDialog.dismiss());
+                btnOK.setOnClickListener(v -> {
+                    confirmDialog.dismiss();
+                    showCancelReasonDialog(item, woCode, clickedView);
+                });
+
+                Window window = confirmDialog.getWindow();
+                if (window != null) {
+                    window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+                    window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                }
+                confirmDialog.show();
             }));
         }
 
@@ -1080,7 +1158,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
             TextView[] fixedCells;
             LinearLayout rowContent;
             TextView[] cells;
-            ImageView btnEdit, btnDelete;
+            ImageView btnEdit, btnDelete, btnCancelInfo;
+            View dividerCancelInfo;
             RowVH(View v) {
                 super(v);
                 layoutForeground = v.findViewById(R.id.layout_foreground);
@@ -1095,6 +1174,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
 
                 btnEdit = v.findViewById(R.id.btn_edit);
                 btnDelete = v.findViewById(R.id.btn_delete);
+                btnCancelInfo = v.findViewById(R.id.btn_cancel_info);
+                dividerCancelInfo = v.findViewById(R.id.divider_cancel_info);
 
                 for (int i = 0; i < fixedCells.length; i++) {
                     TextView tv = new TextView(v.getContext());
@@ -1157,6 +1238,7 @@ public class ListWorkOrderActivity extends AppCompatActivity {
             TextView tvMaStatus;
             ImageView btnEdit;
             ImageView btnDelete;
+            ImageView btnCancelInfo;
 
             CardVH(View v) {
                 super(v);
@@ -1179,6 +1261,7 @@ public class ListWorkOrderActivity extends AppCompatActivity {
                 tvMaStatus = v.findViewById(R.id.tv_card_ma_status);
                 btnEdit = v.findViewById(R.id.btn_card_edit);
                 btnDelete = v.findViewById(R.id.btn_card_delete);
+                btnCancelInfo = v.findViewById(R.id.btn_card_cancel_info);
             }
         }
 
@@ -1427,6 +1510,7 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         switch (typeCode){
             case "DA_THUC_HIEN": return i18n("Completed");
             case "QUA_HAN": return i18n("Overdue");
+            case "DA_HUY": return i18n("Canceled");
             case "CHUA_THUC_HIEN": return i18n("Incomplete");
             default: return "";
         }
@@ -1573,9 +1657,120 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         return a.trim().equalsIgnoreCase(b.trim());
     }
 
-    private void deleteWorkOrder(JSONObject item) {
+    private void showCancelReasonDialog(JSONObject item, String woCode, View clickedView) {
+        final Dialog cancelDialog = new Dialog(clickedView.getContext());
+        cancelDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        LinearLayout root = new LinearLayout(clickedView.getContext());
+        root.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams containerParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        int margin = dpToPx(16);
+        containerParams.setMargins(margin, margin, margin, margin);
+
+        LinearLayout container = new LinearLayout(clickedView.getContext());
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setLayoutParams(containerParams);
+        int padding = dpToPx(16);
+        container.setPadding(padding, padding, padding, padding);
+        container.setBackgroundResource(R.drawable.bg_white_conner_8);
+
+        TextView tvTitle = new TextView(clickedView.getContext());
+        tvTitle.setText(i18n("Cancel Work Order"));
+        tvTitle.setTextSize(18);
+        tvTitle.setTypeface(null, Typeface.BOLD);
+        tvTitle.setTextColor(Color.BLACK);
+        container.addView(tvTitle);
+
+        TextView tvLabel = new TextView(clickedView.getContext());
+        tvLabel.setText(i18n("Cancel Reason") + " *");
+        tvLabel.setTextSize(14);
+        tvLabel.setTextColor(Color.DKGRAY);
+        LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        labelParams.setMargins(0, dpToPx(12), 0, dpToPx(6));
+        tvLabel.setLayoutParams(labelParams);
+        container.addView(tvLabel);
+
+        final EditText etReason = new EditText(clickedView.getContext());
+        etReason.setHint(i18n("Enter cancellation reason..."));
+        etReason.setGravity(Gravity.TOP | Gravity.START);
+        etReason.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        etReason.setSingleLine(false);
+        etReason.setMinLines(3);
+        etReason.setMaxLines(6);
+        etReason.setBackgroundResource(android.R.drawable.editbox_background_normal);
+        container.addView(etReason);
+
+        LinearLayout buttonContainer = new LinearLayout(clickedView.getContext());
+        buttonContainer.setOrientation(LinearLayout.HORIZONTAL);
+        buttonContainer.setGravity(Gravity.END);
+        LinearLayout.LayoutParams btnContainerParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        btnContainerParams.setMargins(0, dpToPx(16), 0, 0);
+        buttonContainer.setLayoutParams(btnContainerParams);
+
+        TextView btnClose = new TextView(clickedView.getContext());
+        btnClose.setText(i18n("Close"));
+        btnClose.setGravity(Gravity.CENTER);
+        btnClose.setTypeface(null, Typeface.BOLD);
+        btnClose.setTextColor(ContextCompat.getColor(clickedView.getContext(), R.color.red));
+        btnClose.setBackgroundResource(R.drawable.layout_bg_red);
+        LinearLayout.LayoutParams closeParams = new LinearLayout.LayoutParams(
+                dpToPx(120),
+                dpToPx(40)
+        );
+        btnClose.setLayoutParams(closeParams);
+        btnClose.setOnClickListener(v -> cancelDialog.dismiss());
+        buttonContainer.addView(btnClose);
+
+        TextView btnConfirm = new TextView(clickedView.getContext());
+        btnConfirm.setText(i18n("Cancel Work Order"));
+        btnConfirm.setGravity(Gravity.CENTER);
+        btnConfirm.setTypeface(null, Typeface.BOLD);
+        btnConfirm.setTextColor(Color.WHITE);
+        btnConfirm.setBackgroundResource(R.drawable.lay_out_conner_4_green_fill);
+        LinearLayout.LayoutParams confirmParams = new LinearLayout.LayoutParams(
+                dpToPx(140),
+                dpToPx(40)
+        );
+        confirmParams.setMargins(dpToPx(8), 0, 0, 0);
+        btnConfirm.setLayoutParams(confirmParams);
+        btnConfirm.setOnClickListener(v -> {
+            String reason = etReason.getText().toString().trim();
+            if (reason.isEmpty()) {
+                Toast.makeText(ListWorkOrderActivity.this, i18n("Cancel Reason is required"), Toast.LENGTH_SHORT).show();
+            } else {
+                cancelDialog.dismiss();
+                executeCancelWorkOrder(item, reason);
+            }
+        });
+        buttonContainer.addView(btnConfirm);
+
+        container.addView(buttonContainer);
+        root.addView(container);
+
+        cancelDialog.setContentView(root);
+        Window window = cancelDialog.getWindow();
+        if (window != null) {
+            window.setLayout(WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            WindowManager.LayoutParams windowAttributes = window.getAttributes();
+            windowAttributes.gravity = Gravity.CENTER;
+            window.setAttributes(windowAttributes);
+        }
+        cancelDialog.show();
+    }
+
+    private void executeCancelWorkOrder(JSONObject item, String reason) {
         ProgressDialog dialog = new ProgressDialog(this);
-        dialog.setMessage(i18n("Deleting Work Order..."));
+        dialog.setMessage(i18n("Canceling Work Order..."));
         dialog.setCancelable(false);
         dialog.show();
 
@@ -1584,35 +1779,119 @@ public class ListWorkOrderActivity extends AppCompatActivity {
                 String woCode = safeGet(item, "WO_CODE");
                 if (woCode.isEmpty()) woCode = safeGet(item, "Wo_Code");
 
-                String requestUser = safeGet(item, "REQUEST_USER");
-                if (requestUser.isEmpty()) requestUser = safeGet(item, "Request_User");
-                if (requestUser.isEmpty()) requestUser = currentUserId;
+                PreferenceHandler handler = new PreferenceHandler(this);
+                JSONObject userObj = handler.getJsonObject("user");
+                String userId = "";
+                String fullName = "";
+                if (userObj != null) {
+                    userId = userObj.optString("userId", "").trim();
+                    fullName = userObj.optString("fullName", "").trim();
+                }
 
-                JSONObject condition = new JSONObject();
-                condition.put("Schema_MMS", schemaData);
-                condition.put("Schema_Core", schemaCore);
-                condition.put("WO_CODE", woCode);
-                condition.put("ISSUE_ID", woCode);
-                condition.put("REQUEST_USER", requestUser);
+                // Call MES_MMS_CANCEL_WORK_ORDER
+                JSONObject cancelWoCondition = new JSONObject();
+                cancelWoCondition.put("Schema_MMS", schemaData);
+                cancelWoCondition.put("Wo_Code", woCode);
+                cancelWoCondition.put("Cancel_Reason", reason);
+                cancelWoCondition.put("UserId", userId + "-" + fullName);
 
-                ColorConsole.d(TAG, "Delete Condition: " + condition.toString());
-                HttpClient.APIReturn res = HttpClient.deleteMtWorkOrder(this, serverDynamic, condition);
+                ColorConsole.d(TAG, "Cancel WO Condition: " + cancelWoCondition.toString());
+                HttpClient.APIReturn res1 = HttpClient.callDynamics(this, serverDynamic, "mes_mms", "MES_MMS_CANCEL_WORK_ORDER", cancelWoCondition);
+
+                // Call MES_MMS_CANCEL_TASK
+                JSONObject cancelTaskCondition = new JSONObject();
+                cancelTaskCondition.put("Schema_MMS", schemaData);
+                cancelTaskCondition.put("Wo_Code", woCode);
+
+                ColorConsole.d(TAG, "Cancel Task Condition: " + cancelTaskCondition.toString());
+                HttpClient.APIReturn res2 = HttpClient.callDynamics(this, serverDynamic, "mes_mms", "MES_MMS_CANCEL_TASK", cancelTaskCondition);
 
                 runOnUiThread(() -> {
                     dialog.dismiss();
-                    if (res != null && res.code == 200) {
-                        Toast.makeText(this, i18n("Delete successful"), Toast.LENGTH_SHORT).show();
+                    if (res1 != null && res1.code == 200 && res2 != null && res2.code == 200) {
+                        Toast.makeText(this, i18n("Cancel successful"), Toast.LENGTH_SHORT).show();
                         loadData(currentDSACondition);
+
+                        // Trigger machine status reset
+                        String machineId = safeGet(item, "Machine_Id");
+                        if (machineId.isEmpty()) machineId = safeGet(item, "MACHINE_ID");
+                        if (machineId.isEmpty()) machineId = safeGet(item, "machine_id");
+                        if (!machineId.isEmpty()) {
+                            checkAndResetMachineStatus(machineId);
+                        }
                     } else {
-                        String msg = (res != null) ? res.message : i18n("No response from server");
-                        Toast.makeText(this, String.format(Locale.getDefault(), i18n("Delete failed: %s"), msg), Toast.LENGTH_LONG).show();
+                        String msg = "";
+                        if (res1 == null || res1.code != 200) {
+                            msg = (res1 != null) ? res1.message : i18n("No response from server");
+                        } else {
+                            msg = (res2 != null) ? res2.message : i18n("No response from server");
+                        }
+                        Toast.makeText(this, String.format(Locale.getDefault(), i18n("Cancel failed: %s"), msg), Toast.LENGTH_LONG).show();
                     }
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> {
                     dialog.dismiss();
-                    Toast.makeText(this, String.format(Locale.getDefault(), i18n("Delete error: %s"), e.getMessage()), Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, String.format(Locale.getDefault(), i18n("Cancel error: %s"), e.getMessage()), Toast.LENGTH_LONG).show();
                 });
+            }
+        }).start();
+    }
+
+    private void checkAndResetMachineStatus(String machineId) {
+        new Thread(() -> {
+            try {
+                // Wait 1.5s for DB stabilization as done on web
+                Thread.sleep(1500);
+
+                String checkWhere = "mt.MACHINE_ID = '" + machineId + "' AND mt.WO_TYPE = 3";
+                HttpClient.APIReturn res = HttpClient.getAllWorkOrder(
+                        getApplicationContext(),
+                        serverDynamic,
+                        schemaData,
+                        schemaCore,
+                        checkWhere,
+                        0,
+                        9999
+                );
+
+                if (res != null && res.code == 200 && res.data != null) {
+                    List<JSONObject> activeTasks = new ArrayList<>();
+                    for (int i = 0; i < res.data.size(); i++) {
+                        JSONObject t = res.data.get(i);
+                        String tMachineId = safeGet(t, "MACHINE_ID");
+                        if (tMachineId.isEmpty()) tMachineId = safeGet(t, "Machine_Id");
+                        if (!tMachineId.trim().equalsIgnoreCase(machineId.trim())) continue;
+
+                        int s = t.optInt("Status_1", t.optInt("STATUS_1", t.optInt("Issue_Status", 0)));
+                        if (s != 1 && s != 6) {
+                            activeTasks.add(t);
+                        }
+                    }
+
+                    int remainingBM = activeTasks.size();
+                    if (remainingBM > 0) {
+                        boolean hasLock = false;
+                        for (JSONObject t : activeTasks) {
+                            int lockedVal = t.optInt("IS_LOCKED", t.optInt("Is_Locked", 0));
+                            if (lockedVal == 2) {
+                                hasLock = true;
+                                break;
+                            }
+                        }
+                        int targetStatus = hasLock ? 2 : 1;
+                        if (targetStatus == 1) {
+                            HttpClient.updateMachineStatus(getApplicationContext(), serverDynamic, schemaCore, machineId, 0);
+                            HttpClient.updateMachineStatus(getApplicationContext(), serverDynamic, schemaCore, machineId, 1);
+                        } else {
+                            HttpClient.updateMachineStatus(getApplicationContext(), serverDynamic, schemaCore, machineId, targetStatus);
+                        }
+                    } else {
+                        HttpClient.updateMachineStatus(getApplicationContext(), serverDynamic, schemaCore, machineId, 0);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "checkAndResetMachineStatus error", e);
             }
         }).start();
     }
@@ -1732,5 +2011,142 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         isDestroyed = true;
         if (countDownTimer != null) countDownTimer.cancel();
         super.onDestroy();
+    }
+
+    private void showCancelDetailsDialog(Context context, JSONObject data) {
+        String cancelBy = safeGetMulti(data, "CANCEL_BY", "Cancel_By", "cancel_by");
+        if (cancelBy.isEmpty()) cancelBy = "N/A";
+        
+        String cancelReason = safeGetMulti(data, "CANCEL_REASON", "Cancel_Reason", "cancel_reason");
+        if (cancelReason.isEmpty()) cancelReason = "-";
+        
+        String rawCancelAt = safeGetMulti(data, "CANCEL_AT", "Cancel_At", "cancel_at");
+        String cancelAt = "N/A";
+        if (!rawCancelAt.isEmpty()) {
+            cancelAt = formatDateTime(rawCancelAt);
+        }
+
+        LinearLayout layout = new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int padding = dpToPx(16);
+        layout.setPadding(padding, padding, padding, padding);
+
+        TextView labelBy = createLabelTextView(context, i18n("Canceled By"));
+        TextView valueBy = createValueTextView(context, cancelBy);
+        
+        TextView labelAt = createLabelTextView(context, i18n("Canceled At"));
+        TextView valueAt = createValueTextView(context, cancelAt);
+        
+        TextView labelReason = createLabelTextView(context, i18n("Cancel Reason"));
+        TextView valueReason = createValueTextView(context, cancelReason);
+
+        layout.addView(labelBy);
+        layout.addView(valueBy);
+        layout.addView(createSpacer(context, 8));
+        layout.addView(labelAt);
+        layout.addView(valueAt);
+        layout.addView(createSpacer(context, 8));
+        layout.addView(labelReason);
+        layout.addView(valueReason);
+
+        new androidx.appcompat.app.AlertDialog.Builder(context)
+                .setTitle(i18n("View Cancel Details"))
+                .setView(layout)
+                .setPositiveButton(i18n("Close"), (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private String translate(String key, String fallbackVi, String fallbackEn) {
+        String lang = LanguageAPIUtils.getLanguageCode();
+        String translated = i18n(key);
+        if (translated.equals(key)) {
+            if ("vi".equals(lang)) return fallbackVi;
+            return fallbackEn;
+        }
+        return translated;
+    }
+
+    private TextView createLabelTextView(Context context, String text) {
+        TextView tv = new TextView(context);
+        tv.setText(text);
+        tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 13);
+        tv.setTextColor(Color.parseColor("#4B5563"));
+        tv.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        lp.setMargins(0, 0, 0, dpToPx(4));
+        tv.setLayoutParams(lp);
+        return tv;
+    }
+
+    private TextView createValueTextView(Context context, String text) {
+        TextView tv = new TextView(context);
+        tv.setText(text);
+        tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 14);
+        tv.setTextColor(Color.parseColor("#111827"));
+        tv.setPadding(dpToPx(10), dpToPx(10), dpToPx(10), dpToPx(10));
+        
+        android.graphics.drawable.GradientDrawable gd = new android.graphics.drawable.GradientDrawable();
+        gd.setColor(Color.parseColor("#F9FAFB"));
+        gd.setCornerRadius(dpToPx(4));
+        gd.setStroke(dpToPx(1), Color.parseColor("#E5E7EB"));
+        tv.setBackground(gd);
+        
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        tv.setLayoutParams(lp);
+        return tv;
+    }
+
+    private View createSpacer(Context context, int dp) {
+        View view = new View(context);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(dp)
+        );
+        view.setLayoutParams(lp);
+        return view;
+    }
+
+    private String safeGetMulti(JSONObject obj, String... keys) {
+        if (obj == null) return "";
+        for (String k : keys) {
+            if (obj.has(k) && !obj.isNull(k)) {
+                return obj.optString(k, "").trim();
+            }
+        }
+        return "";
+    }
+
+    private String formatDateTime(String raw) {
+        if (raw == null || raw.trim().isEmpty()) return "N/A";
+        try {
+            String clean = raw.trim();
+            // Handle ISO 8601 format: 2026-06-17T10:30:00.000Z
+            if (clean.contains("T")) {
+                clean = clean.replace("T", " ").replace("Z", "");
+                if (clean.contains(".")) clean = clean.substring(0, clean.indexOf("."));
+                SimpleDateFormat inputSdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                inputSdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                Date date = inputSdf.parse(clean);
+                SimpleDateFormat outputSdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
+                outputSdf.setTimeZone(TimeZone.getDefault());
+                return outputSdf.format(date);
+            }
+            // Handle yyyy-MM-dd HH:mm:ss format
+            if (clean.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.*")) {
+                SimpleDateFormat inputSdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                Date date = inputSdf.parse(clean.substring(0, 19));
+                SimpleDateFormat outputSdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault());
+                return outputSdf.format(date);
+            }
+        } catch (Exception e) {
+            // fallback
+        }
+        return raw;
     }
 }

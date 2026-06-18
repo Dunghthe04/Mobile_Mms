@@ -144,6 +144,29 @@
                     android:textColor="@color/black"
                     android:textSize="11sp" />
             </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ln_da_huy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_margin="4dp"
+                android:clickable="true">
+                <CheckBox
+                    android:id="@+id/cb_da_huy"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:buttonTint="#EF4444"
+                    android:checked="true"
+                    android:clickable="false" />
+                <TextView
+                    android:id="@+id/tv_count_da_huy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Canceled: 0"
+                    android:textColor="@color/black"
+                    android:textSize="11sp" />
+            </LinearLayout>
         </com.google.android.flexbox.FlexboxLayout>
 
         <FrameLayout
@@ -188,6 +211,17 @@
                     android:layout_height="match_parent"
                     android:layout_weight="33.4"
                     android:background="@drawable/bg_status_progress_done"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_progress_da_huy"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="0"
+                    android:background="@drawable/bg_status_progress_canceled"
                     android:gravity="center"
                     android:textColor="#FFFFFF"
                     android:textSize="12sp"
