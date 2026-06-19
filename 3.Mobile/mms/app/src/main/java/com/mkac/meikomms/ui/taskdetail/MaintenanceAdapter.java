@@ -150,6 +150,7 @@ public class MaintenanceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     class InputViewHolder extends RecyclerView.ViewHolder {
         EditText etValue;
         TextView tvContent, tvRange;
+        TextWatcher valueWatcher;
 
         InputViewHolder(View itemView) {
             super(itemView);
@@ -160,11 +161,15 @@ public class MaintenanceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         void bind(MaintenanceStep step) {
             tvContent.setText(step.getContent());
-            if (step.getValue() != null)
-                etValue.setText(String.valueOf(step.getValue()));
-
             tvRange.setText("Min - Max: " + step.getMin() + " - " + step.getMax());
-            etValue.addTextChangedListener(new TextWatcher() {
+
+            if (valueWatcher != null) {
+                etValue.removeTextChangedListener(valueWatcher);
+            }
+
+            etValue.setText(step.getValue() == null ? "" : String.valueOf(step.getValue()));
+
+            valueWatcher = new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -183,7 +188,8 @@ public class MaintenanceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                         step.setValue("0");
                     }
                 }
-            });
+            };
+            etValue.addTextChangedListener(valueWatcher);
 
 
         }

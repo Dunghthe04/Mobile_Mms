@@ -135,9 +135,15 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
 
                 if (!uploadedReferences.isEmpty()) {
                     runOnUiThread(() -> {
-                        // Remove temporary local Uris
-                        for (Uri uri : uris) {
-                            item.imagePaths.remove(uri.toString());
+                        // Gỡ bỏ triệt để tất cả các URI xem trước nội bộ (content:// hoặc file://) và đồng bộ lại primary imagePath
+                        if (item.imagePaths != null) {
+                            List<String> cleanPaths = new ArrayList<>();
+                            for (String path : item.imagePaths) {
+                                if (path != null && !path.startsWith("content:") && !path.startsWith("file:")) {
+                                    cleanPaths.add(path);
+                                }
+                            }
+                            item.setImagePaths(cleanPaths);
                         }
                         // Merge the verified server URLs
                         mergeUploadedImages(item, uploadedReferences);
@@ -152,8 +158,15 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
 
             // Rollback local Uris if upload failed
             runOnUiThread(() -> {
-                for (Uri uri : uris) {
-                    item.imagePaths.remove(uri.toString());
+                // Gỡ bỏ triệt để tất cả các URI xem trước nội bộ (content:// hoặc file://) và đồng bộ lại primary imagePath
+                if (item.imagePaths != null) {
+                    List<String> cleanPaths = new ArrayList<>();
+                    for (String path : item.imagePaths) {
+                        if (path != null && !path.startsWith("content:") && !path.startsWith("file:")) {
+                            cleanPaths.add(path);
+                        }
+                    }
+                    item.setImagePaths(cleanPaths);
                 }
                 item.refreshChangedState();
                 if (currentChildAdapter != null) currentChildAdapter.notifyDataSetChanged();
@@ -1022,7 +1035,17 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         item.checkValue = pickFirst(row.optString("Check_Value"), row.optString("Value"));
         item.checkValue2 = pickFirst(row.optString("Check_Value_2"), row.optString("Value_2"));
         item.childCount = row.optInt("Child_Count", 0);
-        item.comment = row.optString("Comment", "");
+        item.comment = pickFirst(
+                row.optString("Comment"),
+                row.optString("comment"),
+                row.optString("COMMENT"),
+                row.optString("Remark"),
+                row.optString("remark"),
+                row.optString("REMARK"),
+                row.optString("NOTE"),
+                row.optString("Note"),
+                row.optString("note")
+        );
         item.historyJson = row.optString("History", "");
         item.setImagePaths(parseImagePathsFromRow(row));
 
