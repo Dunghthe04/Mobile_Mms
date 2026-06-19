@@ -1691,8 +1691,7 @@ public class HttpClient
 
             if (fileBytes != null) {
                 RequestBody fileBody = RequestBody.create(MediaType.parse(getMimeType(fileName)), fileBytes);
-                // Send both 'file' and 'files' form names to maximize compatibility with backend
-                builder.addFormDataPart("file", fileName, fileBody);
+                // Send 'files' form name for backend compatibility
                 builder.addFormDataPart("files", fileName, fileBody);
             }
 
@@ -1748,7 +1747,6 @@ public class HttpClient
                     if (fileBytes != null) {
                         RequestBody fileBody = RequestBody.create(MediaType.parse(getMimeType(fileName)), fileBytes);
 
-                        builder.addFormDataPart("file", fileName, fileBody);
                         builder.addFormDataPart("files", fileName, fileBody);
                     }
                 }

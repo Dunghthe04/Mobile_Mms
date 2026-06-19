@@ -224,10 +224,10 @@ public class MaintenanceCheckAdapter extends RecyclerView.Adapter<MaintenanceChe
         boolean isLocked = "OK".equalsIgnoreCase(item.initialStatus);
         boolean disableManualInput = isLocked || hasChildren;
 
-        holder.binding.etItemComment.setText(item.comment == null ? "" : item.comment);
         if (holder.commentWatcher != null) {
             holder.binding.etItemComment.removeTextChangedListener(holder.commentWatcher);
         }
+        holder.binding.etItemComment.setText(item.comment == null ? "" : item.comment);
         holder.commentWatcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
