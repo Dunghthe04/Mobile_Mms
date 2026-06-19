@@ -67,6 +67,13 @@ public class MaintenanceItem {
         return new ArrayList<>(imagePaths);
     }
 
+    public void removeImagePath(String path) {
+        if (path == null) return;
+        imagePaths.remove(path);
+        imagePaths.remove(path.trim());
+        syncPrimaryImagePath();
+    }
+
     public boolean hasImages() {
         ensureImagePaths();
         return !imagePaths.isEmpty();

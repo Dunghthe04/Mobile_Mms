@@ -165,6 +165,59 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         });
     }
 
+    private boolean isLocalImageUri(String imagePath) {
+        if (imagePath == null) return false;
+        String p = imagePath.trim();
+        return p.startsWith("content:") || p.startsWith("file:") || p.startsWith("android.resource:");
+    }
+
+    /** Hỏi xác nhận trước khi gỡ ảnh của hạng mục bảo dưỡng (cha/con). */
+    private void confirmAndDeleteMaintenanceImage(MaintenanceItem item, String imagePath) {
+        if (item == null || imagePath == null || imagePath.trim().isEmpty()) return;
+
+        // Ảnh mới chọn nhưng chưa tải lên server: chỉ gỡ ở local
+        if (isLocalImageUri(imagePath)) {
+            removeImageLocally(item, imagePath);
+            return;
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(i18n("Remove image"))
+                .setMessage(i18n("Are you sure you want to remove this image?"))
+                .setNegativeButton(i18n("Cancel"), null)
+                .setPositiveButton(i18n("Remove"), (d, w) -> deleteMaintenanceImageOnServer(item, imagePath))
+                .show();
+    }
+
+    private void removeImageLocally(MaintenanceItem item, String imagePath) {
+        item.removeImagePath(imagePath);
+        item.refreshChangedState();
+        if (currentChildAdapter != null) currentChildAdapter.notifyDataSetChanged();
+        if (parentAdapter != null) parentAdapter.notifyDataSetChanged();
+        Toast.makeText(this, i18n("Image removed"), Toast.LENGTH_SHORT).show();
+    }
+
+    private void deleteMaintenanceImageOnServer(MaintenanceItem item, String imagePath) {
+        Toast.makeText(this, i18n("Removing image..."), Toast.LENGTH_SHORT).show();
+        executorService.execute(() -> {
+            HttpClient.APIReturn rs = HttpClient.deleteImageComponentForPreventive(
+                    this, serverUrl, taskId, item.checkId, imagePath);
+
+            if (rs != null && rs.code == 200) {
+                runOnUiThread(() -> {
+                    item.removeImagePath(imagePath);
+                    item.refreshChangedState();
+                    if (currentChildAdapter != null) currentChildAdapter.notifyDataSetChanged();
+                    if (parentAdapter != null) parentAdapter.notifyDataSetChanged();
+                    Toast.makeText(this, i18n("Image removed"), Toast.LENGTH_SHORT).show();
+                });
+            } else {
+                String errMsg = (rs != null) ? rs.message : i18n("No response from server");
+                runOnUiThread(() -> Toast.makeText(this, i18n("Remove image failed") + ": " + errMsg, Toast.LENGTH_LONG).show());
+            }
+        });
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -294,6 +347,10 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                 pendingUploadItem = item;
                 imagePickerLauncher.launch("image/*");
             }
+            @Override
+            public void onDeleteImage(MaintenanceItem item, String imagePath) {
+                confirmAndDeleteMaintenanceImage(item, imagePath);
+            }
         });
         binding.rvMaintenanceItems.setAdapter(parentAdapter);
     }
@@ -387,6 +444,9 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
             @Override public void onUploadClick(MaintenanceItem item) {
                 pendingUploadItem = item;
                 imagePickerLauncher.launch("image/*");
+            }
+            @Override public void onDeleteImage(MaintenanceItem item, String imagePath) {
+                confirmAndDeleteMaintenanceImage(item, imagePath);
             }
         });
         dialogBinding.rvChildItems.setAdapter(childAdapter);

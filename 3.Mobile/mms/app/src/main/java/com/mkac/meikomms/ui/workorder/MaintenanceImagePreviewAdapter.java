@@ -25,8 +25,19 @@ public class MaintenanceImagePreviewAdapter extends RecyclerView.Adapter<Mainten
     private final Context context;
     private final List<String> imagePaths = new ArrayList<>();
 
+    public interface OnImageActionListener {
+        /** Người dùng bấm nút (X) trên ảnh để gỡ. imagePath là giá trị gốc đang lưu trong danh sách. */
+        void onDeleteImage(String imagePath);
+    }
+
+    private OnImageActionListener actionListener;
+
     public MaintenanceImagePreviewAdapter(Context context) {
         this.context = context;
+    }
+
+    public void setOnImageActionListener(OnImageActionListener listener) {
+        this.actionListener = listener;
     }
 
     public void submitImages(List<String> images) {
@@ -68,12 +79,22 @@ public class MaintenanceImagePreviewAdapter extends RecyclerView.Adapter<Mainten
             }
         }
 
-        holder.itemView.setOnClickListener(v -> {
+        holder.imageView.setOnClickListener(v -> {
             Context viewContext = holder.itemView.getContext();
             if (viewContext instanceof EnterWorkOrderDataActivity) {
                 ((EnterWorkOrderDataActivity) viewContext).showLargeImagePreview(resolvedPath);
             }
         });
+
+        if (holder.btnDelete != null) {
+            boolean canDelete = actionListener != null;
+            holder.btnDelete.setVisibility(canDelete ? View.VISIBLE : View.GONE);
+            holder.btnDelete.setOnClickListener(v -> {
+                if (actionListener != null) {
+                    actionListener.onDeleteImage(imagePath);
+                }
+            });
+        }
 
         Glide.with(holder.itemView)
             .load(loadModel)
@@ -113,10 +134,12 @@ public class MaintenanceImagePreviewAdapter extends RecyclerView.Adapter<Mainten
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         final ImageView imageView;
+        final ImageView btnDelete;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.img_preview);
+            btnDelete = itemView.findViewById(R.id.btn_delete_image);
         }
     }
 
