@@ -423,8 +423,8 @@ public class MaintenanceTabFragment extends Fragment {
 
             if (currentStatusPosition == 0) {
                 // matchesStatus = true;
-                // Mặc định chỉ hiển thị "Chưa hoàn thành" (0) và "Quá hạn" (5)
-                if ("0".equals(plan.status) || "5".equals(plan.status)) {
+                // Mặc định hiển thị "Chưa hoàn thành" (0), "Quá hạn" (5) và "Checksheet NG" (3)
+                if ("0".equals(plan.status) || "5".equals(plan.status) || "3".equals(plan.status)) {
                     matchesStatus = true;
                 }
             } else {
