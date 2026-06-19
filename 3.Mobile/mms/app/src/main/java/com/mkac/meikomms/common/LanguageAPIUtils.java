@@ -58,6 +58,12 @@ public class LanguageAPIUtils
         if ("vi".equals(languageCode) && "Canceled".equals(text)) {
             return "Đã hủy";
         }
+        if ("vi".equals(languageCode) && "Create Warehouse Request".equals(text)) {
+            return "Tạo yêu cầu xuất kho";
+        }
+        if ("vi".equals(languageCode) && "CONFIRM CHILD ITEMS".equals(text)) {
+            return "XÁC NHẬN MỤC CON";
+        }
         if ("ja".equals(languageCode) && "Canceled".equals(text)) {
             return "キャンセル";
         }

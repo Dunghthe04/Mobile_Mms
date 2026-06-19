@@ -2,10 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@color/white"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="24dp">
 
     <View
         android:layout_width="40dp"
@@ -54,7 +57,6 @@
             android:layout_centerVertical="true"
             android:background="@android:color/transparent"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:tint="#4B5563"
             android:contentDescription="@null" />
     </RelativeLayout>
 
@@ -66,44 +68,21 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_child_items"
         android:layout_width="match_parent"
-        android:layout_height="350dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:layout_marginTop="8dp" />
 
-    <LinearLayout
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_confirm_child_data"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginTop="12dp"
-        android:orientation="horizontal"
-        android:weightSum="2">
+        android:backgroundTint="#01A789"
+        android:text="CONFIRM CHILD ITEMS"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:cornerRadius="6dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_create_wms_request_child"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:layout_marginEnd="6dp"
-            android:backgroundTint="#F3F4F6"
-            android:text="Create Warehouse Request"
-            android:textColor="#1F2937"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            app:cornerRadius="6dp"
-            app:strokeColor="#D1D5DB"
-            app:strokeWidth="1dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_confirm_child_data"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:layout_marginStart="6dp"
-            android:backgroundTint="#01A789"
-            android:text="CONFIRM CHILD ITEMS"
-            android:textColor="@color/white"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            app:cornerRadius="6dp" />
-
-    </LinearLayout>
 
 </LinearLayout>

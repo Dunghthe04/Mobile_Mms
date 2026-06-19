@@ -374,9 +374,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         bottomSheetDialog.setContentView(dialogBinding.getRoot());
         LanguageAPIUtils.setLang(dialogBinding.getRoot());
 
-        if (dialogBinding.btnCreateWmsRequestChild != null) {
-            dialogBinding.btnCreateWmsRequestChild.setText(i18n("Create Warehouse Request"));
-        }
         if (dialogBinding.btnConfirmChildData != null) {
             dialogBinding.btnConfirmChildData.setText(i18n("CONFIRM CHILD ITEMS"));
         }
@@ -418,125 +415,6 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
 
         bottomSheetDialog.setOnDismissListener(dialog -> currentChildAdapter = null);
 
-        PreferenceHandler prefHandler = new PreferenceHandler(this);
-        if (dialogBinding.btnCreateWmsRequestChild != null) {
-            boolean isChildWmsCreated = prefHandler.getBoolean("wms_request_created_child_" + taskId + "_" + parentItem.checkId)
-                    || "1".equals(parentItem.isWarehouseRequest)
-                    || "1".equals(isWarehouseRequestFromIntent);
-            if (isChildWmsCreated) {
-                dialogBinding.btnCreateWmsRequestChild.setEnabled(false);
-                dialogBinding.btnCreateWmsRequestChild.setAlpha(0.35f);
-            } else {
-                dialogBinding.btnCreateWmsRequestChild.setOnClickListener(v -> {
-                    String username = prefHandler.getString("Userlogin");
-                    JSONObject userProfile = prefHandler.getJsonObject("user");
-                    if (username.isEmpty() && userProfile != null) {
-                        username = userProfile.optString("username", userProfile.optString("User_Name", ""));
-                    }
-
-                    if (childItems.isEmpty()) {
-                        Toast.makeText(this, i18n("No child materials available to create warehouse request"), Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    List<JSONObject> addMaterialsList = new ArrayList<>();
-                    try {
-                        for (MaintenanceItem child : childItems) {
-                            String matId = child.checkId;
-                            if (matId == null || matId.isEmpty()) continue;
-
-                            JSONObject matObj = new JSONObject();
-                            matObj.put("Item_Id", matId);
-                            matObj.put("Item_Qty", "1");
-                            matObj.put("Machine_Id", machineId);
-                            matObj.put("Purpose", "Maintain");
-                            matObj.put("User_Export", username);
-                            addMaterialsList.add(matObj);
-                        }
-                    } catch (Exception e) {
-                        Toast.makeText(this, i18n("Error parsing material list") + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    if (addMaterialsList.isEmpty()) {
-                        Toast.makeText(this, i18n("No valid materials found for warehouse release"), Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    String displayMachine = machineName.isEmpty() ? machineId : machineId + "-" + machineName;
-                    String requestNote = i18n("Warehouse request for maintenance machine") + " " + displayMachine;
-                    String requestDateUnixStr = String.valueOf(System.currentTimeMillis() / 1000L);
-
-                    String serverUrlStr = prefHandler.getString("server_url");
-                    if (serverUrlStr.isEmpty()) {
-                        ConfigManager config = new ConfigManager(this);
-                        serverUrlStr = config.getProperty("server_url");
-                        if (serverUrlStr == null || serverUrlStr.isEmpty()) {
-                            serverUrlStr = "http://192.86.0.225";
-                        }
-                    }
-
-                    dialogBinding.btnCreateWmsRequestChild.setEnabled(false);
-                    dialogBinding.btnCreateWmsRequestChild.setAlpha(0.5f);
-
-                    android.app.ProgressDialog wmsProgress = new android.app.ProgressDialog(this);
-                    wmsProgress.setMessage(i18n("Creating warehouse release request..."));
-                    wmsProgress.setCancelable(false);
-                    wmsProgress.show();
-
-                    final String finalUsername = username;
-                    final String finalServerUrl = serverUrlStr;
-                    final List<JSONObject> finalMaterials = addMaterialsList;
-
-                    executorService.execute(() -> {
-                        String generatedRequestId = "REQ_001_" + requestDateUnixStr + "_" + (int)(Math.random() * 100);
-
-                        HttpClient.APIReturn result = HttpClient.saveRequestMaterialMaintenance(
-                                this,
-                                requestDateUnixStr,
-                                "FE",
-                                requestNote,
-                                finalMaterials,
-                                finalServerUrl,
-                                finalUsername,
-                                "Maintain",
-                                machineId,
-                                generatedRequestId
-                        );
-
-                        if (result != null && result.code == 200) {
-                            try {
-                                JSONObject updateCondition = new JSONObject();
-                                updateCondition.put("Schema_Mms", schemaMms);
-                                updateCondition.put("taskId", taskId);
-
-                                HttpClient.callDynamics(
-                                        this, finalServerUrl, "mes_mms", "UPDATE_TASK_WAREHOUSE_REQUEST", updateCondition
-                                );
-                            } catch (Exception e) {
-                                Log.e("WMS_UPDATE", "Error updating maintenance task warehouse request", e);
-                            }
-                        }
-
-                        runOnUiThread(() -> {
-                            wmsProgress.dismiss();
-                            if (result != null && result.code == 200) {
-                                Toast.makeText(this, i18n("Warehouse release request created successfully!"), Toast.LENGTH_SHORT).show();
-                                prefHandler.setBoolean("wms_request_created_child_" + taskId + "_" + parentItem.checkId, true);
-                                dialogBinding.btnCreateWmsRequestChild.setEnabled(false);
-                                dialogBinding.btnCreateWmsRequestChild.setAlpha(0.35f);
-                            } else {
-                                dialogBinding.btnCreateWmsRequestChild.setEnabled(true);
-                                dialogBinding.btnCreateWmsRequestChild.setAlpha(1.0f);
-                                String errMsg = (result != null) ? result.message : i18n("No response from server");
-                                Toast.makeText(this, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    });
-                });
-            }
-        }
-
         dialogBinding.btnConfirmChildData.setOnClickListener(v -> {
             syncParentFromChildren(parentItem, childItems);
             parentAdapter.notifyDataSetChanged();
@@ -544,6 +422,19 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         });
         dialogBinding.btnCloseDialog.setOnClickListener(v -> bottomSheetDialog.dismiss());
         bottomSheetDialog.show();
+        android.widget.FrameLayout bottomSheet = bottomSheetDialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+        if (bottomSheet != null) {
+            android.util.DisplayMetrics metrics = new android.util.DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            android.view.ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
+            lp.height = (int) (metrics.heightPixels * 1.1); // Set to 100% of screen height
+            bottomSheet.setLayoutParams(lp);
+            com.google.android.material.bottomsheet.BottomSheetBehavior<android.widget.FrameLayout> behavior =
+                    com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
+            behavior.setSkipCollapsed(true);
+            behavior.setPeekHeight(lp.height);
+            behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+        }
     }
 
     private void syncParentFromChildren(MaintenanceItem parentItem, List<MaintenanceItem> childItems) {
