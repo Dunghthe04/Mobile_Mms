@@ -440,7 +440,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
             android.util.DisplayMetrics metrics = new android.util.DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(metrics);
             android.view.ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
-            lp.height = (int) (metrics.heightPixels * 1.1); // Set to 100% of screen height
+            lp.height = (int) (metrics.heightPixels * 0.95); // Giới hạn tối đa 95% chiều cao màn hình để không bị đẩy nút xuống dưới
             bottomSheet.setLayoutParams(lp);
             com.google.android.material.bottomsheet.BottomSheetBehavior<android.widget.FrameLayout> behavior =
                     com.google.android.material.bottomsheet.BottomSheetBehavior.from(bottomSheet);
@@ -640,21 +640,33 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                 return;
             }
 
-            if (allChildItems.isEmpty()) {
+            List<MaintenanceItem> allItems = new ArrayList<>();
+            allItems.addAll(parentItems);
+            for (MaintenanceItem parent : parentItems) {
+                if (parent.childCount > 0) {
+                    List<MaintenanceItem> children = childItemsByParent.get(parent.checkId);
+                    if (children != null) {
+                        allItems.addAll(children);
+                    }
+                }
+            }
+
+            // Group by materialId and sum the quantities
+            java.util.Map<String, Integer> materialQuantities = new java.util.HashMap<>();
+            for (MaintenanceItem item : allItems) {
+                String matId = item.materialId;
+                if (matId == null || matId.trim().isEmpty() || "null".equalsIgnoreCase(matId.trim())) continue;
+                int currentQty = materialQuantities.containsKey(matId) ? materialQuantities.get(matId) : 0;
+                int itemQty = item.materialQty > 0 ? item.materialQty : 1;
+                materialQuantities.put(matId, currentQty + itemQty);
+            }
+
+            if (materialQuantities.isEmpty()) {
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
                     Toast.makeText(this, i18n("No materials available to create warehouse request"), Toast.LENGTH_SHORT).show();
                 });
                 return;
-            }
-
-            // Group by Item_Id and sum the quantities
-            java.util.Map<String, Integer> materialQuantities = new java.util.HashMap<>();
-            for (MaintenanceItem child : allChildItems) {
-                String matId = child.checkId;
-                if (matId == null || matId.isEmpty()) continue;
-                int currentQty = materialQuantities.containsKey(matId) ? materialQuantities.get(matId) : 0;
-                materialQuantities.put(matId, currentQty + 1);
             }
 
             List<JSONObject> addMaterialsList = new ArrayList<>();
@@ -679,7 +691,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
             String displayMachine = machineName.isEmpty() ? machineId : machineId + "-" + machineName;
             String requestNote = "Yêu cầu xuất kho cho bảo dưỡng máy " + displayMachine;
             String requestDateUnixStr = String.valueOf(System.currentTimeMillis() / 1000L);
-            String generatedRequestId = "REQ_001_" + new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date()) + "_" + (int)(Math.random() * 100);
+            String generatedRequestId = "REQ_001_" + new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date()) + "_" + (System.currentTimeMillis() / 1000L);
 
             HttpClient.APIReturn result = HttpClient.createWmsExportRequest(
                     this,
@@ -727,8 +739,89 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         });
     }
 
+    private JSONArray fetchAndBuildHistoryArray(MaintenanceItem item) {
+        JSONArray historyArray = new JSONArray();
+
+        HttpClient.APIReturn historyRs = HttpClient.getHistoryChildItems(this, serverUrl, schemaMms, item.checkId, taskId);
+
+        if (historyRs != null && historyRs.code == 200 && historyRs.data != null) {
+            for (JSONObject row : historyRs.data) {
+                String nestedHistoryStr = row.has("History") ? row.optString("History") : row.optString("HISTORY");
+
+                if (nestedHistoryStr != null && !nestedHistoryStr.trim().isEmpty() && !"null".equalsIgnoreCase(nestedHistoryStr.trim())) {
+                    try {
+                        JSONArray historyArr = new JSONArray(nestedHistoryStr.trim());
+                        for (int i = 0; i < historyArr.length(); i++) {
+                            JSONObject logRow = historyArr.optJSONObject(i);
+                            if (logRow != null) {
+                                // Xử lý đệ quy/lồng ghép legacy nếu logRow cũng chứa tiếp History JSON lồng bên trong
+                                String deepHistoryStr = logRow.has("History") ? logRow.optString("History") : logRow.optString("HISTORY");
+                                if (deepHistoryStr != null && !deepHistoryStr.trim().isEmpty() && !"null".equalsIgnoreCase(deepHistoryStr.trim())) {
+                                    try {
+                                        JSONArray deepArr = new JSONArray(deepHistoryStr.trim());
+                                        for (int j = 0; j < deepArr.length(); j++) {
+                                            JSONObject deepRow = deepArr.optJSONObject(j);
+                                            if (deepRow != null) historyArray.put(deepRow);
+                                        }
+                                    } catch (Exception ignored) {}
+                                } else {
+                                    historyArray.put(logRow);
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e("HISTORY_NESTED_ERR", "Lỗi bóc tách chuỗi History khi lưu", e);
+                    }
+                } else {
+                    JSONArray tableArray = row.optJSONArray("Table");
+                    if (tableArray == null) tableArray = row.optJSONArray("data");
+                    if (tableArray == null) tableArray = row.optJSONArray("Data");
+
+                    if (tableArray != null) {
+                        for (int i = 0; i < tableArray.length(); i++) {
+                            JSONObject subRow = tableArray.optJSONObject(i);
+                            if (subRow != null) historyArray.put(subRow);
+                        }
+                    } else {
+                        if (row.has("time") || row.has("Time") || row.has("TIME")) {
+                            historyArray.put(row);
+                        } else {
+                            // Dự phòng convert dòng phẳng cũ sang format log chuẩn
+                            try {
+                                JSONObject logEntry = new JSONObject();
+                                String timeVal = pickFirst(row.optString("Create_Date"), row.optString("CREATE_DATE"), row.optString("Update_Date"));
+                                if (timeVal != null && timeVal.contains("T")) {
+                                    try {
+                                        String cleanTime = timeVal.endsWith("Z") ? timeVal.substring(0, timeVal.length() - 1) : timeVal;
+                                        if (cleanTime.contains(".")) {
+                                            cleanTime = cleanTime.substring(0, cleanTime.indexOf('.'));
+                                        }
+                                        SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                                        parser.setTimeZone(TimeZone.getTimeZone("UTC"));
+                                        Date parsedDate = parser.parse(cleanTime);
+                                        if (parsedDate != null) {
+                                            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                                            formatter.setTimeZone(TimeZone.getDefault());
+                                            timeVal = formatter.format(parsedDate);
+                                        }
+                                    } catch (Exception ignored) {}
+                                }
+                                logEntry.put("time", timeVal != null ? timeVal : "");
+                                logEntry.put("value", pickFirst(row.optString("Check_Value"), row.optString("CHECK_VALUE"), row.optString("value")));
+                                logEntry.put("value_2", pickFirst(row.optString("Check_Value_2"), row.optString("CHECK_VALUE_2"), row.optString("value_2")));
+                                logEntry.put("updateBy", pickFirst(row.optString("Update_By_Name"), row.optString("User_Name"), row.optString("updateBy"), "—"));
+                                historyArray.put(logEntry);
+                            } catch (Exception ignored) {}
+                        }
+                    }
+                }
+            }
+        }
+        return historyArray;
+    }
+
     private int saveSingleItemWithHistory(MaintenanceItem item) {
-        JSONArray historyArray = parseHistoryArray(item.historyJson);
+        JSONArray historyArray = fetchAndBuildHistoryArray(item);
 
         JSONObject newHistoryEntry = new JSONObject();
         try {
@@ -772,55 +865,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
     }
 
     private boolean saveItemWithLatestRemoteHistory(MaintenanceItem item) {
-        JSONArray historyArray = new JSONArray();
-
-        HttpClient.APIReturn historyRs = HttpClient.getHistoryChildItems(this, serverUrl, schemaMms, item.checkId, taskId);
-
-        if (historyRs != null && historyRs.code == 200 && historyRs.data != null) {
-            for (JSONObject row : historyRs.data) {
-                JSONArray tableArray = row.optJSONArray("Table");
-                if (tableArray == null) tableArray = row.optJSONArray("data");
-                if (tableArray == null) tableArray = row.optJSONArray("Data");
-
-                if (tableArray != null) {
-                    for (int i = 0; i < tableArray.length(); i++) {
-                        JSONObject subRow = tableArray.optJSONObject(i);
-                        if (subRow != null) historyArray.put(subRow);
-                    }
-                } else {
-                    historyArray.put(row);
-                }
-            }
-        }
-
-        try {
-            JSONObject newHistoryEntry = new JSONObject();
-            String currentTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-
-            newHistoryEntry.put("time", currentTime);
-            newHistoryEntry.put("value", safe(item.checkValue));
-            newHistoryEntry.put("value_2", item.isRadioInput() ? "" : safe(item.checkValue2));
-            newHistoryEntry.put("updateBy", currentUserId);
-
-            historyArray.put(newHistoryEntry);
-        } catch (Exception e) {
-            Log.e("HISTORY_APPEND_ERR", "Không thể append lịch sử thời gian thực cho mục: " + item.checkId, e);
-        }
-
-        HttpClient.APIReturn saveRs = HttpClient.saveMaintenanceItemDetail(
-                this, serverUrl, schemaMms, taskId, item.checkId,
-                safe(item.checkValue), item.isRadioInput() ? "" : safe(item.checkValue2),
-                historyArray.toString(), safe(item.comment),
-                buildImageListPayload(item), ""
-        );
-
-        if (saveRs != null && saveRs.code == 200) {
-            item.snapshotOriginalValues();
-            item.historyJson = historyArray.toString();
-            item.locked = "OK".equalsIgnoreCase(item.initialStatus);
-            return true;
-        }
-        return false;
+        return saveSingleItemWithHistory(item) > 0;
     }
 
     private int saveItemIfNeeded(MaintenanceItem item) {
@@ -870,6 +915,12 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         }
         if (anyNg) return "3";
         if (allOk && !parentItems.isEmpty()) return "2";
+        
+        // Nếu trước đó là Checksheet NG (3) hoặc Checksheet OK (2) nhưng hiện tại không có lỗi NG 
+        // và checksheet chưa điền đủ (vẫn còn mục trống), cập nhật trạng thái tổng về Chưa hoàn thành (0)
+        if ("2".equals(taskStatus) || "3".equals(taskStatus)) {
+            return "0";
+        }
         return "";
     }
 
@@ -995,10 +1046,26 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         item.unit = pickFirst(row.optString("Unit"), row.optString("unit"));
         item.subDesc = ""; // Bỏ trống chuỗi tĩnh cũ
         item.isWarehouseRequest = pickFirst(row.optString("Is_Warehouse_Request"), row.optString("isWarehouseRequest"), row.optString("IS_WAREHOUSE_REQUEST"));
+        item.materialId = pickFirst(row.optString("Material_Id"), row.optString("material_id"), row.optString("MATERIAL_ID"));
+        item.materialQty = row.optInt("Qty", row.optInt("QTY", 1));
 
         item.initialStatus = resolveInitialStatus(item);
         if (item.childCount > 0) {
             item.locked = true;
+            int statusCheck = row.optInt("Status_Check", -1);
+            if (statusCheck == -1) {
+                statusCheck = row.optInt("STATUS_CHECK", -1);
+            }
+            if (statusCheck == 1) {
+                item.checkValue = "OK";
+                item.initialStatus = "OK";
+            } else if (statusCheck == 0) {
+                item.checkValue = "NG";
+                item.initialStatus = "NG";
+            } else if (statusCheck == 2) {
+                item.checkValue = "";
+                item.initialStatus = "";
+            }
         } else {
             item.locked = "OK".equalsIgnoreCase(item.initialStatus);
         }
@@ -1062,7 +1129,21 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                             JSONArray historyArr = new JSONArray(nestedHistoryStr.trim());
                             for (int i = 0; i < historyArr.length(); i++) {
                                 JSONObject logRow = historyArr.optJSONObject(i);
-                                if (logRow != null) historyRows.add(logRow);
+                                if (logRow != null) {
+                                    // Xử lý đệ quy/lồng ghép legacy nếu logRow cũng chứa tiếp History JSON lồng bên trong
+                                    String deepHistoryStr = logRow.has("History") ? logRow.optString("History") : logRow.optString("HISTORY");
+                                    if (deepHistoryStr != null && !deepHistoryStr.trim().isEmpty() && !"null".equalsIgnoreCase(deepHistoryStr.trim())) {
+                                        try {
+                                            JSONArray deepArr = new JSONArray(deepHistoryStr.trim());
+                                            for (int j = 0; j < deepArr.length(); j++) {
+                                                JSONObject deepRow = deepArr.optJSONObject(j);
+                                                if (deepRow != null) historyRows.add(deepRow);
+                                            }
+                                        } catch (Exception ignored) {}
+                                    } else {
+                                        historyRows.add(logRow);
+                                    }
+                                }
                             }
                         } catch (Exception e) {
                             Log.e("HISTORY_NESTED_ERR", "Lỗi bóc tách chuỗi History", e);
@@ -1135,18 +1216,23 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
                     String displayVal = pickFirst(row.optString("value"), row.optString("Value"), row.optString("VALUE"), row.optString("Check_Value"));
                     String actualVal = pickFirst(row.optString("value_2"), row.optString("Value_2"), row.optString("VALUE_2"), row.optString("Check_Value_2"));
 
-                    if (rawTime.contains("T")) {
+                    if (rawTime != null && !rawTime.trim().isEmpty() && !"—".equals(rawTime)) {
                         try {
-                            String cleanTime = rawTime.endsWith("Z") ? rawTime.substring(0, rawTime.length() - 1) : rawTime;
-                            if (cleanTime.contains(".")) {
-                                cleanTime = cleanTime.substring(0, cleanTime.indexOf('.'));
+                            Date parsedDate = null;
+                            if (rawTime.contains("T")) {
+                                String cleanTime = rawTime.endsWith("Z") ? rawTime.substring(0, rawTime.length() - 1) : rawTime;
+                                if (cleanTime.contains(".")) {
+                                    cleanTime = cleanTime.substring(0, cleanTime.indexOf('.'));
+                                }
+                                SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                                parser.setTimeZone(TimeZone.getTimeZone("UTC"));
+                                parsedDate = parser.parse(cleanTime);
+                            } else {
+                                SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                                parsedDate = parser.parse(rawTime);
                             }
-                            SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
-                            parser.setTimeZone(TimeZone.getTimeZone("UTC"));
-                            Date parsedDate = parser.parse(cleanTime);
                             if (parsedDate != null) {
-                                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy- HH:mm:ss", Locale.getDefault());
-                                formatter.setTimeZone(TimeZone.getDefault());
+                                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
                                 rawTime = formatter.format(parsedDate);
                             }
                         } catch (Exception ignored) {}

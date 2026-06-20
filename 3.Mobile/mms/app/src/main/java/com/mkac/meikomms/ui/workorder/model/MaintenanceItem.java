@@ -22,6 +22,8 @@ public class MaintenanceItem {
     public String imagePath;
     public final List<String> imagePaths = new ArrayList<>();
     public String isWarehouseRequest;
+    public String materialId = "";
+    public int materialQty = 1;
     
     public String originalCheckValue;
     public String originalCheckValue2;
@@ -32,6 +34,7 @@ public class MaintenanceItem {
     public boolean locked;
 
     public boolean isNumericInput() {
+        if (childCount > 0) return false;
         return (min != null && !min.trim().isEmpty()) || (max != null && !max.trim().isEmpty());
     }
 
