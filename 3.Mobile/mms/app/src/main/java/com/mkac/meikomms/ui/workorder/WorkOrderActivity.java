@@ -65,6 +65,7 @@ public class WorkOrderActivity extends AppCompatActivity {
             {"Stop by production plan", "Dá»«ng theo káº¿ hoáº¡ch sáº£n xuáº¥t", "ç”Ÿç”£è¨ˆç”»ă«ă‚ˆă‚‹åœæ­¢", "æŒ‰ç”Ÿäº§è®¡åˆ’åœæœº"},
             {"Maintenance and repair", "Báº£o dÆ°á»¡ng, sá»­a chá»¯a", "ä¿å…¨ăƒ»ä¿®ç†", "ä¿å…»ä¸ç»´ä¿®"}
         };
+        
     private EditText edtWoCode, edtRequestDate, edtProcess, edtPassedDate, edtReason, edtDeadline;
     private AutoCompleteTextView autoMachine, autoLoaiHinh, autoRequester, autoMaStatus;
     private ImageView btnClose;
