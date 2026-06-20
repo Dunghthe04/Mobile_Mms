@@ -231,6 +231,14 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung cho WorkOrderEntryDialog ──────────────
                     "  \"Occurrence Time\": \"Occurrence Time\",\n" +
+                    // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
+                    "  \"Tìm kiếm máy (mã - tên)\": \"Search machine (code - name)\",\n" +
+                    "  \"Ngày\": \"Date\",\n" +
+                    "  \"Trạng thái\": \"Status\",\n" +
+                    "  \"Nhóm\": \"Group\",\n" +
+                    "  \"Date\": \"Date\",\n" +
+                    "  \"Group\": \"Group\",\n" +
+                    "  \"Language changed successfully\": \"Language changed successfully\",\n" +
                     "  \"Enter Work Order Data And Maintenance\": \"Enter Work Order Data And Maintenance\",\n" +
                     "  \"Enter maintenance data\": \"Enter maintenance data\",\n" +
                     "  \"Modification History\": \"Modification History\",\n" +
@@ -498,6 +506,14 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"Thời gian phát sinh\",\n" +
+                    // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
+                    "  \"Tìm kiếm máy (mã - tên)\": \"Tìm kiếm máy (mã - tên)\",\n" +
+                    "  \"Ngày\": \"Ngày\",\n" +
+                    "  \"Trạng thái\": \"Trạng thái\",\n" +
+                    "  \"Nhóm\": \"Nhóm\",\n" +
+                    "  \"Date\": \"Ngày\",\n" +
+                    "  \"Group\": \"Nhóm\",\n" +
+                    "  \"Language changed successfully\": \"Đổi ngôn ngữ thành công\",\n" +
                     "  \"Enter Work Order Data And Maintenance\": \"Nhập kết quả Work Order và Hạng mục bảo dưỡng\",\n" +
                     "  \"Enter maintenance data\": \"Nhập dữ liệu bảo dưỡng\",\n" +
                     "  \"Modification History\": \"Lịch sử thay đổi\",\n" +
@@ -728,6 +744,15 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"発生時間\",\n" +
+                    // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
+                    "  \"Tìm kiếm máy (mã - tên)\": \"設備を検索（コード - 名称）\",\n" +
+                    "  \"Ngày\": \"日付\",\n" +
+                    "  \"Trạng thái\": \"ステータス\",\n" +
+                    "  \"Nhóm\": \"グループ\",\n" +
+                    "  \"Date\": \"日付\",\n" +
+                    "  \"Group\": \"グループ\",\n" +
+                    "  \"Enter Work Order Data And Maintenance\": \"ワークオーダーと保守データの入力\",\n" +
+                    "  \"Language changed successfully\": \"言語の変更に成功しました\",\n" +
                     "  \"Enter maintenance data\": \"保守データ入力\",\n" +
                     "  \"Modification History\": \"変更履歴\",\n" +
                     "  \"Preparing operation\": \"じゅんびさぎょう\",\n" +
@@ -958,6 +983,14 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"发生时间\",\n" +
+                    // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
+                    "  \"Tìm kiếm máy (mã - tên)\": \"搜索设备（代码 - 名称）\",\n" +
+                    "  \"Ngày\": \"日期\",\n" +
+                    "  \"Trạng thái\": \"状态\",\n" +
+                    "  \"Nhóm\": \"组\",\n" +
+                    "  \"Date\": \"日期\",\n" +
+                    "  \"Group\": \"组\",\n" +
+                    "  \"Enter Work Order Data And Maintenance\": \"录入工单与保养数据\",\n" +
                     "  \"Enter maintenance data\": \"维护数据录入\",\n" +
                     "  \"Modification History\": \"修改履历\",\n" +
                     "  \"Method\": \"方法\",\n" +
