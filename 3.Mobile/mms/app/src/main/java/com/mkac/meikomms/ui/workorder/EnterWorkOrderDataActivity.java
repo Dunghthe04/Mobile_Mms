@@ -603,48 +603,38 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
 
                 String overallStatus = resolveOverallStatus();
 
-                if (overallStatus.isEmpty()) {
+                // Mỗi lần lưu (cha hoặc con) đều cập nhật "Người nhập Checksheet" = người đang đăng nhập,
+                // đồng thời cập nhật trạng thái tổng (nếu có). Dùng endpoint riêng để KHÔNG ghi đè
+                // người phụ trách (MAINTAINER_ID) / người thực hiện (ACTUAL_MAINTANER_ID).
+                if (taskId == null || taskId.isEmpty() || currentUserId == null || currentUserId.isEmpty()) {
                     final int finalSavedCount = savedCount;
                     runOnUiThread(() -> {
                         Toast.makeText(this, i18n("Temporarily saved successfully") + " " + finalSavedCount + " " + i18n("detailed items") + "!", Toast.LENGTH_LONG).show();
                         setResult(RESULT_OK);
                         finish();
                     });
-                } else {
-                    StringBuilder missing = new StringBuilder();
-                    if (taskId == null || taskId.isEmpty()) missing.append("Task_Id ");
-                    if (machineId == null || machineId.isEmpty()) missing.append("Machine_Id ");
-                    if (taskDateUnix <= 0) missing.append("Task_Date_Unix ");
-                    if (currentUserId == null || currentUserId.isEmpty()) missing.append("Maintainer_Id ");
-                    if (categoryId == null || categoryId.isEmpty()) missing.append("Category_Id ");
-
-                    if (missing.length() > 0) {
-                        final String miss = missing.toString().trim();
-                        runOnUiThread(() -> Toast.makeText(this, i18n("Missing required fields") + ": " + miss + " - " + i18n("Do not send status update"), Toast.LENGTH_LONG).show());
-                        return;
-                    }
-
-                    HttpClient.APIReturn updateTaskResult = HttpClient.updateOverallTaskStatus(
-                            this, serverUrl, taskId, machineId, taskDateUnix, currentUserId, categoryId, overallStatus
-                    );
-
-                    final int finalSavedCount = savedCount;
-                    runOnUiThread(() -> {
-                        if (updateTaskResult != null && updateTaskResult.code == 200) {
-                            Toast.makeText(this, i18n("Saved successfully") + " " + finalSavedCount + " " + i18n("items") + " " + i18n("and updated Task status") + "!", Toast.LENGTH_LONG).show();
-                            setResult(RESULT_OK);
-                            finish();
-                        } else {
-                            String serverMsg = (updateTaskResult != null) ? updateTaskResult.message : i18n("No conclusion response from Server");
-                            String detail = "";
-                            if (updateTaskResult != null && updateTaskResult.data != null && !updateTaskResult.data.isEmpty()) {
-                                try { detail = " | " + i18n("Details") + ": " + updateTaskResult.data.toString(); } catch (Exception ignored) {}
-                            }
-                            String toastMsg = i18n("Save details OK but update Task status error") + ": " + serverMsg + detail;
-                            Toast.makeText(this, toastMsg, Toast.LENGTH_LONG).show();
-                        }
-                    });
+                    return;
                 }
+
+                HttpClient.APIReturn checksheetRs = HttpClient.updateChecksheetInput(
+                        this, serverUrl, taskId, currentUserId, overallStatus
+                );
+
+                final int finalSavedCount = savedCount;
+                final boolean hasOverall = !overallStatus.isEmpty();
+                runOnUiThread(() -> {
+                    if (checksheetRs != null && checksheetRs.code == 200) {
+                        String msg = hasOverall
+                                ? (i18n("Saved successfully") + " " + finalSavedCount + " " + i18n("items") + " " + i18n("and updated Task status") + "!")
+                                : (i18n("Temporarily saved successfully") + " " + finalSavedCount + " " + i18n("detailed items") + "!");
+                        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                        setResult(RESULT_OK);
+                        finish();
+                    } else {
+                        String serverMsg = (checksheetRs != null) ? checksheetRs.message : i18n("No conclusion response from Server");
+                        Toast.makeText(this, i18n("Save details OK but update Task status error") + ": " + serverMsg, Toast.LENGTH_LONG).show();
+                    }
+                });
 
             } catch (Exception e) {
                 Log.e("SAVE_ACTION_ERROR", "Lỗi trong quá trình thực thi save", e);

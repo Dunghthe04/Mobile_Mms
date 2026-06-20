@@ -1679,6 +1679,30 @@ public class HttpClient
         }
     }
 
+    /**
+     * Cập nhật "Người nhập Checksheet" (INPUT_CHECKSHEET_BY) cho Task khi lưu kết quả bảo dưỡng (cha/con).
+     * Endpoint riêng: KHÔNG ghi đè MAINTAINER_ID (người phụ trách) / ACTUAL_MAINTANER_ID (người thực hiện).
+     * @param status trạng thái tổng (2/3/0); để trống nếu chỉ cập nhật người nhập checksheet.
+     */
+    public static APIReturn updateChecksheetInput(Context context, String server_url, String taskId, String userId, String status) {
+        try {
+            String finalUrl = server_url;
+            if (finalUrl.endsWith("/")) {
+                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+            }
+            finalUrl += "/api/v1/mms/task/checksheet-input";
+
+            JSONObject payload = new JSONObject();
+            payload.put("Task_Id", taskId == null ? "" : taskId);
+            payload.put("User_Id", userId == null ? "" : userId);
+            payload.put("Status", status == null ? "" : status);
+
+            return callPostRaw(context, finalUrl, payload);
+        } catch (Exception e) {
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
     // TODO: Xem lịch sử của mục kiểm tra con (ActionName: GET_HISTORY_CHILD)
     public static APIReturn getHistoryChildItems(Context context, String server_url, String schemaMms,
                                                  String checkId, String taskId) {
