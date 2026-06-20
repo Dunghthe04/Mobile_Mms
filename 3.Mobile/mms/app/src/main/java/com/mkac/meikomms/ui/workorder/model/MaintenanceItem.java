@@ -24,7 +24,8 @@ public class MaintenanceItem {
     public String isWarehouseRequest;
     public String materialId = "";
     public int materialQty = 1;
-    
+    public String materialName = "";
+
     public String originalCheckValue;
     public String originalCheckValue2;
     public String originalComment;

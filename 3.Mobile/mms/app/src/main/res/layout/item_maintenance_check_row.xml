@@ -48,6 +48,18 @@
                 android:textColor="#6B7280"
                 android:textSize="11sp" />
 
+            <!-- Vật tư (hiển thị khi hạng mục có thông tin vật tư) -->
+            <TextView
+                android:id="@+id/tv_item_material"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="#047857"
+                android:textSize="11sp"
+                android:visibility="gone"
+                tools:text="● 42012229\n● Qty: 1\n● Magnet"
+                tools:visibility="visible" />
+
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0.5dp"

@@ -209,6 +209,9 @@ public class MaintenanceCheckAdapter extends RecyclerView.Adapter<MaintenanceChe
         holder.binding.tvItemSubDesc.setText(uiBuilder.toString().trim());
         // =========================================================================
 
+        // Hiển thị thông tin vật tư (mã - SL - tên) giống bên web, chỉ khi có dữ liệu
+        bindMaterialInfo(holder, item);
+
         // Cấu hình trạng thái tương tác bảng con
         boolean hasChildren = item.childCount > 0;
         holder.binding.btnItemInfo.setEnabled(hasChildren);
@@ -368,6 +371,45 @@ public class MaintenanceCheckAdapter extends RecyclerView.Adapter<MaintenanceChe
 //        holder.previewAdapter.submitImages(images);
 //        holder.binding.rvCheckPreviews.setVisibility(images.isEmpty() ? View.GONE : View.VISIBLE);
 //    }
+
+    /**
+     * Hiển thị thông tin vật tư của hạng mục (cha/con) giống bên web:
+     *   ● {Mã vật tư}
+     *   ● Qty: {Số lượng}
+     *   ● {Tên vật tư}
+     * Chỉ hiện khi hạng mục thực sự có vật tư (có mã hoặc tên vật tư).
+     */
+    private void bindMaterialInfo(ViewHolder holder, MaintenanceItem item) {
+        if (holder.binding.tvItemMaterial == null) return;
+
+        String materialId = cleanMaterialValue(item.materialId);
+        String materialName = cleanMaterialValue(item.materialName);
+
+        if (materialId.isEmpty() && materialName.isEmpty()) {
+            holder.binding.tvItemMaterial.setVisibility(View.GONE);
+            holder.binding.tvItemMaterial.setText("");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        if (!materialId.isEmpty()) {
+            sb.append("● ").append(materialId).append("\n");
+        }
+        int qty = item.materialQty > 0 ? item.materialQty : 1;
+        sb.append("● Qty: ").append(qty);
+        if (!materialName.isEmpty()) {
+            sb.append("\n● ").append(materialName);
+        }
+
+        holder.binding.tvItemMaterial.setText(sb.toString());
+        holder.binding.tvItemMaterial.setVisibility(View.VISIBLE);
+    }
+
+    private String cleanMaterialValue(String value) {
+        if (value == null) return "";
+        String trimmed = value.trim();
+        return "null".equalsIgnoreCase(trimmed) ? "" : trimmed;
+    }
 
     private void bindImagePreviews(ViewHolder holder, MaintenanceItem item) {
         if (holder.previewAdapter == null) {

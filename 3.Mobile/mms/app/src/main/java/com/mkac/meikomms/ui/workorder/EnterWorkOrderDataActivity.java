@@ -1108,6 +1108,7 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
         item.isWarehouseRequest = pickFirst(row.optString("Is_Warehouse_Request"), row.optString("isWarehouseRequest"), row.optString("IS_WAREHOUSE_REQUEST"));
         item.materialId = pickFirst(row.optString("Material_Id"), row.optString("material_id"), row.optString("MATERIAL_ID"));
         item.materialQty = row.optInt("Qty", row.optInt("QTY", 1));
+        item.materialName = pickFirst(row.optString("Material_Name"), row.optString("material_name"), row.optString("MATERIAL_NAME"));
 
         item.initialStatus = resolveInitialStatus(item);
         if (item.childCount > 0) {
