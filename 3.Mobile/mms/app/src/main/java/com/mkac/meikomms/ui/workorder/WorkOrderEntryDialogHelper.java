@@ -61,9 +61,11 @@ public final class WorkOrderEntryDialogHelper {
 
 //    private static Uri selectedFileUri = null;
     private static List<Uri> selectedFileUris = new ArrayList<>();
-    private static String uploadedFileName = "";
-    private static TextView tvAttachmentStatusView = null;
-    private static ImageView imgAttachmentIconView = null;
+    // Danh sách file đã tải lên server (tên file đầy đủ, lấy từ FILE_WO / kết quả upload)
+    private static List<String> uploadedFileNames = new ArrayList<>();
+    private static String currentTaskId = "";
+    private static LinearLayout layoutAttachmentEmptyView = null;
+    private static LinearLayout layoutAttachmentListView = null;
     private static Context dialogContext = null;
 
     // Danh sách key chuẩn (tiếng Anh) — dùng để lưu DB và tra dịch qua i18n()
@@ -108,14 +110,8 @@ public final class WorkOrderEntryDialogHelper {
                 selectedFileUris.add(data.getData());
             }
 
-            // Hiển thị trạng thái lên UI
-            if (!selectedFileUris.isEmpty() && tvAttachmentStatusView != null && dialogContext != null) {
-                tvAttachmentStatusView.setText(buildAttachmentSummaryText(dialogContext, selectedFileUris));
-                tvAttachmentStatusView.setPaintFlags(tvAttachmentStatusView.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
-                if (imgAttachmentIconView != null) {
-                    imgAttachmentIconView.setImageResource(R.drawable.ic_paperclip);
-                }
-            }
+            // Vẽ lại danh sách đính kèm (file đã chọn nhưng chưa tải lên)
+            renderAttachmentList(dialogContext);
         }
     }
 
@@ -148,69 +144,198 @@ public final class WorkOrderEntryDialogHelper {
         return result;
     }
 
-    private static String buildAttachmentSummaryText(Context context, List<Uri> fileUris) {
-        if (fileUris == null || fileUris.isEmpty()) {
-            return "";
-        }
-
-        if (fileUris.size() == 1) {
-            return getFileName(context, fileUris.get(0));
-        }
-
-        String firstName = getFileName(context, fileUris.get(0));
-        return firstName + " + " + (fileUris.size() - 1) + " more";
-    }
-
-    private static String buildUploadedSummaryText(List<JSONObject> uploadedFiles) {
-        if (uploadedFiles == null || uploadedFiles.isEmpty()) {
-            return "";
-        }
-
-        String firstFileName = "";
-        int fileCount = 0;
-        for (JSONObject item : uploadedFiles) {
-            if (item == null) continue;
-            String fileName = item.optString("value");
-            if (fileName.isEmpty()) continue;
-            if (firstFileName.isEmpty()) {
-                firstFileName = fileName;
-            }
-            fileCount++;
-        }
-
-        if (firstFileName.isEmpty()) {
-            return "";
-        }
-
-        if (fileCount <= 1) {
-            return firstFileName;
-        }
-
-        return firstFileName + " + " + (fileCount - 1) + " more";
-    }
-
-    private static String extractFirstUploadedFileName(List<JSONObject> uploadedFiles) {
-        if (uploadedFiles == null || uploadedFiles.isEmpty()) {
-            return "";
-        }
-
-        for (JSONObject item : uploadedFiles) {
-            if (item == null) continue;
-            String fileName = item.optString("value");
-            if (!fileName.isEmpty()) {
-                return fileName;
+    /** Tách chuỗi FILE_WO (phân tách bằng dấu phẩy) thành danh sách tên file. */
+    private static List<String> parseFileWo(String fileWo) {
+        List<String> files = new ArrayList<>();
+        if (fileWo == null) return files;
+        for (String part : fileWo.split(",")) {
+            String name = part.trim();
+            if (!name.isEmpty()) {
+                files.add(name);
             }
         }
+        return files;
+    }
 
-        return "";
+    private static int dp(Context context, float value) {
+        return Math.round(value * context.getResources().getDisplayMetrics().density);
+    }
+
+    /**
+     * Vẽ lại khung tài liệu đính kèm: mỗi file là 1 dòng kèm nút (X) để gỡ.
+     * - File đã tải lên server (uploadedFileNames): nút X gọi API xóa trên server.
+     * - File mới chọn nhưng chưa tải lên (selectedFileUris): nút X chỉ gỡ ở local.
+     */
+    private static void renderAttachmentList(Context context) {
+        if (context == null || layoutAttachmentListView == null || layoutAttachmentEmptyView == null) {
+            return;
+        }
+
+        layoutAttachmentListView.removeAllViews();
+
+        boolean hasUploaded = !uploadedFileNames.isEmpty();
+        boolean hasSelected = !selectedFileUris.isEmpty();
+
+        if (!hasUploaded && !hasSelected) {
+            layoutAttachmentEmptyView.setVisibility(View.VISIBLE);
+            layoutAttachmentListView.setVisibility(View.GONE);
+            return;
+        }
+
+        layoutAttachmentEmptyView.setVisibility(View.GONE);
+        layoutAttachmentListView.setVisibility(View.VISIBLE);
+
+        // File đã tải lên server
+        for (final String fileName : new ArrayList<>(uploadedFileNames)) {
+            layoutAttachmentListView.addView(
+                    buildAttachmentRow(context, fileName, true, null, fileName));
+        }
+
+        // File mới chọn, chưa tải lên
+        for (final Uri uri : new ArrayList<>(selectedFileUris)) {
+            String displayName = getFileName(context, uri);
+            layoutAttachmentListView.addView(
+                    buildAttachmentRow(context, displayName, false, uri, null));
+        }
+    }
+
+    /**
+     * Tạo 1 dòng hiển thị file: [icon] tên file (bấm để tải về nếu đã upload) ... [X]
+     */
+    private static View buildAttachmentRow(final Context context, String displayName,
+                                           final boolean isUploaded, final Uri localUri,
+                                           final String serverFileName) {
+        LinearLayout row = new LinearLayout(context);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        rowLp.setMargins(0, dp(context, 2), 0, dp(context, 2));
+        row.setLayoutParams(rowLp);
+
+        ImageView icon = new ImageView(context);
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(context, 18), dp(context, 18));
+        iconLp.setMarginEnd(dp(context, 8));
+        icon.setLayoutParams(iconLp);
+        icon.setImageResource(R.drawable.ic_paperclip);
+        row.addView(icon);
+
+        TextView tvName = new TextView(context);
+        LinearLayout.LayoutParams nameLp = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        tvName.setLayoutParams(nameLp);
+        tvName.setText(displayName);
+        tvName.setTextColor(Color.parseColor("#333333"));
+        tvName.setTextSize(13);
+        tvName.setPaintFlags(tvName.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+        if (isUploaded) {
+            tvName.setOnClickListener(v -> downloadUploadedFile(context, serverFileName));
+        }
+        row.addView(tvName);
+
+        ImageView btnRemove = new ImageView(context);
+        LinearLayout.LayoutParams removeLp = new LinearLayout.LayoutParams(dp(context, 22), dp(context, 22));
+        removeLp.setMarginStart(dp(context, 8));
+        btnRemove.setLayoutParams(removeLp);
+        btnRemove.setPadding(dp(context, 2), dp(context, 2), dp(context, 2), dp(context, 2));
+        btnRemove.setImageResource(R.drawable.close_24);
+        btnRemove.setClickable(true);
+        btnRemove.setFocusable(true);
+        btnRemove.setOnClickListener(v -> {
+            if (isUploaded) {
+                confirmAndDeleteUploadedFile(context, serverFileName);
+            } else {
+                selectedFileUris.remove(localUri);
+                renderAttachmentList(context);
+            }
+        });
+        row.addView(btnRemove);
+
+        return row;
+    }
+
+    /** Hỏi xác nhận rồi gọi API xóa file đã tải lên trên server. */
+    private static void confirmAndDeleteUploadedFile(final Context context, final String serverFileName) {
+        new AlertDialog.Builder(context)
+                .setTitle(i18n("Remove attachment"))
+                .setMessage(i18n("Are you sure you want to remove this file?") + "\n" + serverFileName)
+                .setNegativeButton(i18n("Cancel"), null)
+                .setPositiveButton(i18n("Remove"), (d, w) -> deleteUploadedFile(context, serverFileName))
+                .show();
+    }
+
+    private static void deleteUploadedFile(final Context context, final String serverFileName) {
+        if (currentTaskId == null || currentTaskId.isEmpty()) {
+            Toast.makeText(context, i18n("Work Order code not found for upload"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ConfigManager config = new ConfigManager(context);
+        String serverDynamicUrl = config.getProperty("server_dynamic_url");
+        if (serverDynamicUrl.isEmpty()) {
+            serverDynamicUrl = "http://192.86.0.225:9101/api/dynamics";
+        }
+
+        final ProgressDialog progress = new ProgressDialog(context);
+        progress.setMessage(i18n("Removing attachment..."));
+        progress.setCancelable(false);
+        progress.show();
+
+        final String finalServerUrl = serverDynamicUrl;
+        new Thread(() -> {
+            HttpClient.APIReturn result = HttpClient.deleteWorkOrderFile(
+                    context, finalServerUrl, currentTaskId, serverFileName);
+
+            new Handler(Looper.getMainLooper()).post(() -> {
+                progress.dismiss();
+                if (result != null && result.code == 200) {
+                    uploadedFileNames.remove(serverFileName);
+                    renderAttachmentList(context);
+                    Toast.makeText(context, i18n("Attachment removed"), Toast.LENGTH_SHORT).show();
+                } else {
+                    String errMsg = (result != null) ? result.message : i18n("No response from server");
+                    Toast.makeText(context, i18n("Remove failed") + ": " + errMsg, Toast.LENGTH_LONG).show();
+                }
+            });
+        }).start();
+    }
+
+    private static void downloadUploadedFile(Context context, String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            Toast.makeText(context, i18n("No attachment file to download"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ConfigManager config = new ConfigManager(context);
+        String serverDynamicUrl = config.getProperty("server_dynamic_url");
+        if (serverDynamicUrl.isEmpty()) {
+            serverDynamicUrl = "http://192.86.0.225:9101/api/dynamics";
+        }
+
+        String finalUrl = serverDynamicUrl;
+        if (finalUrl.contains("://")) {
+            String protocol = finalUrl.split("://")[0];
+            String addressWithPort = finalUrl.split("://")[1];
+            if (addressWithPort.contains(":")) {
+                finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+            } else {
+                finalUrl = protocol + "://" + addressWithPort;
+            }
+        }
+        if (finalUrl.endsWith("/")) {
+            finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+        }
+        String downloadUrl = finalUrl + ":9101/api/v1/mms_file-img/" + fileName;
+        downloadFile(context, downloadUrl, fileName);
     }
 
     private static void clearState() {
 //        selectedFileUri = null;
         selectedFileUris.clear();
-        uploadedFileName = "";
-        tvAttachmentStatusView = null;
-        imgAttachmentIconView = null;
+        uploadedFileNames.clear();
+        currentTaskId = "";
+        layoutAttachmentEmptyView = null;
+        layoutAttachmentListView = null;
         dialogContext = null;
     }
 
@@ -305,57 +430,27 @@ public final class WorkOrderEntryDialogHelper {
 
         View btnChooseFile = dialogView.findViewById(R.id.btn_choose_file);
         View btnUploadFile = dialogView.findViewById(R.id.btn_upload_file);
-        tvAttachmentStatusView = dialogView.findViewById(R.id.tv_attachment_status);
-        imgAttachmentIconView = dialogView.findViewById(R.id.img_attachment_icon);
+        layoutAttachmentEmptyView = dialogView.findViewById(R.id.layout_attachment_empty);
+        layoutAttachmentListView = dialogView.findViewById(R.id.layout_attachment_list);
 
         dialogContext = context;
 //        selectedFileUri = null;
         selectedFileUris.clear();
-        uploadedFileName = "";
+        uploadedFileNames.clear();
+
+        // taskId dùng cho upload/xóa file chính là WO_CODE
+        currentTaskId = safeGet(workOrder, "WO_CODE");
+        if (currentTaskId.isEmpty()) currentTaskId = safeGet(workOrder, "Wo_Code");
+        if (currentTaskId.isEmpty()) currentTaskId = safeGet(workOrder, "TASK_ID");
+        if (currentTaskId.isEmpty()) currentTaskId = safeGet(workOrder, "Task_Id");
+        if (currentTaskId.isEmpty()) currentTaskId = safeGet(workOrder, "taskId");
+        if (currentTaskId.isEmpty()) currentTaskId = safeGet(workOrder, "Task_ID");
 
         String existingFile = safeGet(workOrder, "File_Wo");
         if (existingFile.isEmpty()) existingFile = safeGet(workOrder, "FILE_WO");
-        if (!existingFile.isEmpty()) {
-            uploadedFileName = existingFile;
-            if (tvAttachmentStatusView != null) {
-                tvAttachmentStatusView.setText(existingFile);
-                tvAttachmentStatusView.setPaintFlags(tvAttachmentStatusView.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
-            }
-            if (imgAttachmentIconView != null) {
-                imgAttachmentIconView.setImageResource(R.drawable.ic_paperclip);
-            }
-        }
+        uploadedFileNames.addAll(parseFileWo(existingFile));
 
-        if (tvAttachmentStatusView != null) {
-            tvAttachmentStatusView.setOnClickListener(v -> {
-                if (uploadedFileName == null || uploadedFileName.isEmpty()) {
-                    Toast.makeText(context, i18n("No attachment file to download"), Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                ConfigManager config = new ConfigManager(context);
-                String serverDynamicUrl = config.getProperty("server_dynamic_url");
-                if (serverDynamicUrl.isEmpty()) {
-                    serverDynamicUrl = "http://192.86.0.225:9101/api/dynamics";
-                }
-
-                String finalUrl = serverDynamicUrl;
-                if (finalUrl.contains("://")) {
-                    String protocol = finalUrl.split("://")[0];
-                    String addressWithPort = finalUrl.split("://")[1];
-                    if (addressWithPort.contains(":")) {
-                        finalUrl = protocol + "://" + addressWithPort.split(":")[0];
-                    } else {
-                        finalUrl = protocol + "://" + addressWithPort;
-                    }
-                }
-                if (finalUrl.endsWith("/")) {
-                    finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
-                }
-                String downloadUrl = finalUrl + ":9101/api/v1/mms_file-img/" + uploadedFileName;
-                downloadFile(context, downloadUrl, uploadedFileName);
-            });
-        }
+        renderAttachmentList(context);
 
         btnTabInfo.setOnClickListener(v -> {
             btnTabInfo.setBackgroundResource(R.drawable.bg_tab_active);
@@ -393,14 +488,7 @@ public final class WorkOrderEntryDialogHelper {
                 return;
             }
 
-            String taskId = safeGet(workOrder, "WO_CODE");
-            if (taskId.isEmpty()) taskId = safeGet(workOrder, "Wo_Code");
-            if (taskId.isEmpty()) taskId = safeGet(workOrder, "TASK_ID");
-            if (taskId.isEmpty()) taskId = safeGet(workOrder, "Task_Id");
-            if (taskId.isEmpty()) taskId = safeGet(workOrder, "taskId");
-            if (taskId.isEmpty()) taskId = safeGet(workOrder, "Task_ID");
-
-            if (taskId.isEmpty()) {
+            if (currentTaskId.isEmpty()) {
                 Toast.makeText(context, i18n("Work Order code not found for upload"), Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -416,7 +504,7 @@ public final class WorkOrderEntryDialogHelper {
             uploadProgress.setCancelable(false);
             uploadProgress.show();
 
-            final String finalTaskId = taskId;
+            final String finalTaskId = currentTaskId;
             final String finalServerDynamicUrl = serverDynamicUrl;
             new Thread(() -> {
                 HttpClient.APIReturn result = HttpClient.uploadWorkOrderFile(
@@ -431,13 +519,18 @@ public final class WorkOrderEntryDialogHelper {
                     uploadProgress.dismiss();
 
                     if (result != null && result.code == 200 && result.data != null && !result.data.isEmpty()) {
-                        String fileVal = extractFirstUploadedFileName(result.data);
-                        if (!fileVal.isEmpty()) {
-                            uploadedFileName = fileVal;
-                            if (tvAttachmentStatusView != null) {
-                                tvAttachmentStatusView.setText(buildUploadedSummaryText(result.data));
-                                tvAttachmentStatusView.setPaintFlags(tvAttachmentStatusView.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
-                            }
+                        // Server trả về toàn bộ danh sách file (cũ + mới) của work order
+                        List<String> serverFiles = new ArrayList<>();
+                        for (JSONObject item : result.data) {
+                            if (item == null) continue;
+                            String fileVal = item.optString("value");
+                            if (!fileVal.isEmpty()) serverFiles.add(fileVal);
+                        }
+                        if (!serverFiles.isEmpty()) {
+                            uploadedFileNames.clear();
+                            uploadedFileNames.addAll(serverFiles);
+                            selectedFileUris.clear();
+                            renderAttachmentList(context);
                             Toast.makeText(context, i18n("Photos uploaded successfully"), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(context, i18n("Uploaded successfully but failed to get file name"), Toast.LENGTH_SHORT).show();

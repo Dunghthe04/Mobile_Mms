@@ -192,6 +192,50 @@ public class HttpClient
         }
     }
 
+    /**
+     * Xóa một file đính kèm của work order trên server (Endpoint: :9101/api/v1/mms_file-img/delete-file-task).
+     * @param taskId   mã work order (WO_CODE)
+     * @param fileName tên file đã lưu trên server (đầy đủ, vd: WO_..._Screenshot_....jpg)
+     * @return APIReturn; data chứa danh sách file còn lại sau khi xóa
+     */
+    public static APIReturn deleteWorkOrderFile(Context context, String server_url, String taskId, String fileName) {
+        PreferenceHandler handler = new PreferenceHandler(context);
+        token = handler.getString("api_key");
+        try {
+            String finalUrl = server_url;
+            if (finalUrl.contains("://")) {
+                String protocol = finalUrl.split("://")[0];
+                String addressWithPort = finalUrl.split("://")[1];
+                if (addressWithPort.contains(":")) {
+                    finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+                } else {
+                    finalUrl = protocol + "://" + addressWithPort;
+                }
+            }
+            if (finalUrl.endsWith("/")) {
+                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+            }
+            finalUrl = finalUrl + ":9101/api/v1/mms_file-img/delete-file-task";
+
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("taskId", taskId)
+                    .addFormDataPart("fileName", fileName)
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(finalUrl)
+                    .header("Authorization", "Bearer " + token)
+                    .post(requestBody)
+                    .build();
+
+            return executeRequest(request);
+        } catch (Exception e) {
+            Log.e("Exception", e.getMessage());
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
     public static APIReturn postNoAuth(String url, String json) {
         RequestBody body = RequestBody.create(json, JSON);
         Request request = buildRequestNoAuth(url, "POST", body);
@@ -1755,6 +1799,57 @@ public class HttpClient
             builder.addFormDataPart("param", "");
 
             RequestBody requestBody = builder.build();
+            Request request = new Request.Builder()
+                    .url(finalUrl)
+                    .header("Authorization", "Bearer " + token)
+                    .post(requestBody)
+                    .build();
+
+            return executeRequest(request);
+        } catch (Exception e) {
+            Log.e("Exception", e.getMessage());
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    /**
+     * Xóa 1 ảnh của hạng mục bảo dưỡng (cha hoặc con) trên server.
+     * Endpoint: :9101/api/v1/mms_file-img/deleteImageComponentForPreventive
+     * @param checkId   CHECK_ID của hạng mục
+     * @param imagePath đường dẫn/URL ảnh cần xóa (server so khớp theo tên file)
+     * @return APIReturn; data là danh sách ảnh còn lại
+     */
+    public static APIReturn deleteImageComponentForPreventive(Context context, String server_url,
+                                                              String taskId, String checkId, String imagePath) {
+        PreferenceHandler handler = new PreferenceHandler(context);
+        token = handler.getString("api_key");
+        try {
+            String finalUrl = server_url;
+            if (finalUrl.contains("://")) {
+                String protocol = finalUrl.split("://")[0];
+                String addressWithPort = finalUrl.split("://")[1];
+                if (addressWithPort.contains(":")) {
+                    finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+                } else {
+                    finalUrl = protocol + "://" + addressWithPort;
+                }
+            }
+            if (finalUrl.endsWith("/")) {
+                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+            }
+            finalUrl = finalUrl + ":9101/api/v1/mms_file-img/deleteImageComponentForPreventive";
+
+            String tId = taskId == null ? "" : taskId;
+            String cId = checkId == null ? "" : checkId;
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("taskId", tId)
+                    .addFormDataPart("checkId", cId)
+                    .addFormDataPart("Task_Id", tId)
+                    .addFormDataPart("Check_Id", cId)
+                    .addFormDataPart("imagePath", imagePath == null ? "" : imagePath)
+                    .build();
+
             Request request = new Request.Builder()
                     .url(finalUrl)
                     .header("Authorization", "Bearer " + token)

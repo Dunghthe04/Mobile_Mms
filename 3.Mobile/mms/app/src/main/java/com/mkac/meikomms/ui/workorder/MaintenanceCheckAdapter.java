@@ -25,6 +25,7 @@ public class MaintenanceCheckAdapter extends RecyclerView.Adapter<MaintenanceChe
         void onInfoClick(MaintenanceItem item);
         void onHistoryClick(MaintenanceItem item);
         void onUploadClick(MaintenanceItem item);
+        void onDeleteImage(MaintenanceItem item, String imagePath);
     }
 
     public MaintenanceCheckAdapter(List<MaintenanceItem> items, OnItemActionListener actionListener) {
@@ -377,6 +378,13 @@ public class MaintenanceCheckAdapter extends RecyclerView.Adapter<MaintenanceChe
             holder.previewAdapter = new MaintenanceImagePreviewAdapter(holder.itemView.getContext());
             holder.binding.rvCheckPreviews.setAdapter(holder.previewAdapter);
         }
+
+        // Gắn callback gỡ ảnh theo đúng item đang bind (tránh giữ tham chiếu item cũ khi tái sử dụng ViewHolder)
+        holder.previewAdapter.setOnImageActionListener(imagePath -> {
+            if (actionListener != null) {
+                actionListener.onDeleteImage(item, imagePath);
+            }
+        });
 
         List<String> images = item.getImagePathsSnapshot();
 

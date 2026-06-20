@@ -262,6 +262,18 @@ public class LanguageAPIUtils
                     "  \"Upload\": \"Upload\",\n" +
                     "  \"Attachment\": \"Attachment\",\n" +
                     "  \"No attachment file\": \"No attachment file\",\n" +
+                    "  \"Attachment removed\": \"Attachment removed\",\n" +
+                    "  \"Remove attachment\": \"Remove attachment\",\n" +
+                    "  \"Are you sure you want to remove this file?\": \"Are you sure you want to remove this file?\",\n" +
+                    "  \"Cancel\": \"Cancel\",\n" +
+                    "  \"Remove\": \"Remove\",\n" +
+                    "  \"Removing attachment...\": \"Removing attachment...\",\n" +
+                    "  \"Remove failed\": \"Remove failed\",\n" +
+                    "  \"Remove image\": \"Remove image\",\n" +
+                    "  \"Are you sure you want to remove this image?\": \"Are you sure you want to remove this image?\",\n" +
+                    "  \"Image removed\": \"Image removed\",\n" +
+                    "  \"Removing image...\": \"Removing image...\",\n" +
+                    "  \"Remove image failed\": \"Remove image failed\",\n" +
                     "  \"Create WMS Request\": \"Create WMS Request\",\n" +
                     "  \"Materials\": \"Materials\",\n" +
                     "  \"No materials available\": \"No materials available\",\n" +
@@ -520,6 +532,18 @@ public class LanguageAPIUtils
                     "  \"Upload\": \"Tải lên\",\n" +
                     "  \"Attachment\": \"Tài liệu đính kèm\",\n" +
                     "  \"No attachment file\": \"Chưa có tài liệu đính kèm\",\n" +
+                    "  \"Attachment removed\": \"Đã gỡ tài liệu đính kèm\",\n" +
+                    "  \"Remove attachment\": \"Gỡ tài liệu đính kèm\",\n" +
+                    "  \"Are you sure you want to remove this file?\": \"Bạn có chắc muốn gỡ tệp này?\",\n" +
+                    "  \"Cancel\": \"Hủy\",\n" +
+                    "  \"Remove\": \"Gỡ\",\n" +
+                    "  \"Removing attachment...\": \"Đang gỡ tài liệu đính kèm...\",\n" +
+                    "  \"Remove failed\": \"Gỡ tài liệu thất bại\",\n" +
+                    "  \"Remove image\": \"Gỡ ảnh\",\n" +
+                    "  \"Are you sure you want to remove this image?\": \"Bạn có chắc muốn gỡ ảnh này?\",\n" +
+                    "  \"Image removed\": \"Đã gỡ ảnh\",\n" +
+                    "  \"Removing image...\": \"Đang gỡ ảnh...\",\n" +
+                    "  \"Remove image failed\": \"Gỡ ảnh thất bại\",\n" +
                     "  \"Create WMS Request\": \"Tạo yêu cầu xuất kho\",\n" +
                     "  \"Materials\": \"Vật tư\",\n" +
                     "  \"No materials available\": \"Không có vật tư đi kèm\",\n" +
@@ -733,6 +757,18 @@ public class LanguageAPIUtils
                     "  \"Upload\": \"アップロード\",\n" +
                     "  \"Attachment\": \"添付ファイル\",\n" +
                     "  \"No attachment file\": \"添付ファイルなし\",\n" +
+                    "  \"Attachment removed\": \"添付ファイルを削除しました\",\n" +
+                    "  \"Remove attachment\": \"添付ファイルを削除\",\n" +
+                    "  \"Are you sure you want to remove this file?\": \"このファイルを削除してもよろしいですか？\",\n" +
+                    "  \"Cancel\": \"キャンセル\",\n" +
+                    "  \"Remove\": \"削除\",\n" +
+                    "  \"Removing attachment...\": \"添付ファイルを削除中...\",\n" +
+                    "  \"Remove failed\": \"削除に失敗しました\",\n" +
+                    "  \"Remove image\": \"画像を削除\",\n" +
+                    "  \"Are you sure you want to remove this image?\": \"この画像を削除してもよろしいですか？\",\n" +
+                    "  \"Image removed\": \"画像を削除しました\",\n" +
+                    "  \"Removing image...\": \"画像を削除中...\",\n" +
+                    "  \"Remove image failed\": \"画像の削除に失敗しました\",\n" +
                     "  \"Create WMS Request\": \"出庫要求を作成\",\n" +
                     "  \"Materials\": \"資材\",\n" +
                     "  \"No materials available\": \"資材がありません\",\n" +
@@ -954,6 +990,18 @@ public class LanguageAPIUtils
                     "  \"Upload\": \"上传\",\n" +
                     "  \"Attachment\": \"附件\",\n" +
                     "  \"No attachment file\": \"暂无附件\",\n" +
+                    "  \"Attachment removed\": \"已移除附件\",\n" +
+                    "  \"Remove attachment\": \"移除附件\",\n" +
+                    "  \"Are you sure you want to remove this file?\": \"确定要移除此文件吗？\",\n" +
+                    "  \"Cancel\": \"取消\",\n" +
+                    "  \"Remove\": \"移除\",\n" +
+                    "  \"Removing attachment...\": \"正在移除附件...\",\n" +
+                    "  \"Remove failed\": \"移除失败\",\n" +
+                    "  \"Remove image\": \"移除图片\",\n" +
+                    "  \"Are you sure you want to remove this image?\": \"确定要移除此图片吗？\",\n" +
+                    "  \"Image removed\": \"已移除图片\",\n" +
+                    "  \"Removing image...\": \"正在移除图片...\",\n" +
+                    "  \"Remove image failed\": \"移除图片失败\",\n" +
                     "  \"Create WMS Request\": \"创建出库申请\",\n" +
                     "  \"Materials\": \"材料\",\n" +
                     "  \"No materials available\": \"暂无材料\",\n" +

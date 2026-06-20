@@ -428,25 +428,41 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:background="#F4F6F9"
-                        android:gravity="center"
-                        android:orientation="horizontal"
+                        android:orientation="vertical"
                         android:padding="14dp">
 
-                        <ImageView
-                            android:id="@+id/img_attachment_icon"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
-                            android:layout_marginEnd="10dp"
-                            android:src="@drawable/ic_folder" />
-
-                        <TextView
-                            android:id="@+id/tv_attachment_status"
-                            android:layout_width="wrap_content"
+                        <!-- Placeholder khi chưa có file -->
+                        <LinearLayout
+                            android:id="@+id/layout_attachment_empty"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="No attachment file"
-                            android:textColor="#808080"
-                            android:textSize="14sp"
-                            android:textStyle="italic" />
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/img_attachment_icon"
+                                android:layout_width="22dp"
+                                android:layout_height="22dp"
+                                android:layout_marginEnd="10dp"
+                                android:src="@drawable/ic_folder" />
+
+                            <TextView
+                                android:id="@+id/tv_attachment_status"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="No attachment file"
+                                android:textColor="#808080"
+                                android:textSize="14sp"
+                                android:textStyle="italic" />
+                        </LinearLayout>
+
+                        <!-- Danh sách file đính kèm (mỗi file 1 dòng kèm nút X) -->
+                        <LinearLayout
+                            android:id="@+id/layout_attachment_list"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone" />
                     </LinearLayout>
                 </LinearLayout>
 
