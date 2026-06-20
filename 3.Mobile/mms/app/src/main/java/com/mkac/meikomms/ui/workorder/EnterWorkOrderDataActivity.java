@@ -507,6 +507,12 @@ public class EnterWorkOrderDataActivity extends AppCompatActivity {
             behavior.setSkipCollapsed(true);
             behavior.setPeekHeight(lp.height);
             behavior.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+
+            android.view.ViewGroup.LayoutParams rootParams = dialogBinding.getRoot().getLayoutParams();
+            if (rootParams != null) {
+                rootParams.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+                dialogBinding.getRoot().setLayoutParams(rootParams);
+            }
         }
     }
 
