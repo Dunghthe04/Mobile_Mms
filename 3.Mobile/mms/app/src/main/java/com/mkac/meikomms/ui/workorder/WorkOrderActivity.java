@@ -59,11 +59,11 @@ public class WorkOrderActivity extends AppCompatActivity {
             "Maintenance and repair"
     );
         private static final String[][] MA_STATUS_ALIASES = new String[][]{
-            {"Machine Breakdown", "Machine broken", "MĂ¡y há»ng", "è¨­å‚™æ•…éœ", "è®¾å¤‡æ•…éœ"},
-            {"Preparing operation", "Chuáº©n bá»‹ thao tĂ¡c", "ä½œæ¥­æº–å‚™", "å‡†å¤‡ä½œä¸"},
-            {"Stop due to shortage", "Dá»«ng thiáº¿u tá»“n", "ä¸è¶³ă«ă‚ˆă‚‹åœæ­¢", "ç¼ºæ–™åœæœº"},
-            {"Stop by production plan", "Dá»«ng theo káº¿ hoáº¡ch sáº£n xuáº¥t", "ç”Ÿç”£è¨ˆç”»ă«ă‚ˆă‚‹åœæ­¢", "æŒ‰ç”Ÿäº§è®¡åˆ’åœæœº"},
-            {"Maintenance and repair", "Báº£o dÆ°á»¡ng, sá»­a chá»¯a", "ä¿å…¨ăƒ»ä¿®ç†", "ä¿å…»ä¸ç»´ä¿®"}
+            {"Machine Breakdown", "Machine broken", "Máy hỏng", "設備故障", "设备故障"},
+            {"Preparing operation", "Chuẩn bị thao tác", "作業準備", "准备作业"},
+            {"Stop due to shortage", "Dừng thiếu tồn", "不足による停止", "缺料停机"},
+            {"Stop by production plan", "Dừng theo kế hoạch sản xuất", "生産計画による停止", "按生产计划停机"},
+            {"Maintenance and repair", "Bảo dưỡng, sửa chữa", "保全・修理", "保养与维修"}
         };
         
     private EditText edtWoCode, edtRequestDate, edtProcess, edtPassedDate, edtReason, edtDeadline;
@@ -361,7 +361,7 @@ public class WorkOrderActivity extends AppCompatActivity {
                         PreferenceHandler pref = new PreferenceHandler(this);
                         JSONObject userData = pref.getJsonObject("user");
 
-                        ColorConsole.d(TAG, "Dá»® LIá»†U USER ÄĂƒ LÆ¯U: " + (userData != null ? userData.toString() : "NULL"));
+                        ColorConsole.d(TAG, "DỮ LIỆU USER ĐÃ LƯU: " + (userData != null ? userData.toString() : "NULL"));
 
                         if (userData != null) {
                             loginUserName = userData.optString("userId", "");
@@ -491,12 +491,12 @@ public class WorkOrderActivity extends AppCompatActivity {
             }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show();
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
 
-        //TODO: chá»n tá»« hiá»‡n táº¡i tá»›i tÆ°Æ¡ng lai
+        //TODO: chọn từ hiện tại tới tương lai
 //        if (editText.getId() == R.id.edt_request_date) {
 //            dialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
 //        }
 
-        //TODO: chá»n tá»« quĂ¡ khá»© tá»›i hiá»‡n táº¡i
+        //TODO: chọn từ quá khứ tới hiện tại
         if (editText.getId() == R.id.edt_request_date) {
             try {
                 long maxDate;
@@ -542,7 +542,7 @@ public class WorkOrderActivity extends AppCompatActivity {
                 return last + "_1";
             }
         } catch (Exception e) {
-            Log.e(TAG, "Lá»—i parse mĂ£ W/O: " + e.getMessage());
+            Log.e(TAG, "Lỗi parse mã W/O: " + e.getMessage());
             return last;
         }
     }
@@ -569,16 +569,16 @@ public class WorkOrderActivity extends AppCompatActivity {
     private void performAddWorkOrder(){
         if (isSubmitting) return;
 
-        ColorConsole.i("Báº¯t Ä‘áº§u thĂªm Work Order");
+        ColorConsole.i("Bắt đầu thêm Work Order");
 
-        //TODO: Láº¥y dá»¯ liá»‡u
+        //TODO: Lấy dữ liệu
 
-        String woCode = edtWoCode.getText().toString().trim(); //mĂ£ WO
-        String requestDate = edtRequestDate.getText().toString().trim(); //ngĂ y yĂªu cáº§u
-        String machineRaw = autoMachine.getText().toString().trim(); //mĂ£ mĂ¡y
-        //String loaiHinh = autoLoaiHinh.getText().toString().trim(); //loáº¡i hĂ¬nh
+        String woCode = edtWoCode.getText().toString().trim(); //mã WO
+        String requestDate = edtRequestDate.getText().toString().trim(); //ngày yêu cầu
+        String machineRaw = autoMachine.getText().toString().trim(); //mã máy
+        //String loaiHinh = autoLoaiHinh.getText().toString().trim(); //loại hình
         String loaiHinh = "BM";
-        String requesterRaw = autoRequester.getText().toString().trim(); //tĂªn ngÆ°á»i yĂªu cáº§u
+        String requesterRaw = autoRequester.getText().toString().trim(); //tên người yêu cầu
 
         String userIdToSave = "";
         if (!requesterRaw.isEmpty() && requesterRaw.contains(" - ")) {
@@ -586,12 +586,12 @@ public class WorkOrderActivity extends AppCompatActivity {
         } else {
             userIdToSave = requesterRaw;
         }
-        ColorConsole.d(TAG, "ID ngÆ°á»i yĂªu cáº§u Ä‘á»ƒ lÆ°u: " + userIdToSave);
+        ColorConsole.d(TAG, "ID người yêu cầu để lưu: " + userIdToSave);
 
-        String reason = edtReason.getText().toString().trim(); //lĂ½ do yĂªu cáº§u
-        String process = edtProcess.getText().toString().trim(); //tráº¡ng thĂ¡i mĂ¡y
-        String passedDateVal = edtPassedDate.getText().toString().trim(); //ngĂ y tráº£i qua
-        String maStatusStr = autoMaStatus.getText().toString().trim(); //tráº¡ng thĂ¡i MA bĂ¡o
+        String reason = edtReason.getText().toString().trim(); //lý do yêu cầu
+        String process = edtProcess.getText().toString().trim(); //trạng thái máy
+        String passedDateVal = edtPassedDate.getText().toString().trim(); //ngày trải qua
+        String maStatusStr = autoMaStatus.getText().toString().trim(); //trạng thái MA báo
         String currentLockStatus = getCurrentLockStatus();
 
         //TODO: validate
@@ -609,21 +609,21 @@ public class WorkOrderActivity extends AppCompatActivity {
 
         int statusVal = statusFromText(maStatusStr);
 
-       //TODO: TĂ¡ch láº¥y ID tá»« chuá»—i "ID - Name"
+       //TODO: Tách lấy ID từ chuỗi "ID - Name"
         final String machineId = machineRaw.contains(" - ") ? machineRaw.split(" - ")[0] : machineRaw;
         final String requesterUsername = requesterRaw.contains(" - ") ? requesterRaw.split(" - ")[0].trim() : requesterRaw;
-        ColorConsole.d(TAG, "ID ngÆ°á»i yĂªu cáº§u: " + requesterUsername);
+        ColorConsole.d(TAG, "ID người yêu cầu: " + requesterUsername);
 
-        //TODO: Láº¥y thĂ´ng tin ngÆ°á»i táº¡o
+        //TODO: Lấy thông tin người tạo
         PreferenceHandler preferenceHandler = new PreferenceHandler(this);
         //JSONObject userData = preferenceHandler.getJsonObject("user");
         JSONObject userData = null;
         try {
             userData = preferenceHandler.getJsonObject("user");
         } catch (Exception e) {
-            ColorConsole.e(TAG, "Lá»—i khi láº¥y user object tá»« SharedPreferences: " + e.getMessage());
+            ColorConsole.e(TAG, "Lỗi khi lấy user object từ SharedPreferences: " + e.getMessage());
         }
-        ColorConsole.d(TAG, "Dá»® LIá»†U USER ÄĂƒ LÆ¯U: " + (userData != null ? userData.toString() : "NULL"));
+        ColorConsole.d(TAG, "DỮ LIỆU USER ĐÃ LƯU: " + (userData != null ? userData.toString() : "NULL"));
 
         String tempEmail = "";
         String tempFullName = "";
@@ -633,7 +633,7 @@ public class WorkOrderActivity extends AppCompatActivity {
             tempEmail = safeGet(userData, "email");
             tempFullName = safeGet(userData, "fullName");
             tempDivisionName = safeGet(userData, "divisionName");
-            ColorConsole.d(TAG, "Dá»® LIá»†U ÄĂƒ Láº¤Y: Email=" + tempEmail + " | Division=" + tempDivisionName);
+            ColorConsole.d(TAG, "DỮ LIỆU ĐÃ LẤY: Email=" + tempEmail + " | Division=" + tempDivisionName);
         }
 
         final String currentLoginUserId = createByRealId;
@@ -641,9 +641,9 @@ public class WorkOrderActivity extends AppCompatActivity {
         final String finalFullName = tempFullName;
         final String finalDivisionName = tempDivisionName;
         final String finalRequestUser = buildRequestUserLabel(userData);
-        ColorConsole.d(TAG, "ID ngÆ°á»i táº¡o (CREATE_BY) sáº½ gá»­i lĂªn DB: " + currentLoginUserId);
+        ColorConsole.d(TAG, "ID người tạo (CREATE_BY) sẽ gửi lên DB: " + currentLoginUserId);
 
-        //TODO: ThĂªm loading data
+        //TODO: Thêm loading data
         ProgressDialog progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(i18n("Processing data..."));
         progressDialog.setCancelable(false);
@@ -681,12 +681,12 @@ public class WorkOrderActivity extends AppCompatActivity {
                 ColorConsole.d(TAG, "Add WO response: " + resWo.toString());
 
                 if(resWo == null || resWo.code != 200){
-                    String errorMsg = (resWo != null) ? resWo.message : "KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c server";
-                    throw new Exception("Lá»—i thĂªm WorkOrder: " + errorMsg);
+                    String errorMsg = (resWo != null) ? resWo.message : "Không kết nối được server";
+                    throw new Exception("Lỗi thêm WorkOrder: " + errorMsg);
                 }
                 ColorConsole.i(TAG, "Add WO success, start mail and task processes...");
 
-                //TODO: Cáº­p nháº­t tráº¡ng thĂ¡i mĂ¡y
+                //TODO: Cập nhật trạng thái máy
 
                 if (getWoTypeInt(loaiHinh) == 3) {
 
@@ -695,9 +695,9 @@ public class WorkOrderActivity extends AppCompatActivity {
                     if ("MA".equalsIgnoreCase(finalDivisionName)) {
 
                         if ("2".equals(currentLockStatus)) {
-                            machineStatus = 2; // khĂ³a -> Ä‘á» nháº¥p nhĂ¡y
+                            machineStatus = 2; // khóa -> đỏ nhấp nháy
                         } else {
-                            machineStatus = 1; // khĂ´ng khĂ³a -> Ä‘á» thÆ°á»ng
+                            machineStatus = 1; // không khóa -> đỏ thường
                         }
 
                     } else {
@@ -716,8 +716,8 @@ public class WorkOrderActivity extends AppCompatActivity {
                     if(resStatus == null || resStatus.code != 200){
                         ColorConsole.e(
                                 "API Error",
-                                "Lá»—i cáº­p nháº­t tráº¡ng thĂ¡i mĂ¡y: "
-                                        + (resStatus != null ? resStatus.message : "KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c server")
+                                "Lỗi cập nhật trạng thái máy: "
+                                        + (resStatus != null ? resStatus.message : "Không kết nối được server")
                         );
                     }
                 }
@@ -742,7 +742,7 @@ public class WorkOrderActivity extends AppCompatActivity {
                         isLockVal
                 );
 
-                //TODO: ThĂªm task tÆ°Æ¡ng á»©ng
+                //TODO: Thêm task tương ứng
                 String maintainerIdForTask = "";
 
                 try {
@@ -762,7 +762,7 @@ public class WorkOrderActivity extends AppCompatActivity {
                         ColorConsole.d(TAG, "[TASK] MaintainerId: " + maintainerIdForTask);
                     }
                 } catch (Exception e) {
-                    ColorConsole.e(TAG, "Lá»—i láº¥y maintainer cho TASK: " + e.getMessage());
+                    ColorConsole.e(TAG, "Lỗi lấy maintainer cho TASK: " + e.getMessage());
                 }
 
                 if (maintainerIdForTask.isEmpty()) {
@@ -772,10 +772,10 @@ public class WorkOrderActivity extends AppCompatActivity {
                 HttpClient.APIReturn resTask = HttpClient.addMtTask(this, serverUrl, taskData);
 
                 if(resTask == null || resTask.code != 200){
-                    throw new Exception("Lá»—i thĂªm Task: " + (resTask != null ? resTask.message : "KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c server"));
+                    throw new Exception("Lỗi thêm Task: " + (resTask != null ? resTask.message : "Không kết nối được server"));
                 }
 
-                //TODO: ThĂªm WorkOrder thĂ nh cĂ´ng, cáº­p nháº­t tráº¡ng thĂ¡i thĂ nh cĂ´ng, táº¡o task tÆ°Æ¡ng á»©ng thĂ nh cĂ´ng
+                //TODO: Thêm WorkOrder thành công, cập nhật trạng thái thành công, tạo task tương ứng thành công
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
                     isSubmitting = false;
@@ -785,7 +785,7 @@ public class WorkOrderActivity extends AppCompatActivity {
                     finish();
                 });
             }catch (Exception e){
-                ColorConsole.e(TAG, "Lá»—i gá»­i mail: " + e.getMessage());
+                ColorConsole.e(TAG, "Lỗi gửi mail: " + e.getMessage());
 
                 runOnUiThread(() -> {
                     progressDialog.dismiss();
@@ -896,11 +896,11 @@ public class WorkOrderActivity extends AppCompatActivity {
 
                             if ("2".equals(currentLockStatus)) {
 
-                                machineStatus = 2; // khĂ³a -> Ä‘á» nháº¥p nhĂ¡y
+                                machineStatus = 2; // khóa -> đỏ nhấp nháy
 
                             } else {
 
-                                machineStatus = 1; // khĂ´ng khĂ³a -> Ä‘á» thÆ°á»ng
+                                machineStatus = 1; // không khóa -> đỏ thường
                             }
                         }
 
@@ -917,8 +917,8 @@ public class WorkOrderActivity extends AppCompatActivity {
 
                             ColorConsole.e(
                                     "API Error",
-                                    "Lá»—i cáº­p nháº­t tráº¡ng thĂ¡i mĂ¡y: "
-                                            + (resStatus != null ? resStatus.message : "KhĂ´ng káº¿t ná»‘i Ä‘Æ°á»£c server")
+                                    "Lỗi cập nhật trạng thái máy: "
+                                            + (resStatus != null ? resStatus.message : "Không kết nối được server")
                             );
                         }
                     }
@@ -1043,7 +1043,7 @@ public class WorkOrderActivity extends AppCompatActivity {
         return "";
     }
 
-    //TODO: func tĂ­nh ngĂ y tráº£i qua
+    //TODO: func tính ngày trải qua
     private void updatePassedDays(String selectedDateStr) {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
@@ -1089,7 +1089,7 @@ public class WorkOrderActivity extends AppCompatActivity {
             PreferenceHandler preferenceHandler = new PreferenceHandler(this);
             return preferenceHandler.getJsonObject("user");
         } catch (Exception e) {
-            ColorConsole.e(TAG, "Lá»—i khi láº¥y user hiá»‡n táº¡i: " + e.getMessage());
+            ColorConsole.e(TAG, "Lỗi khi lấy user hiện tại: " + e.getMessage());
             return null;
         }
     }
@@ -1249,7 +1249,7 @@ public class WorkOrderActivity extends AppCompatActivity {
                 ColorConsole.w(TAG, "WO mail response is null");
             }
         } catch (Exception e) {
-            ColorConsole.e(TAG, "Lá»—i gá»­i mail WorkOrder: " + e.getMessage());
+            ColorConsole.e(TAG, "Lỗi gửi mail WorkOrder: " + e.getMessage());
         }
     }
 
@@ -1416,7 +1416,7 @@ public class WorkOrderActivity extends AppCompatActivity {
         }
     }
 
-    //TODO: func: cho phĂ©p cĂ¡c trÆ°á»ng Ä‘Æ°á»£c chá»‰nh sá»­a
+    //TODO: func: cho phép các trường được chỉnh sửa
     private void setupEditModeUI() {
         applyReadOnlyFieldStyle(edtWoCode);
         applyReadOnlyFieldStyle(autoMachine);
@@ -1430,7 +1430,7 @@ public class WorkOrderActivity extends AppCompatActivity {
         applyEditableFieldStyle(edtRequestDate);
         applyEditableFieldStyle(edtReason);
 
-        // disable toĂ n bá»™ group
+        // disable toàn bộ group
         if (radioGroupMesLock != null) {
             radioGroupMesLock.setEnabled(false);
             radioGroupMesLock.setClickable(false);
@@ -1441,7 +1441,7 @@ public class WorkOrderActivity extends AppCompatActivity {
                     R.drawable.bg_input_field_disabled
             );
         }
-        // disable tá»«ng radio
+        // disable từng radio
         radioMesLockYes.setEnabled(false);
         radioMesLockYes.setClickable(false);
 
@@ -1556,15 +1556,15 @@ public class WorkOrderActivity extends AppCompatActivity {
 
     private String getCurrentLockStatus() {
         if (radioMesLockYes != null && radioMesLockYes.isChecked()) {
-            return "2"; //khĂ³a
+            return "2"; //khóa
         }
         if (radioMesLockNo != null && radioMesLockNo.isChecked()) {
-            return "1"; //khĂ´ng khĂ³a
+            return "1"; //không khóa
         }
-        return "0"; //máº·c Ä‘á»‹nh
+        return "0"; //mặc định
     }
 
-    //TODO: func convert status ma bĂ¡o
+    //TODO: func convert status ma báo
     private String convertStatus(int status){
         if (status >= 1 && status <= MA_STATUS_KEYS.size()) {
             return i18n(MA_STATUS_KEYS.get(status - 1));
