@@ -236,6 +236,45 @@ public class HttpClient
         }
     }
 
+    /**
+     * Lấy danh sách file đính kèm của work order (Endpoint: :9101/api/v1/mms_file-img/get-task).
+     * Backend đọc cột FILE_WO trong MT_WORK_ORDER theo WO_CODE.
+     * @param taskId mã work order (WO_CODE)
+     * @return APIReturn; data là danh sách JSONObject mỗi cái có key "value" = tên file
+     */
+    public static APIReturn getWorkOrderFiles(Context context, String server_url, String taskId) {
+        PreferenceHandler handler = new PreferenceHandler(context);
+        token = handler.getString("api_key");
+        try {
+            String finalUrl = server_url;
+            if (finalUrl.contains("://")) {
+                String protocol = finalUrl.split("://")[0];
+                String addressWithPort = finalUrl.split("://")[1];
+                if (addressWithPort.contains(":")) {
+                    finalUrl = protocol + "://" + addressWithPort.split(":")[0];
+                } else {
+                    finalUrl = protocol + "://" + addressWithPort;
+                }
+            }
+            if (finalUrl.endsWith("/")) {
+                finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
+            }
+            finalUrl = finalUrl + ":9101/api/v1/mms_file-img/get-task?taskId="
+                    + java.net.URLEncoder.encode(taskId, "UTF-8");
+
+            Request request = new Request.Builder()
+                    .url(finalUrl)
+                    .header("Authorization", "Bearer " + token)
+                    .get()
+                    .build();
+
+            return executeRequest(request);
+        } catch (Exception e) {
+            Log.e("Exception", e.getMessage());
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
     public static APIReturn postNoAuth(String url, String json) {
         RequestBody body = RequestBody.create(json, JSON);
         Request request = buildRequestNoAuth(url, "POST", body);

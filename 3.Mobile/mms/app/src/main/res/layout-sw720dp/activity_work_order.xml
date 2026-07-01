@@ -470,6 +470,129 @@
                                 </RelativeLayout>
                             </LinearLayout>
                         </GridLayout>
+
+                        <!-- ATTACHMENT (ảnh đính kèm) -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="8dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tv_label_attachment"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Attachment"
+                                android:textStyle="bold"
+                                android:textColor="#303133"
+                                android:layout_marginBottom="8dp" />
+
+                            <!-- Choose File & Upload buttons -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="10dp"
+                                android:orientation="horizontal">
+
+                                <LinearLayout
+                                    android:id="@+id/btn_choose_file"
+                                    android:layout_width="0dp"
+                                    android:layout_height="40dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/bg_btn_choose_file"
+                                    android:gravity="center"
+                                    android:orientation="horizontal"
+                                    android:paddingHorizontal="8dp"
+                                    android:layout_marginEnd="6dp"
+                                    android:clickable="true"
+                                    android:focusable="true">
+
+                                    <ImageView
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:layout_marginEnd="4dp"
+                                        android:src="@drawable/ic_paperclip" />
+
+                                    <TextView
+                                        android:id="@+id/tv_choose_file"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Choose File"
+                                        android:textColor="#01A789"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:id="@+id/btn_upload_file"
+                                    android:layout_width="0dp"
+                                    android:layout_height="40dp"
+                                    android:layout_weight="1"
+                                    android:background="@drawable/bg_tab_active"
+                                    android:gravity="center"
+                                    android:orientation="horizontal"
+                                    android:paddingHorizontal="8dp"
+                                    android:clickable="true"
+                                    android:focusable="true">
+
+                                    <ImageView
+                                        android:layout_width="16dp"
+                                        android:layout_height="16dp"
+                                        android:layout_marginEnd="4dp"
+                                        android:src="@drawable/ic_upload" />
+
+                                    <TextView
+                                        android:id="@+id/tv_upload_file"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Upload"
+                                        android:textColor="@color/white"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <!-- Khu vực hiển thị file -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:background="#F4F6F9"
+                                android:orientation="vertical"
+                                android:padding="12dp">
+
+                                <!-- Placeholder khi chưa có file -->
+                                <LinearLayout
+                                    android:id="@+id/layout_attachment_empty"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:orientation="horizontal">
+
+                                    <ImageView
+                                        android:layout_width="18dp"
+                                        android:layout_height="18dp"
+                                        android:layout_marginEnd="8dp"
+                                        android:src="@drawable/ic_folder" />
+
+                                    <TextView
+                                        android:id="@+id/tv_attachment_status"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="No attachment file"
+                                        android:textColor="#808080"
+                                        android:textSize="13sp"
+                                        android:textStyle="italic" />
+                                </LinearLayout>
+
+                                <!-- Danh sách file đính kèm (mỗi file 1 dòng kèm nút X) -->
+                                <LinearLayout
+                                    android:id="@+id/layout_attachment_list"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:visibility="gone" />
+                            </LinearLayout>
+                        </LinearLayout>
                     </LinearLayout>
                 </ViewFlipper>
 

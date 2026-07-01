@@ -231,6 +231,7 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung cho WorkOrderEntryDialog ──────────────
                     "  \"Occurrence Time\": \"Occurrence Time\",\n" +
+                    "  \"The photo will be uploaded automatically after you press Add\": \"The photo will be uploaded automatically after you press Add\",\n" +
                     // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
                     "  \"Tìm kiếm máy (mã - tên)\": \"Search machine (code - name)\",\n" +
                     "  \"Ngày\": \"Date\",\n" +
@@ -506,6 +507,7 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"Thời gian phát sinh\",\n" +
+                    "  \"The photo will be uploaded automatically after you press Add\": \"Ảnh sẽ được tự động tải lên sau khi bấm Thêm\",\n" +
                     // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
                     "  \"Tìm kiếm máy (mã - tên)\": \"Tìm kiếm máy (mã - tên)\",\n" +
                     "  \"Ngày\": \"Ngày\",\n" +
@@ -744,6 +746,7 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"発生時間\",\n" +
+                    "  \"The photo will be uploaded automatically after you press Add\": \"追加ボタンを押すと写真が自動的にアップロードされます\",\n" +
                     // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
                     "  \"Tìm kiếm máy (mã - tên)\": \"設備を検索（コード - 名称）\",\n" +
                     "  \"Ngày\": \"日付\",\n" +
@@ -983,6 +986,7 @@ public class LanguageAPIUtils
             "{\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"发生时间\",\n" +
+                    "  \"The photo will be uploaded automatically after you press Add\": \"点击添加后照片将自动上传\",\n" +
                     // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
                     "  \"Tìm kiếm máy (mã - tên)\": \"搜索设备（代码 - 名称）\",\n" +
                     "  \"Ngày\": \"日期\",\n" +
