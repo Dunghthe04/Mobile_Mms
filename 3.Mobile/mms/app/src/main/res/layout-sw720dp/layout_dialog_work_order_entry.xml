@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:background="@drawable/bg_white_conner_8"
     android:orientation="vertical"
     android:padding="24dp">
@@ -54,14 +54,14 @@
     <LinearLayout
         android:id="@+id/layout_tab_info_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:visibility="visible">
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:maxHeight="560dp">
+            android:layout_height="match_parent">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -332,6 +332,93 @@
                         android:background="@drawable/border_bg_grey" />
                 </LinearLayout>
 
+                <!-- Daily Report Declaration -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="200dp"
+                        android:layout_height="wrap_content"
+                        android:text="Có khai báo Daily report không?"
+                        android:textColor="@color/black"
+                        android:textSize="15sp" />
+
+                    <RadioGroup
+                        android:id="@+id/rg_daily_report"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="horizontal">
+
+                        <RadioButton
+                            android:id="@+id/rb_daily_report_yes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:text="Yes"
+                            android:textColor="@color/black"
+                            android:textSize="15sp" />
+
+                        <RadioButton
+                            android:id="@+id/rb_daily_report_no"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="32dp"
+                            android:text="No"
+                            android:textColor="@color/black"
+                            android:textSize="15sp" />
+                    </RadioGroup>
+                </LinearLayout>
+
+                <!-- Daily Report Reason (only when No) -->
+                <LinearLayout
+                    android:id="@+id/layout_daily_report_reason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:gravity="top"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="200dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Lý do không khai báo Daily report"
+                            android:textColor="@color/black"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="*"
+                            android:textColor="@color/red"
+                            android:textSize="15sp" />
+                    </LinearLayout>
+
+                    <EditText
+                        android:id="@+id/et_daily_report_reason"
+                        android:layout_width="0dp"
+                        android:layout_height="72dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/border_bg_grey"
+                        android:gravity="top"
+                        android:hint="Nhập lý do"
+                        android:inputType="textMultiLine"
+                        android:padding="12dp"
+                        android:textColor="@color/black"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
                 <!-- Chọn file & Tải lên buttons -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -518,14 +605,14 @@
     <LinearLayout
         android:id="@+id/layout_tab_materials_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:visibility="gone">
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:maxHeight="560dp">
+            android:layout_height="match_parent">
 
             <LinearLayout
                 android:layout_width="match_parent"

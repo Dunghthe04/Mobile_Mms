@@ -142,6 +142,26 @@ public class HttpClient
 
     /**upload nhiều ảnh*/
     public static APIReturn uploadWorkOrderFile(Context context, String server_url, String taskId, List<Uri> fileUris) {
+        // Mặc định bộ phận MA (dùng cho màn tạo/sửa WO của MA).
+        return uploadWorkOrderFile(context, server_url, taskId, fileUris, "MA", "");
+    }
+
+    /**
+     * Upload file đính kèm work order theo bộ phận (không dùng bucket).
+     * @param division "MA" -> tài liệu MA (prefix {WO}_MA_, cột FILE_WO_MA);
+     *                 "FE" -> tài liệu FE ở màn nhập kết quả WO (prefix {WO}_FE_, ghi FILE_WO).
+     */
+    public static APIReturn uploadWorkOrderFile(Context context, String server_url, String taskId, List<Uri> fileUris, String division) {
+        return uploadWorkOrderFile(context, server_url, taskId, fileUris, division, "");
+    }
+
+    /**
+     * Upload file đính kèm work order theo bộ phận + bucket (giống web gửi formData "division"/"bucket").
+     * @param division "MA"/"FE".
+     * @param bucket   "edit" -> FE upload từ màn Chỉnh sửa WO (ghi kho gốc FILE_WO_FE);
+     *                 rỗng   -> chỉ ghi FILE_WO (màn nhập kết quả) / FILE_WO_MA (MA).
+     */
+    public static APIReturn uploadWorkOrderFile(Context context, String server_url, String taskId, List<Uri> fileUris, String division, String bucket) {
         PreferenceHandler handler = new PreferenceHandler(context);
         token = handler.getString("api_key");
         try {
@@ -162,6 +182,14 @@ public class HttpClient
 
             MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
             builder.addFormDataPart("taskId", taskId);
+            // division quyết định file thuộc kho MA hay FE (giống web gửi formData "division").
+            // MA -> tiền tố {WO}_MA_ + cột FILE_WO_MA; FE -> {WO}_FE_ + FILE_WO (màn nhập kết quả).
+            String uploadDivision = (division == null || division.trim().isEmpty()) ? "MA" : division.trim();
+            builder.addFormDataPart("division", uploadDivision);
+            // bucket "edit" -> FE upload từ màn Chỉnh sửa WO (ghi kho gốc FILE_WO_FE), giống web.
+            if (bucket != null && !bucket.trim().isEmpty()) {
+                builder.addFormDataPart("bucket", bucket.trim());
+            }
 
             if (fileUris != null && !fileUris.isEmpty()) {
                 for (Uri fileUri : fileUris) {
@@ -199,6 +227,15 @@ public class HttpClient
      * @return APIReturn; data chứa danh sách file còn lại sau khi xóa
      */
     public static APIReturn deleteWorkOrderFile(Context context, String server_url, String taskId, String fileName) {
+        // Mặc định scope MA (dùng cho màn tạo/sửa WO của MA).
+        return deleteWorkOrderFile(context, server_url, taskId, fileName, "MA");
+    }
+
+    /**
+     * Xóa file đính kèm work order theo scope bộ phận.
+     * @param scope "MA" -> xóa trong FILE_WO_MA; "FE" -> xóa trong kho FE (màn nhập kết quả WO).
+     */
+    public static APIReturn deleteWorkOrderFile(Context context, String server_url, String taskId, String fileName, String scope) {
         PreferenceHandler handler = new PreferenceHandler(context);
         token = handler.getString("api_key");
         try {
@@ -221,6 +258,8 @@ public class HttpClient
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("taskId", taskId)
                     .addFormDataPart("fileName", fileName)
+                    // scope quyết định xóa trong kho MA hay FE (giống web).
+                    .addFormDataPart("scope", (scope == null || scope.trim().isEmpty()) ? "MA" : scope.trim())
                     .build();
 
             Request request = new Request.Builder()
@@ -243,6 +282,15 @@ public class HttpClient
      * @return APIReturn; data là danh sách JSONObject mỗi cái có key "value" = tên file
      */
     public static APIReturn getWorkOrderFiles(Context context, String server_url, String taskId) {
+        // Mặc định đọc kho MA.
+        return getWorkOrderFiles(context, server_url, taskId, "MA");
+    }
+
+    /**
+     * Lấy danh sách file đính kèm work order theo bộ phận.
+     * @param division "MA" -> get-task-ma (đọc FILE_WO_MA); "FE" -> get-task-fe (đọc FILE_WO_FE).
+     */
+    public static APIReturn getWorkOrderFiles(Context context, String server_url, String taskId, String division) {
         PreferenceHandler handler = new PreferenceHandler(context);
         token = handler.getString("api_key");
         try {
@@ -259,7 +307,10 @@ public class HttpClient
             if (finalUrl.endsWith("/")) {
                 finalUrl = finalUrl.substring(0, finalUrl.length() - 1);
             }
-            finalUrl = finalUrl + ":9101/api/v1/mms_file-img/get-task?taskId="
+            // FE -> get-task-fe (FILE_WO_FE); mặc định MA -> get-task-ma (FILE_WO_MA), đúng như web.
+            String endpoint = "FE".equalsIgnoreCase(division == null ? "" : division.trim())
+                    ? "get-task-fe" : "get-task-ma";
+            finalUrl = finalUrl + ":9101/api/v1/mms_file-img/" + endpoint + "?taskId="
                     + java.net.URLEncoder.encode(taskId, "UTF-8");
 
             Request request = new Request.Builder()

@@ -21,6 +21,8 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -284,7 +286,7 @@ public final class WorkOrderEntryDialogHelper {
         final String finalServerUrl = serverDynamicUrl;
         new Thread(() -> {
             HttpClient.APIReturn result = HttpClient.deleteWorkOrderFile(
-                    context, finalServerUrl, currentTaskId, serverFileName);
+                    context, finalServerUrl, currentTaskId, serverFileName, "FE");
 
             new Handler(Looper.getMainLooper()).post(() -> {
                 progress.dismiss();
@@ -423,6 +425,11 @@ public final class WorkOrderEntryDialogHelper {
         EditText etNote = dialogView.findViewById(R.id.et_note);
         Spinner spinnerStatus = dialogView.findViewById(R.id.spinner_status);
 
+        RadioGroup rgDailyReport = dialogView.findViewById(R.id.rg_daily_report);
+        RadioButton rbDailyReportNo = dialogView.findViewById(R.id.rb_daily_report_no);
+        LinearLayout layoutDailyReportReason = dialogView.findViewById(R.id.layout_daily_report_reason);
+        EditText etDailyReportReason = dialogView.findViewById(R.id.et_daily_report_reason);
+
         TextView btnTabInfo = dialogView.findViewById(R.id.btn_tab_info);
         TextView btnTabMaterials = dialogView.findViewById(R.id.btn_tab_materials);
         LinearLayout layoutTabInfoContent = dialogView.findViewById(R.id.layout_tab_info_content);
@@ -512,7 +519,9 @@ public final class WorkOrderEntryDialogHelper {
                         finalServerDynamicUrl,
                         finalTaskId,
 //                        selectedFileUri
-                        selectedFileUris
+                        selectedFileUris,
+                        // Màn nhập kết quả WO là của FE -> lưu vào kho tài liệu FE, không phải MA.
+                        "FE"
                 );
 
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -966,6 +975,37 @@ public final class WorkOrderEntryDialogHelper {
         }
         spinnerStatus.setSelection(statusPosition);
 
+        // =========================================================================
+        // Daily Report Declaration (chỉ hiển thị ở màn nhập kết quả WO của tài khoản FE)
+        // =========================================================================
+        String isDailyReportStr = safeGet(workOrder, "Is_Daily_Report");
+        if (isDailyReportStr.isEmpty()) isDailyReportStr = safeGet(workOrder, "IS_DAILY_REPORT");
+        int isDailyReportVal = 1; // Mặc định "Có" giống web
+        try {
+            if (!isDailyReportStr.isEmpty()) {
+                isDailyReportVal = (int) Double.parseDouble(isDailyReportStr);
+            }
+        } catch (NumberFormatException e) { /* giữ mặc định 1 */ }
+
+        String dailyReportReasonStr = safeGet(workOrder, "Daily_Report_Reason");
+        if (dailyReportReasonStr.isEmpty()) dailyReportReasonStr = safeGet(workOrder, "DAILY_REPORT_REASON");
+        etDailyReportReason.setText(dailyReportReasonStr);
+
+        if (isDailyReportVal == 0) {
+            rbDailyReportNo.setChecked(true);
+            layoutDailyReportReason.setVisibility(View.VISIBLE);
+        } else {
+            layoutDailyReportReason.setVisibility(View.GONE);
+        }
+
+        rgDailyReport.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.rb_daily_report_no) {
+                layoutDailyReportReason.setVisibility(View.VISIBLE);
+            } else {
+                layoutDailyReportReason.setVisibility(View.GONE);
+            }
+        });
+
         etStart.setOnClickListener(v -> pickDateTime(context, etStart));
         etEnd.setOnClickListener(v -> pickDateTime(context, etEnd));
 
@@ -1007,6 +1047,17 @@ public final class WorkOrderEntryDialogHelper {
             String noteVal = etNote.getText().toString().trim();
             int statusVal = spinnerStatus.getSelectedItemPosition();
 
+            // Daily report: 0 = No (bắt buộc nhập lý do), 1 = Yes
+            int dailyReportFlag = rbDailyReportNo.isChecked() ? 0 : 1;
+            String dailyReportReason = dailyReportFlag == 0
+                    ? etDailyReportReason.getText().toString().trim() : "";
+            if (dailyReportFlag == 0 && dailyReportReason.isEmpty()) {
+                Toast.makeText(context,
+                        i18n("Lý do không khai báo Daily report") + " " + i18n("is required"),
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+
             long actualTaskDateUnixVal = 0;
             try { actualTaskDateUnixVal = Long.parseLong(startTimeSecStr); } catch (NumberFormatException e) {}
 
@@ -1034,6 +1085,8 @@ public final class WorkOrderEntryDialogHelper {
                 conditionObj.put("ACTION_TAKEN", action);
                 conditionObj.put("NOTE", noteVal);
                 conditionObj.put("STATUS", statusVal);
+                conditionObj.put("IS_DAILY_REPORT", dailyReportFlag);
+                conditionObj.put("DAILY_REPORT_REASON", dailyReportReason);
                 conditionObj.put("TASK_ID", taskId);
             } catch (Exception e) {
                 Toast.makeText(context, i18n("System error while saving") + ": " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -1070,9 +1123,11 @@ public final class WorkOrderEntryDialogHelper {
 
         dialog.show();
         if (dialog.getWindow() != null) {
+            // Giới hạn chiều cao dialog để vùng nội dung cuộn được và 2 nút Đóng/Lưu
+            // luôn hiển thị (tránh bị đẩy khuất khi form dài).
             dialog.getWindow().setLayout(
                     (int) (context.getResources().getDisplayMetrics().widthPixels * 0.92),
-                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+                    (int) (context.getResources().getDisplayMetrics().heightPixels * 0.9));
         }
     }
 

@@ -100,6 +100,7 @@
 
                             <!-- Ngày yêu cầu -->
                             <LinearLayout
+                                android:id="@+id/layout_request_date"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_columnWeight="1"
@@ -354,6 +355,7 @@
                             </LinearLayout>
 
                             <LinearLayout
+                                android:id="@+id/layout_mes_lock"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_columnWeight="1"
@@ -433,6 +435,7 @@
 
                             <!-- Trạng thái MA báo -->
                             <LinearLayout
+                                android:id="@+id/layout_ma_status"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_columnSpan="2"
@@ -552,8 +555,9 @@
                                 </LinearLayout>
                             </LinearLayout>
 
-                            <!-- Khu vực hiển thị file -->
+                            <!-- Khu vực hiển thị file (màn Thêm: 1 khối duy nhất) -->
                             <LinearLayout
+                                android:id="@+id/layout_attachment_single"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:background="#F4F6F9"
@@ -591,6 +595,61 @@
                                     android:layout_height="wrap_content"
                                     android:orientation="vertical"
                                     android:visibility="gone" />
+                            </LinearLayout>
+
+                            <!-- Màn Sửa WO: 2 khối riêng Tài liệu MA / Tài liệu FE (giống web) -->
+                            <LinearLayout
+                                android:id="@+id/layout_doc_ma_block"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:visibility="gone">
+
+                                <TextView
+                                    android:id="@+id/tv_label_doc_ma"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="6dp"
+                                    android:layout_marginBottom="4dp"
+                                    android:text="MA Documents"
+                                    android:textColor="#475569"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                                <LinearLayout
+                                    android:id="@+id/layout_doc_ma_list"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:background="#F4F6F9"
+                                    android:orientation="vertical"
+                                    android:padding="12dp" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/layout_doc_fe_block"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:visibility="gone">
+
+                                <TextView
+                                    android:id="@+id/tv_label_doc_fe"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="10dp"
+                                    android:layout_marginBottom="4dp"
+                                    android:text="FE Documents"
+                                    android:textColor="#475569"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold" />
+
+                                <LinearLayout
+                                    android:id="@+id/layout_doc_fe_list"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:background="#F4F6F9"
+                                    android:orientation="vertical"
+                                    android:padding="12dp" />
                             </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>

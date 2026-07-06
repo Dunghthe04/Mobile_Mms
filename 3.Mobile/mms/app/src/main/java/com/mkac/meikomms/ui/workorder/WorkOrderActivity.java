@@ -93,6 +93,10 @@ public class WorkOrderActivity extends AppCompatActivity {
     private JSONObject editingData = null;
     private int currentFeStatus = 0;
 
+    // Bộ phận người đăng nhập + các container ẩn/hiện theo bộ phận (giống web)
+    private boolean isFeUser = false;
+    private LinearLayout layoutRequestDate, layoutMaStatus, layoutMesLock;
+
     // ===== Đính kèm ảnh / file =====
     private static final int REQUEST_PICK_FILE = 9999;
     // File người dùng mới chọn nhưng chưa tải lên server
@@ -101,6 +105,13 @@ public class WorkOrderActivity extends AppCompatActivity {
     private final List<String> uploadedFileNames = new ArrayList<>();
     private LinearLayout layoutAttachmentEmpty;
     private LinearLayout layoutAttachmentList;
+
+    // Màn Sửa WO: 2 khối tài liệu MA/FE (giống web)
+    private View layoutAttachmentSingle;
+    private TextView tvLabelAttachment;
+    private LinearLayout layoutDocMaBlock, layoutDocMaList, layoutDocFeBlock, layoutDocFeList;
+    private final List<String> docMaFiles = new ArrayList<>();
+    private final List<String> docFeFiles = new ArrayList<>();
 
     public static void start(Context context) {
         context.startActivity(new Intent(context, WorkOrderActivity.class));
@@ -131,6 +142,7 @@ public class WorkOrderActivity extends AppCompatActivity {
         }
 
         initConfiguration();
+        isFeUser = isCurrentUserFe();
         initViews();
         applyI18nFieldTexts();
 
@@ -148,6 +160,13 @@ public class WorkOrderActivity extends AppCompatActivity {
 
                 bindDataToUI(data);
                 setupEditModeUI();
+
+                // FE: hiển thị đúng Loại WO đã lưu; áp lại quy tắc ẩn/hiện theo bộ phận + Edit.
+                if (isFeUser && autoLoaiHinh != null) {
+                    int wt = editingData.optInt("WO_TYPE", editingData.optInt("Wo_Type", 3));
+                    autoLoaiHinh.setText(woTypeNumberToText(wt), false);
+                }
+                applyDivisionFormRules();
 
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     bindDataToUI(data);
@@ -231,6 +250,15 @@ public class WorkOrderActivity extends AppCompatActivity {
 
         layoutAttachmentEmpty = findViewById(R.id.layout_attachment_empty);
         layoutAttachmentList = findViewById(R.id.layout_attachment_list);
+        layoutRequestDate = findViewById(R.id.layout_request_date);
+        layoutMaStatus = findViewById(R.id.layout_ma_status);
+        layoutMesLock = findViewById(R.id.layout_mes_lock);
+        layoutAttachmentSingle = findViewById(R.id.layout_attachment_single);
+        tvLabelAttachment = findViewById(R.id.tv_label_attachment);
+        layoutDocMaBlock = findViewById(R.id.layout_doc_ma_block);
+        layoutDocMaList = findViewById(R.id.layout_doc_ma_list);
+        layoutDocFeBlock = findViewById(R.id.layout_doc_fe_block);
+        layoutDocFeList = findViewById(R.id.layout_doc_fe_list);
         View btnChooseFile = findViewById(R.id.btn_choose_file);
         View btnUploadFile = findViewById(R.id.btn_upload_file);
         if (btnChooseFile != null) btnChooseFile.setOnClickListener(v -> openFilePicker());
@@ -278,10 +306,266 @@ public class WorkOrderActivity extends AppCompatActivity {
         });
 
         setupDropdown(autoMaStatus, getLocalizedMaStatusOptions());
-       // setupDropdown(autoLoaiHinh, Collections.singletonList("BM"));
-        autoLoaiHinh.setText("BM");
         applyReadOnlyFieldStyle(edtWoCode);
-        applyReadOnlyFieldStyle(autoLoaiHinh);
+
+        // Loại WO: MA cố định BM; FE được chọn BM/PM/CM/Other (giống web).
+        if (isFeUser) {
+            setupDropdown(autoLoaiHinh, Arrays.asList("BM", "PM", "CM", "Other"));
+            autoLoaiHinh.setText("BM", false);
+            applyEditableFieldStyle(autoLoaiHinh);
+        } else {
+            autoLoaiHinh.setText("BM");
+            applyReadOnlyFieldStyle(autoLoaiHinh);
+        }
+
+        applyDivisionFormRules();
+    }
+
+    /**
+     * Ẩn/hiện & enable field theo bộ phận (MA/FE) và chế độ Add/Edit — bám theo web getWoPopupHTML:
+     *  - Thời gian phát sinh: MA luôn hiện; FE chỉ hiện khi Edit (và bị disable).
+     *  - Trạng thái MA báo + "Có lock thiết bị": hiện nếu MA hoặc (FE và Edit); FE thì disable.
+     */
+    private void applyDivisionFormRules() {
+        boolean showRequestDate = !isFeUser || isEditMode;
+        // Giống web: "Trạng thái MA báo" + "Có lock thiết bị" hiện nếu MA, hoặc (FE và đang Sửa).
+        // => FE + Thêm: ẩn hẳn. FE + Sửa: vẫn hiện nhưng disable.
+        boolean showMaBlock = !isFeUser || isEditMode;
+
+        if (layoutRequestDate != null) {
+            layoutRequestDate.setVisibility(showRequestDate ? View.VISIBLE : View.GONE);
+        }
+        // FE (kể cả Edit) không được sửa thời gian phát sinh.
+        if (isFeUser && edtRequestDate != null) {
+            applyReadOnlyFieldStyle(edtRequestDate);
+            edtRequestDate.setOnClickListener(null);
+        }
+
+        if (layoutMaStatus != null) {
+            layoutMaStatus.setVisibility(showMaBlock ? View.VISIBLE : View.GONE);
+        }
+        if (layoutMesLock != null) {
+            layoutMesLock.setVisibility(showMaBlock ? View.VISIBLE : View.GONE);
+        }
+        // Trạng thái MA báo + MES lock chỉ MA mới thao tác được.
+        if (isFeUser) {
+            if (autoMaStatus != null) applyReadOnlyFieldStyle(autoMaStatus);
+            if (radioMesLockYes != null) { radioMesLockYes.setEnabled(false); radioMesLockYes.setClickable(false); }
+            if (radioMesLockNo != null) { radioMesLockNo.setEnabled(false); radioMesLockNo.setClickable(false); }
+        }
+
+        applyAttachmentMode();
+    }
+
+    /**
+     * Chế độ hiển thị đính kèm giống web:
+     *  - Thêm WO: 1 khối duy nhất.
+     *  - Sửa WO: 2 khối riêng "Tài liệu MA" (đọc FILE_WO_MA) + "Tài liệu FE" (đọc FILE_WO_FE).
+     */
+    private void applyAttachmentMode() {
+        boolean dual = isEditMode;
+        if (layoutAttachmentSingle != null) layoutAttachmentSingle.setVisibility(dual ? View.GONE : View.VISIBLE);
+        if (tvLabelAttachment != null) tvLabelAttachment.setVisibility(dual ? View.GONE : View.VISIBLE);
+        if (layoutDocMaBlock != null) layoutDocMaBlock.setVisibility(dual ? View.VISIBLE : View.GONE);
+        if (layoutDocFeBlock != null) layoutDocFeBlock.setVisibility(dual ? View.VISIBLE : View.GONE);
+        if (dual) loadEditModeAttachments();
+    }
+
+    /** Tải file 2 kho MA/FE cho màn Sửa WO rồi vẽ lại 2 khối. */
+    private void loadEditModeAttachments() {
+        final String woCode = edtWoCode != null ? edtWoCode.getText().toString().trim() : "";
+        if (woCode.isEmpty() || "...".equals(woCode)) return;
+        final String serverDynamicUrl = getServerDynamicUrl();
+        new Thread(() -> {
+            List<String> maList = extractFileValues(HttpClient.getWorkOrderFiles(this, serverDynamicUrl, woCode, "MA"));
+            List<String> feList = extractFileValues(HttpClient.getWorkOrderFiles(this, serverDynamicUrl, woCode, "FE"));
+            runOnUiThread(() -> {
+                docMaFiles.clear();
+                docMaFiles.addAll(maList);
+                docFeFiles.clear();
+                docFeFiles.addAll(feList);
+                renderDocBlocks();
+            });
+        }).start();
+    }
+
+    private List<String> extractFileValues(HttpClient.APIReturn result) {
+        List<String> files = new ArrayList<>();
+        if (result == null || result.code != 200 || result.data == null) return files;
+        for (JSONObject item : result.data) {
+            if (item == null) continue;
+            String v = item.optString("value");
+            if (!v.isEmpty()) files.add(v);
+        }
+        return files;
+    }
+
+    /**
+     * Vẽ 2 khối tài liệu. Theo web: khối MA xóa được (readonly=false);
+     * khối FE chỉ xóa được khi người dùng là FE. File mới chọn (chưa upload) hiển thị ở khối
+     * đúng bộ phận đang đăng nhập.
+     */
+    private void renderDocBlocks() {
+        final String woCode = edtWoCode != null ? edtWoCode.getText().toString().trim() : "";
+        renderDocBlock(layoutDocMaList, docMaFiles, "MA", true, !isFeUser, woCode);
+        renderDocBlock(layoutDocFeList, docFeFiles, "FE", isFeUser, isFeUser, woCode);
+    }
+
+    /**
+     * @param canDelete cho phép xóa file đã upload ở kho này
+     * @param showPending khối này có hiển thị file mới chọn (chưa upload) của phiên hiện tại không
+     */
+    private void renderDocBlock(LinearLayout container, List<String> files, String scope,
+                                boolean canDelete, boolean showPending, String woCode) {
+        if (container == null) return;
+        container.removeAllViews();
+
+        boolean hasAny = !files.isEmpty() || (showPending && !selectedFileUris.isEmpty());
+        if (!hasAny) {
+            TextView empty = new TextView(this);
+            empty.setText(i18n("No attachment file"));
+            empty.setTextColor(Color.parseColor("#94A3B8"));
+            empty.setTextSize(13);
+            empty.setTypeface(empty.getTypeface(), android.graphics.Typeface.ITALIC);
+            container.addView(empty);
+            return;
+        }
+
+        for (final String fileName : new ArrayList<>(files)) {
+            container.addView(buildDocRow(displayFileName(woCode, fileName), fileName, scope, canDelete));
+        }
+        if (showPending) {
+            for (final Uri uri : new ArrayList<>(selectedFileUris)) {
+                container.addView(buildPendingRow(getFileName(uri), uri));
+            }
+        }
+    }
+
+    /** 1 dòng file đã upload trong 1 kho (MA/FE): tên (tải về) + nút tải + nút xóa (nếu được phép). */
+    private View buildDocRow(String displayName, final String fullName, final String scope, boolean canDelete) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        rowLp.setMargins(0, dp(2), 0, dp(2));
+        row.setLayoutParams(rowLp);
+
+        ImageView icon = new ImageView(this);
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(18), dp(18));
+        iconLp.setMarginEnd(dp(8));
+        icon.setLayoutParams(iconLp);
+        icon.setImageResource(R.drawable.ic_paperclip);
+        row.addView(icon);
+
+        TextView tvName = new TextView(this);
+        tvName.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        tvName.setText(displayName);
+        tvName.setTextColor(Color.parseColor("#333333"));
+        tvName.setTextSize(13);
+        tvName.setPaintFlags(tvName.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+        tvName.setOnClickListener(v -> downloadUploadedFile(fullName));
+        row.addView(tvName);
+
+        ImageView btnDownload = new ImageView(this);
+        LinearLayout.LayoutParams dlLp = new LinearLayout.LayoutParams(dp(24), dp(24));
+        dlLp.setMarginStart(dp(8));
+        btnDownload.setLayoutParams(dlLp);
+        btnDownload.setPadding(dp(3), dp(3), dp(3), dp(3));
+        btnDownload.setImageResource(R.drawable.ic_download_24);
+        btnDownload.setOnClickListener(v -> downloadUploadedFile(fullName));
+        row.addView(btnDownload);
+
+        if (canDelete) {
+            ImageView btnRemove = new ImageView(this);
+            LinearLayout.LayoutParams rmLp = new LinearLayout.LayoutParams(dp(22), dp(22));
+            rmLp.setMarginStart(dp(8));
+            btnRemove.setLayoutParams(rmLp);
+            btnRemove.setPadding(dp(2), dp(2), dp(2), dp(2));
+            btnRemove.setImageResource(R.drawable.close_24);
+            btnRemove.setOnClickListener(v -> confirmDeleteDocFile(fullName, scope));
+            row.addView(btnRemove);
+        }
+        return row;
+    }
+
+    /** 1 dòng file mới chọn chưa upload (chỉ gỡ ở local). */
+    private View buildPendingRow(String displayName, final Uri localUri) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        rowLp.setMargins(0, dp(2), 0, dp(2));
+        row.setLayoutParams(rowLp);
+
+        ImageView icon = new ImageView(this);
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(dp(18), dp(18));
+        iconLp.setMarginEnd(dp(8));
+        icon.setLayoutParams(iconLp);
+        icon.setImageResource(R.drawable.ic_paperclip);
+        row.addView(icon);
+
+        TextView tvName = new TextView(this);
+        tvName.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        tvName.setText(displayName + "  (" + i18n("Not uploaded yet") + ")");
+        tvName.setTextColor(Color.parseColor("#64748B"));
+        tvName.setTextSize(13);
+        row.addView(tvName);
+
+        ImageView btnRemove = new ImageView(this);
+        LinearLayout.LayoutParams rmLp = new LinearLayout.LayoutParams(dp(22), dp(22));
+        rmLp.setMarginStart(dp(8));
+        btnRemove.setLayoutParams(rmLp);
+        btnRemove.setPadding(dp(2), dp(2), dp(2), dp(2));
+        btnRemove.setImageResource(R.drawable.close_24);
+        btnRemove.setOnClickListener(v -> {
+            selectedFileUris.remove(localUri);
+            renderAttachments();
+        });
+        row.addView(btnRemove);
+        return row;
+    }
+
+    private void confirmDeleteDocFile(final String fullName, final String scope) {
+        new AlertDialog.Builder(this)
+                .setTitle(i18n("Remove attachment"))
+                .setMessage(i18n("Are you sure you want to remove this file?") + "\n" + fullName)
+                .setNegativeButton(i18n("Cancel"), null)
+                .setPositiveButton(i18n("Remove"), (d, w) -> deleteDocFile(fullName, scope))
+                .show();
+    }
+
+    private void deleteDocFile(final String fullName, final String scope) {
+        final String woCode = edtWoCode != null ? edtWoCode.getText().toString().trim() : "";
+        if (woCode.isEmpty() || "...".equals(woCode)) return;
+        final ProgressDialog progress = new ProgressDialog(this);
+        progress.setMessage(i18n("Removing attachment..."));
+        progress.setCancelable(false);
+        progress.show();
+        final String serverDynamicUrl = getServerDynamicUrl();
+        new Thread(() -> {
+            HttpClient.APIReturn result = HttpClient.deleteWorkOrderFile(this, serverDynamicUrl, woCode, fullName, scope);
+            runOnUiThread(() -> {
+                progress.dismiss();
+                if (result != null && result.code == 200) {
+                    loadEditModeAttachments();
+                    Toast.makeText(this, i18n("Attachment removed"), Toast.LENGTH_SHORT).show();
+                } else {
+                    String errMsg = (result != null) ? result.message : i18n("No response from server");
+                    Toast.makeText(this, i18n("Remove failed") + ": " + errMsg, Toast.LENGTH_LONG).show();
+                }
+            });
+        }).start();
+    }
+
+    /** Dispatcher: màn Sửa vẽ 2 khối; màn Thêm vẽ 1 khối. */
+    private void renderAttachments() {
+        if (isEditMode) {
+            renderDocBlocks();
+        } else {
+            renderAttachmentList();
+        }
     }
 
     private void applyI18nFieldTexts() {
@@ -344,6 +628,10 @@ public class WorkOrderActivity extends AppCompatActivity {
         if (tvUploadFile != null) tvUploadFile.setText(i18n("Upload"));
         TextView tvAttachmentStatus = findViewById(R.id.tv_attachment_status);
         if (tvAttachmentStatus != null) tvAttachmentStatus.setText(i18n("No attachment file"));
+        TextView tvLabelDocMa = findViewById(R.id.tv_label_doc_ma);
+        if (tvLabelDocMa != null) tvLabelDocMa.setText(i18n("Tài liệu MA"));
+        TextView tvLabelDocFe = findViewById(R.id.tv_label_doc_fe);
+        if (tvLabelDocFe != null) tvLabelDocFe.setText(i18n("Tài liệu FE"));
     }
 
     private void loadInitialData() {
@@ -608,8 +896,9 @@ public class WorkOrderActivity extends AppCompatActivity {
         String woCode = edtWoCode.getText().toString().trim(); //mã WO
         String requestDate = edtRequestDate.getText().toString().trim(); //ngày yêu cầu
         String machineRaw = autoMachine.getText().toString().trim(); //mã máy
-        //String loaiHinh = autoLoaiHinh.getText().toString().trim(); //loại hình
-        String loaiHinh = "BM";
+        // Loại WO: MA cố định BM; FE lấy theo lựa chọn (BM/PM/CM/Other).
+        String loaiHinhSel = isFeUser ? autoLoaiHinh.getText().toString().trim() : "BM";
+        final String loaiHinh = loaiHinhSel.isEmpty() ? "BM" : loaiHinhSel;
         String requesterRaw = autoRequester.getText().toString().trim(); //tên người yêu cầu
 
         String userIdToSave = "";
@@ -632,6 +921,11 @@ public class WorkOrderActivity extends AppCompatActivity {
             return;
 
         }
+        // Giống web: Thời gian phát sinh chỉ bắt buộc với MA.
+        if (!isFeUser && requestDate.isEmpty()) {
+            Toast.makeText(this, i18n("Time arises is required"), Toast.LENGTH_SHORT).show();
+            return;
+        }
         if(!validateRequiredFields()){
             return;
         }
@@ -639,7 +933,11 @@ public class WorkOrderActivity extends AppCompatActivity {
         isSubmitting = true;
         btnAdd.setEnabled(false);
 
-        int statusVal = statusFromText(maStatusStr);
+        // Status: nếu thời gian phát sinh < hôm nay (so theo ngày) và chưa chọn MA status
+        // thì đặt Quá hạn (5); ngược lại dùng giá trị MA status. (giống web)
+        int maReport = statusFromText(maStatusStr);
+        final boolean isOverdue = isRequestDateBeforeToday(requestDate);
+        int statusVal = (isOverdue && maReport == 0) ? 5 : maReport;
 
        //TODO: Tách lấy ID từ chuỗi "ID - Name"
         final String machineId = machineRaw.contains(" - ") ? machineRaw.split(" - ")[0] : machineRaw;
@@ -683,6 +981,25 @@ public class WorkOrderActivity extends AppCompatActivity {
 
         new Thread(() -> {
             try{
+                // Chặn tạo WO thứ 2 khi máy đang có WO chưa hoàn thành
+                // (giống web checkActiveWorkOrderForMachine). BM luôn có máy nên luôn kiểm tra.
+                String activeWhere = "mt.MACHINE_ID = '" + machineId + "' AND mt.DELETED = 0 "
+                        + "AND NVL(mt.STATUS,0) <> 6 AND NVL(tp.Status_1, 0) NOT IN (1, 6)";
+                HttpClient.APIReturn resActive = HttpClient.getAllWorkOrder(
+                        this, serverUrl, schemaMms, schemaCore, activeWhere, 0, 1);
+                if (resActive != null && resActive.code == 200
+                        && resActive.data != null && !resActive.data.isEmpty()) {
+                    runOnUiThread(() -> {
+                        progressDialog.dismiss();
+                        isSubmitting = false;
+                        btnAdd.setEnabled(true);
+                        Toast.makeText(this,
+                                i18n("This machine already has an unfinished Work Order. Cannot create another."),
+                                Toast.LENGTH_LONG).show();
+                    });
+                    return;
+                }
+
                 JSONObject woData = new JSONObject();
                 woData.put("Schema_MMS", schemaMms);
                 woData.put("WO_CODE", escapeSql(woCode));
@@ -800,7 +1117,9 @@ public class WorkOrderActivity extends AppCompatActivity {
                 if (maintainerIdForTask.isEmpty()) {
                     maintainerIdForTask = createByRealId;
                 }
-                JSONObject taskData = prepareTaskData(machineId, woCode, reason, maintainerIdForTask);
+                // Task cũng quá hạn nếu thời gian phát sinh < hôm nay (giống web).
+                int taskStatus = isOverdue ? 5 : 0;
+                JSONObject taskData = prepareTaskData(machineId, woCode, reason, maintainerIdForTask, taskStatus);
                 HttpClient.APIReturn resTask = HttpClient.addMtTask(this, serverUrl, taskData);
 
                 if(resTask == null || resTask.code != 200){
@@ -838,12 +1157,40 @@ public class WorkOrderActivity extends AppCompatActivity {
     private void performUpdateWorkOrder(){
         if (isSubmitting) return;
 
-        isSubmitting = true;
-        btnAdd.setEnabled(false);
-
         String woCode = editingWoCode;
         String requestDateUi = edtRequestDate.getText().toString().trim();
         String reason = edtReason.getText().toString().trim();
+
+        //TODO: validate (giống web renderEditWorkOrder)
+        // 1) Thời gian phát sinh bắt buộc
+        if (requestDateUi.isEmpty()) {
+            Toast.makeText(this, i18n("Time arises is required"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // 2) Thời gian phát sinh không được lớn hơn ngày tạo work order
+        if (editingData != null) {
+            String createRaw = safeGet(editingData, "CREATE_DATE");
+            if (createRaw.isEmpty()) createRaw = safeGet(editingData, "Create_Date");
+            if (!createRaw.isEmpty()) {
+                Date reqDate = parseDisplayDate(requestDateUi);
+                Date createDate = parseDisplayDate(formatDateForUI(createRaw));
+                if (reqDate != null && createDate != null && reqDate.getTime() > createDate.getTime()) {
+                    Toast.makeText(this,
+                            i18n("Thời gian phát sinh không được lớn hơn ngày tạo work order"),
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
+        }
+        // 3) Nội dung work order bắt buộc
+        if (reason.isEmpty()) {
+            edtReason.setError(i18n("Request reason is required"));
+            edtReason.requestFocus();
+            return;
+        }
+
+        isSubmitting = true;
+        btnAdd.setEnabled(false);
 
         ProgressDialog dialog = new ProgressDialog(this);
         dialog.setMessage(i18n("Updating..."));
@@ -1022,7 +1369,7 @@ public class WorkOrderActivity extends AppCompatActivity {
         }).start();
     }
 
-    private JSONObject prepareTaskData(String machineId, String woCode, String reason, String maintainerId) throws Exception {
+    private JSONObject prepareTaskData(String machineId, String woCode, String reason, String maintainerId, int taskStatus) throws Exception {
         JSONObject taskData = new JSONObject();
         String dateSuffix = new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date());
         String taskId = "TASK_" + dateSuffix + "_" + (new Random().nextInt(9000) + 1000);
@@ -1034,7 +1381,7 @@ public class WorkOrderActivity extends AppCompatActivity {
         taskData.put("taskId", escapeSql(taskId));
         taskData.put("taskType", "4");
         taskData.put("machineId", escapeSql(machineId));
-        taskData.put("status", "0");
+        taskData.put("status", String.valueOf(taskStatus));
         taskData.put("dsa", "TO_TIMESTAMP('" + dsaTime + "', 'YYYY-MM-DD HH24:MI:SS')");
         taskData.put("taskDateUnix", String.valueOf(unixTime));
         taskData.put("maintainerId", escapeSql(maintainerId));
@@ -1045,8 +1392,25 @@ public class WorkOrderActivity extends AppCompatActivity {
     }
 
     private int getWoTypeInt(String loaiHinh){
-        if("BM".equalsIgnoreCase(loaiHinh)) return 3;
+        // Map giống web: PM=1, CM=2, BM=3, Other=4.
+        if (loaiHinh == null) return 3;
+        String t = loaiHinh.trim();
+        if ("PM".equalsIgnoreCase(t)) return 1;
+        if ("CM".equalsIgnoreCase(t)) return 2;
+        if ("BM".equalsIgnoreCase(t)) return 3;
+        if ("Other".equalsIgnoreCase(t)) return 4;
         return 3;
+    }
+
+    /** Số WO_TYPE -> text (giống web woTypeNumberToText). */
+    private String woTypeNumberToText(int n){
+        switch (n) {
+            case 1: return "PM";
+            case 2: return "CM";
+            case 3: return "BM";
+            case 4: return "Other";
+            default: return "BM";
+        }
     }
 
     private String formatToDateOnly(String dateTimeStr) {
@@ -1097,6 +1461,41 @@ public class WorkOrderActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             edtPassedDate.setText("0");
+        }
+    }
+
+    /**
+     * So sánh theo NGÀY (bỏ giờ): trả về true nếu ngày phát sinh trước ngày hôm nay.
+     * Dùng để đặt trạng thái Quá hạn (5) khi tạo WO/Task, giống web.
+     */
+    /** Parse chuỗi hiển thị "dd/MM/yyyy HH:mm" thành Date, trả null nếu lỗi. */
+    private Date parseDisplayDate(String s) {
+        if (s == null || s.trim().isEmpty()) return null;
+        try {
+            return new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).parse(s.trim());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private boolean isRequestDateBeforeToday(String uiDate) {
+        try {
+            Date d = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).parse(uiDate);
+            if (d == null) return false;
+            Calendar req = Calendar.getInstance();
+            req.setTime(d);
+            req.set(Calendar.HOUR_OF_DAY, 0);
+            req.set(Calendar.MINUTE, 0);
+            req.set(Calendar.SECOND, 0);
+            req.set(Calendar.MILLISECOND, 0);
+            Calendar today = Calendar.getInstance();
+            today.set(Calendar.HOUR_OF_DAY, 0);
+            today.set(Calendar.MINUTE, 0);
+            today.set(Calendar.SECOND, 0);
+            today.set(Calendar.MILLISECOND, 0);
+            return req.getTimeInMillis() < today.getTimeInMillis();
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -1530,7 +1929,7 @@ public class WorkOrderActivity extends AppCompatActivity {
             else if (data.getData() != null) {
                 selectedFileUris.add(data.getData());
             }
-            renderAttachmentList();
+            renderAttachments();
         }
     }
 
@@ -1544,6 +1943,61 @@ public class WorkOrderActivity extends AppCompatActivity {
     }
 
     /**
+     * Bộ phận của người dùng đang đăng nhập (đọc từ prefs "user".divisionName).
+     * Dùng để định tuyến kho tài liệu MA/FE giống web ở màn Chỉnh sửa WO.
+     */
+    private boolean isCurrentUserFe() {
+        try {
+            PreferenceHandler ph = new PreferenceHandler(this);
+            JSONObject u = ph.getJsonObject("user");
+            if (u == null) return false;
+
+            // Division_Id "006" = FE (giống web: Division_Id == "006" ? "FE" : "MA").
+            String divId = safeGet(u, "Division_Id");
+            if (divId.isEmpty()) divId = safeGet(u, "divisionId");
+            if (divId.isEmpty()) divId = safeGet(u, "DIVISION_ID");
+            if ("006".equals(divId.trim())) return true;
+
+            // Chuẩn hóa mã bộ phận từ nhiều key khả dĩ (giống ListWorkOrderActivity).
+            String code = safeGet(u, "departmentCode");
+            if (code.isEmpty()) code = safeGet(u, "Department_Code");
+            if (code.isEmpty()) code = safeGet(u, "divisionCode");
+            if (code.isEmpty()) code = safeGet(u, "divisionName");
+            if (code.isEmpty()) code = safeGet(u, "Division_Name");
+            return "FE".equals(normalizeDeptCode(code));
+        } catch (Exception e) {
+            ColorConsole.e(TAG, "isCurrentUserFe error: " + e.getMessage());
+        }
+        return false;
+    }
+
+    /** Chuẩn hóa mã bộ phận về "FE"/"MA" (chấp nhận "FE", "FE-xxx", chuỗi chứa "FE"). */
+    private String normalizeDeptCode(String raw) {
+        if (raw == null) return "";
+        String value = raw.trim();
+        if (value.isEmpty()) return "";
+        if ("FE".equalsIgnoreCase(value) || "MA".equalsIgnoreCase(value)) {
+            return value.toUpperCase(java.util.Locale.ROOT);
+        }
+        String[] parts = value.split("-");
+        if (parts.length > 0) {
+            String first = parts[0].trim();
+            if ("FE".equalsIgnoreCase(first) || "MA".equalsIgnoreCase(first)) {
+                return first.toUpperCase(java.util.Locale.ROOT);
+            }
+        }
+        String upper = value.toUpperCase(java.util.Locale.ROOT);
+        if (upper.contains("FE")) return "FE";
+        if (upper.contains("MA")) return "MA";
+        return upper;
+    }
+
+    /** Bộ phận dùng cho kho tài liệu: FE nếu user là FE, ngược lại MA. */
+    private String attachmentDivision() {
+        return isCurrentUserFe() ? "FE" : "MA";
+    }
+
+    /**
      * Tải danh sách ảnh đã đính kèm từ server theo WO_CODE (giống web: gọi get-task).
      * Backend đọc cột FILE_WO trong MT_WORK_ORDER.
      */
@@ -1553,7 +2007,8 @@ public class WorkOrderActivity extends AppCompatActivity {
 
         final String serverDynamicUrl = getServerDynamicUrl();
         new Thread(() -> {
-            HttpClient.APIReturn result = HttpClient.getWorkOrderFiles(this, serverDynamicUrl, woCode);
+            // Edit WO: FE đọc kho FE (FILE_WO_FE), MA đọc kho MA (FILE_WO_MA) — giống web.
+            HttpClient.APIReturn result = HttpClient.getWorkOrderFiles(this, serverDynamicUrl, woCode, attachmentDivision());
             if (result == null || result.code != 200 || result.data == null) return;
 
             final List<String> serverFiles = new ArrayList<>();
@@ -1664,28 +2119,26 @@ public class WorkOrderActivity extends AppCompatActivity {
 
         final String serverDynamicUrl = getServerDynamicUrl();
         final List<Uri> filesToUpload = new ArrayList<>(selectedFileUris);
+        // Edit WO: FE upload vào kho FE (division=FE, bucket=edit -> FILE_WO_FE); MA vào kho MA.
+        final String uploadDivision = attachmentDivision();
+        final String uploadBucket = isCurrentUserFe() ? "edit" : "";
         new Thread(() -> {
             HttpClient.APIReturn result = HttpClient.uploadWorkOrderFile(
-                    this, serverDynamicUrl, woCode, filesToUpload);
+                    this, serverDynamicUrl, woCode, filesToUpload, uploadDivision, uploadBucket);
 
             runOnUiThread(() -> {
                 uploadProgress.dismiss();
-                if (result != null && result.code == 200 && result.data != null && !result.data.isEmpty()) {
-                    List<String> serverFiles = new ArrayList<>();
-                    for (JSONObject item : result.data) {
-                        if (item == null) continue;
-                        String fileVal = item.optString("value");
-                        if (!fileVal.isEmpty()) serverFiles.add(fileVal);
-                    }
-                    if (!serverFiles.isEmpty()) {
-                        uploadedFileNames.clear();
-                        uploadedFileNames.addAll(serverFiles);
-                        selectedFileUris.clear();
-                        renderAttachmentList();
-                        Toast.makeText(this, i18n("Photos uploaded successfully"), Toast.LENGTH_SHORT).show();
+                if (result != null && result.code == 200) {
+                    // upload-file-task trả về toàn bộ FILE_WO; đọc lại đúng kho theo bộ phận
+                    // (FE -> get-task-fe, MA -> get-task-ma) để danh sách hiển thị chuẩn.
+                    selectedFileUris.clear();
+                    // Màn Sửa dùng 2 khối MA/FE -> tải lại cả 2 kho; nếu không thì danh sách đơn.
+                    if (isEditMode) {
+                        loadEditModeAttachments();
                     } else {
-                        Toast.makeText(this, i18n("Uploaded successfully but failed to get file name"), Toast.LENGTH_SHORT).show();
+                        loadUploadedFilesFromServer();
                     }
+                    Toast.makeText(this, i18n("Photos uploaded successfully"), Toast.LENGTH_SHORT).show();
                 } else {
                     String errMsg = (result != null) ? result.message : i18n("No response from server");
                     Toast.makeText(this, i18n("Upload failed") + ": " + errMsg, Toast.LENGTH_LONG).show();
@@ -1702,13 +2155,33 @@ public class WorkOrderActivity extends AppCompatActivity {
         if (selectedFileUris.isEmpty()) return true;
         if (woCode == null || woCode.trim().isEmpty()) return false;
         try {
+            // Thêm WO: theo tài khoản đăng nhập — FE up vào kho FE (division=FE, bucket=edit -> FILE_WO_FE),
+            // MA up vào kho MA (FILE_WO_MA). Không fix cứng MA nữa.
+            String division = attachmentDivision();
+            String bucket = isCurrentUserFe() ? "edit" : "";
             HttpClient.APIReturn result = HttpClient.uploadWorkOrderFile(
-                    this, getServerDynamicUrl(), woCode.trim(), new ArrayList<>(selectedFileUris));
+                    this, getServerDynamicUrl(), woCode.trim(), new ArrayList<>(selectedFileUris), division, bucket);
             return result != null && result.code == 200;
         } catch (Exception e) {
             ColorConsole.e(TAG, "Lỗi upload file cho WO mới: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Bỏ tiền tố phân loại của web ({WO_CODE}_MA_ / {WO_CODE}_FE_) để hiển thị tên gọn,
+     * giống hàm woReportClassifyAttach bên web. Tên đầy đủ vẫn được dùng khi tải/xóa.
+     */
+    private String displayFileName(String woCode, String fileName) {
+        if (fileName == null) return "";
+        String rest = fileName;
+        if (woCode != null && !woCode.isEmpty()) {
+            String prefix = woCode + "_";
+            if (rest.startsWith(prefix)) rest = rest.substring(prefix.length());
+        }
+        if (rest.startsWith("MA_")) rest = rest.substring(3);
+        else if (rest.startsWith("FE_")) rest = rest.substring(3);
+        return rest;
     }
 
     /** Tách chuỗi FILE_WO (phân tách bằng dấu phẩy) thành danh sách tên file. */
@@ -1775,8 +2248,10 @@ public class WorkOrderActivity extends AppCompatActivity {
         layoutAttachmentEmpty.setVisibility(View.GONE);
         layoutAttachmentList.setVisibility(View.VISIBLE);
 
+        final String woCode = edtWoCode != null ? edtWoCode.getText().toString().trim() : "";
         for (final String fileName : new ArrayList<>(uploadedFileNames)) {
-            layoutAttachmentList.addView(buildAttachmentRow(fileName, true, null, fileName));
+            // Hiển thị tên gọn (bỏ tiền tố {WO_CODE}_MA_) nhưng vẫn dùng tên đầy đủ để tải/xóa.
+            layoutAttachmentList.addView(buildAttachmentRow(displayFileName(woCode, fileName), true, null, fileName));
         }
         for (final Uri uri : new ArrayList<>(selectedFileUris)) {
             String displayName = getFileName(uri);
@@ -1872,8 +2347,9 @@ public class WorkOrderActivity extends AppCompatActivity {
 
         final String serverDynamicUrl = getServerDynamicUrl();
         new Thread(() -> {
+            // Edit WO: FE xóa trong kho FE (scope=FE), MA xóa trong kho MA (scope=MA).
             HttpClient.APIReturn result = HttpClient.deleteWorkOrderFile(
-                    this, serverDynamicUrl, woCode, serverFileName);
+                    this, serverDynamicUrl, woCode, serverFileName, attachmentDivision());
 
             runOnUiThread(() -> {
                 progress.dismiss();
