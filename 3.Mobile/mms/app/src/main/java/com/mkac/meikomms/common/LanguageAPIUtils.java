@@ -232,6 +232,21 @@ public class LanguageAPIUtils
                     // ── Keys mới bổ sung cho WorkOrderEntryDialog ──────────────
                     "  \"Occurrence Time\": \"Occurrence Time\",\n" +
                     "  \"The photo will be uploaded automatically after you press Add\": \"The photo will be uploaded automatically after you press Add\",\n" +
+                    "  \"This machine already has an unfinished Work Order. Cannot create another.\": \"This machine already has an unfinished Work Order. Cannot create another.\",\n" +
+                    "  \"Information\": \"Information\",\n" +
+                    "  \"Materials\": \"Materials\",\n" +
+                    "  \"Add material\": \"Add material\",\n" +
+                    "  \"Assignee\": \"Assignee\",\n" +
+                    "  \"Stock\": \"Stock\",\n" +
+                    "  \"Function\": \"Function\",\n" +
+                    "  \"Material\": \"Material\",\n" +
+                    "  \"must have quantity > 0\": \"must have quantity > 0\",\n" +
+                    "  \"Requested quantity\": \"Requested quantity\",\n" +
+                    "  \"exceeds stock\": \"exceeds stock\",\n" +
+                    "  \"Please select a material after entering quantity\": \"Please select a material after entering quantity\",\n" +
+                    "  \"is required\": \"is required\",\n" +
+                    "  \"Tài liệu MA\": \"MA Documents\",\n" +
+                    "  \"Tài liệu FE\": \"FE Documents\",\n" +
                     // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
                     "  \"Tìm kiếm máy (mã - tên)\": \"Search machine (code - name)\",\n" +
                     "  \"Ngày\": \"Date\",\n" +
@@ -508,6 +523,22 @@ public class LanguageAPIUtils
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"Thời gian phát sinh\",\n" +
                     "  \"The photo will be uploaded automatically after you press Add\": \"Ảnh sẽ được tự động tải lên sau khi bấm Thêm\",\n" +
+                    // ── Tạo/sửa WO cho FE: tab Vật tư, Assignee, validate vật tư ──
+                    "  \"This machine already has an unfinished Work Order. Cannot create another.\": \"Thiết bị này đang có Work Order chưa hoàn thành. Không thể tạo thêm.\",\n" +
+                    "  \"Information\": \"Thông tin\",\n" +
+                    "  \"Materials\": \"Vật tư\",\n" +
+                    "  \"Add material\": \"Thêm vật tư\",\n" +
+                    "  \"Assignee\": \"Người phụ trách\",\n" +
+                    "  \"Stock\": \"Tồn kho\",\n" +
+                    "  \"Function\": \"Chức năng\",\n" +
+                    "  \"Material\": \"Vật tư\",\n" +
+                    "  \"must have quantity > 0\": \"phải có số lượng > 0\",\n" +
+                    "  \"Requested quantity\": \"Số lượng yêu cầu\",\n" +
+                    "  \"exceeds stock\": \"vượt quá tồn kho\",\n" +
+                    "  \"Please select a material after entering quantity\": \"Vui lòng chọn mã vật tư khi đã nhập số lượng\",\n" +
+                    "  \"is required\": \"là bắt buộc\",\n" +
+                    "  \"Tài liệu MA\": \"Tài liệu MA\",\n" +
+                    "  \"Tài liệu FE\": \"Tài liệu FE\",\n" +
                     // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
                     "  \"Tìm kiếm máy (mã - tên)\": \"Tìm kiếm máy (mã - tên)\",\n" +
                     "  \"Ngày\": \"Ngày\",\n" +
@@ -735,6 +766,7 @@ public class LanguageAPIUtils
                     "  \"Vật tư\": \"Vật tư\",\n" +
                     "  \"Is there a device lock feature on the MES system?\": \"Có lock thiết bị trên hệ thống MES không?\",\n" +
                     "  \"Method\": \"Phương pháp\",\n" +
+                    "  \"Add\": \"Thêm\",\n" +
                     "  \"Visual Standard\": \"Tiêu chuẩn ngoại quan\",\n" +
                     "  \"Action\": \"Thao tác\"\n" +
                     "}\n";
@@ -747,6 +779,22 @@ public class LanguageAPIUtils
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"発生時間\",\n" +
                     "  \"The photo will be uploaded automatically after you press Add\": \"追加ボタンを押すと写真が自動的にアップロードされます\",\n" +
+                    "  \"This machine already has an unfinished Work Order. Cannot create another.\": \"この設備には未完了のワークオーダーがあります。新規作成できません。\",\n" +
+                    "  \"Information\": \"情報\",\n" +
+                    "  \"Materials\": \"資材\",\n" +
+                    "  \"Add material\": \"資材を追加\",\n" +
+                    "  \"Assignee\": \"担当者\",\n" +
+                    "  \"Stock\": \"在庫\",\n" +
+                    "  \"Function\": \"機能\",\n" +
+                    "  \"Material\": \"資材\",\n" +
+                    "  \"must have quantity > 0\": \"数量は0より大きい必要があります\",\n" +
+                    "  \"Requested quantity\": \"要求数量\",\n" +
+                    "  \"exceeds stock\": \"在庫を超えています\",\n" +
+                    "  \"Please select a material after entering quantity\": \"数量を入力したら資材を選択してください\",\n" +
+                    "  \"is required\": \"は必須です\",\n" +
+                    "  \"Tài liệu MA\": \"MA資料\",\n" +
+                    "  \"Tài liệu FE\": \"FE資料\",\n" +
+                    "  \"Add\": \"追加\",\n" +
                     // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
                     "  \"Tìm kiếm máy (mã - tên)\": \"設備を検索（コード - 名称）\",\n" +
                     "  \"Ngày\": \"日付\",\n" +
@@ -943,6 +991,7 @@ public class LanguageAPIUtils
                     "  \"Enter request reason\": \"依頼理由を入力\",\n" +
                     "  \"Enter work order content\": \"W/O内容を入力\",\n" +
                     "  \"MA Status\": \"MA報告状態\",\n" +
+                    "  \"MA status\": \"MA報告状態\",\n" +
                     "  \"Passed Date\": \"経過日数\",\n" +
                     "  \"Completed\": \"完了\",\n" +
                     "  \"Incomplete\": \"未完了\",\n" +
@@ -987,6 +1036,22 @@ public class LanguageAPIUtils
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"发生时间\",\n" +
                     "  \"The photo will be uploaded automatically after you press Add\": \"点击添加后照片将自动上传\",\n" +
+                    "  \"This machine already has an unfinished Work Order. Cannot create another.\": \"该设备已有未完成的工单，无法再创建。\",\n" +
+                    "  \"Information\": \"信息\",\n" +
+                    "  \"Materials\": \"物料\",\n" +
+                    "  \"Add material\": \"添加物料\",\n" +
+                    "  \"Assignee\": \"负责人\",\n" +
+                    "  \"Stock\": \"库存\",\n" +
+                    "  \"Function\": \"功能\",\n" +
+                    "  \"Material\": \"物料\",\n" +
+                    "  \"must have quantity > 0\": \"数量必须大于0\",\n" +
+                    "  \"Requested quantity\": \"请求数量\",\n" +
+                    "  \"exceeds stock\": \"超过库存\",\n" +
+                    "  \"Please select a material after entering quantity\": \"输入数量后请选择物料\",\n" +
+                    "  \"is required\": \"为必填项\",\n" +
+                    "  \"Tài liệu MA\": \"MA文件\",\n" +
+                    "  \"Tài liệu FE\": \"FE文件\",\n" +
+                    "  \"Add\": \"添加\",\n" +
                     // ── Tab Work Order / Bảo dưỡng: ô tìm kiếm + nhãn bộ lọc ───
                     "  \"Tìm kiếm máy (mã - tên)\": \"搜索设备（代码 - 名称）\",\n" +
                     "  \"Ngày\": \"日期\",\n" +
@@ -1183,6 +1248,7 @@ public class LanguageAPIUtils
                     "  \"Enter request reason\": \"输入申请原因\",\n" +
                     "  \"Enter work order content\": \"输入工单内容\",\n" +
                     "  \"MA Status\": \"MA报告状态\",\n" +
+                    "  \"MA status\": \"MA报告状态\",\n" +
                     "  \"Passed Date\": \"已过天数\",\n" +
                     "  \"Incomplete\": \"未完成\",\n" +
                     "  \"Completed\": \"完了\",\n" +

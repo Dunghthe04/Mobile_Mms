@@ -494,7 +494,7 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Attachment -->
+                <!-- Tài liệu MA -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -503,14 +503,14 @@
                     android:orientation="horizontal">
 
                     <TextView
+                        android:id="@+id/tv_label_doc_ma"
                         android:layout_width="150dp"
                         android:layout_height="wrap_content"
-                        android:text="Attachment"
+                        android:text="Tài liệu MA"
                         android:textColor="@color/black"
                         android:textSize="13sp" />
 
                     <LinearLayout
-                        android:id="@+id/layout_attachment_status"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -518,34 +518,59 @@
                         android:orientation="vertical"
                         android:padding="12dp">
 
-                        <!-- Placeholder khi chưa có file -->
+                        <TextView
+                            android:id="@+id/tv_doc_ma_empty"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="No attachment file"
+                            android:textColor="#808080"
+                            android:textSize="13sp"
+                            android:textStyle="italic" />
+
                         <LinearLayout
-                            android:id="@+id/layout_attachment_empty"
+                            android:id="@+id/layout_doc_ma_list"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:orientation="horizontal">
+                            android:orientation="vertical"
+                            android:visibility="gone" />
+                    </LinearLayout>
+                </LinearLayout>
 
-                            <ImageView
-                                android:id="@+id/img_attachment_icon"
-                                android:layout_width="18dp"
-                                android:layout_height="18dp"
-                                android:layout_marginEnd="8dp"
-                                android:src="@drawable/ic_folder" />
+                <!-- Tài liệu FE -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="top"
+                    android:orientation="horizontal">
 
-                            <TextView
-                                android:id="@+id/tv_attachment_status"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="No attachment file"
-                                android:textColor="#808080"
-                                android:textSize="13sp"
-                                android:textStyle="italic" />
-                        </LinearLayout>
+                    <TextView
+                        android:id="@+id/tv_label_doc_fe"
+                        android:layout_width="150dp"
+                        android:layout_height="wrap_content"
+                        android:text="Tài liệu FE"
+                        android:textColor="@color/black"
+                        android:textSize="13sp" />
 
-                        <!-- Danh sách file đính kèm (mỗi file 1 dòng kèm nút X) -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="#F4F6F9"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+
+                        <TextView
+                            android:id="@+id/tv_doc_fe_empty"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="No attachment file"
+                            android:textColor="#808080"
+                            android:textSize="13sp"
+                            android:textStyle="italic" />
+
                         <LinearLayout
-                            android:id="@+id/layout_attachment_list"
+                            android:id="@+id/layout_doc_fe_list"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"

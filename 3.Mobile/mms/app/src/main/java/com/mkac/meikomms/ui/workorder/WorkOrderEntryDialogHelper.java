@@ -66,8 +66,12 @@ public final class WorkOrderEntryDialogHelper {
     // Danh sách file đã tải lên server (tên file đầy đủ, lấy từ FILE_WO / kết quả upload)
     private static List<String> uploadedFileNames = new ArrayList<>();
     private static String currentTaskId = "";
-    private static LinearLayout layoutAttachmentEmptyView = null;
-    private static LinearLayout layoutAttachmentListView = null;
+    // Hai khối tài liệu MA / FE (giống web)
+    private static TextView docMaEmptyView = null;
+    private static LinearLayout docMaListView = null;
+    private static TextView docFeEmptyView = null;
+    private static LinearLayout docFeListView = null;
+    private static boolean currentUserIsFe = true; // bộ phận tài khoản đăng nhập
     private static Context dialogContext = null;
 
     // Danh sách key chuẩn (tiếng Anh) — dùng để lưu DB và tra dịch qua i18n()
@@ -82,6 +86,14 @@ public final class WorkOrderEntryDialogHelper {
             "Unknown Cause",
             "Other Cause"
     );
+
+    // Mã trạng thái WO thực tế (khớp getStatusType ở ListWorkOrderActivity) tương ứng
+    // từng vị trí trong R.array.work_order_entry_status:
+    //   vị trí 0 = "Chưa hoàn thành" -> 0
+    //   vị trí 1 = "Đã thực hiện"    -> 1
+    //   vị trí 2 = "Quá hạn"         -> 5
+    // Trước đây lưu thẳng vị trí spinner (0,1,2) nên "Quá hạn" bị lưu 2 -> sai trạng thái.
+    private static final int[] ENTRY_STATUS_CODES = {0, 1, 5};
 //    public static void onActivityResult(int requestCode, int resultCode, Intent data) {
 //        if (requestCode == 9999 && resultCode == android.app.Activity.RESULT_OK && data != null && data.getData() != null) {
 //            selectedFileUri = data.getData();
@@ -168,36 +180,75 @@ public final class WorkOrderEntryDialogHelper {
      * - File đã tải lên server (uploadedFileNames): nút X gọi API xóa trên server.
      * - File mới chọn nhưng chưa tải lên (selectedFileUris): nút X chỉ gỡ ở local.
      */
+    /** File thuộc bộ phận FE nếu tên (sau tiền tố {taskId}_) bắt đầu bằng "FE_"; còn lại coi là MA. */
+    private static boolean isFeFile(String fileName) {
+        if (fileName == null) return false;
+        String rest = fileName;
+        if (currentTaskId != null && !currentTaskId.isEmpty() && rest.startsWith(currentTaskId + "_")) {
+            rest = rest.substring(currentTaskId.length() + 1);
+        }
+        return rest.startsWith("FE_");
+    }
+
+    /** Bộ phận của tài khoản đăng nhập (ưu tiên cờ hub lưu; fallback đọc prefs). Mặc định FE. */
+    private static boolean isFeAccount(Context ctx) {
+        try {
+            PreferenceHandler ph = new PreferenceHandler(ctx);
+            String saved = ph.getString("wo_user_division");
+            if ("FE".equalsIgnoreCase(saved)) return true;
+            if ("MA".equalsIgnoreCase(saved)) return false;
+            JSONObject u = ph.getJsonObject("user");
+            if (u != null) {
+                for (String k : new String[]{"Division_Id", "divisionId", "DIVISION_ID"}) {
+                    if ("006".equals(u.optString(k, "").trim())) return true;
+                }
+                for (String k : new String[]{"departmentCode", "Department_Code", "divisionCode",
+                        "divisionName", "Division_Name", "DIVISION_NAME"}) {
+                    String v = u.optString(k, "").trim().toUpperCase(Locale.ROOT);
+                    if (v.isEmpty()) continue;
+                    if (v.contains("FE")) return true;
+                    if (v.contains("MA")) return false;
+                }
+            }
+        } catch (Exception ignored) {}
+        return true;
+    }
+
     private static void renderAttachmentList(Context context) {
-        if (context == null || layoutAttachmentListView == null || layoutAttachmentEmptyView == null) {
+        renderDocBlock(context, docMaListView, docMaEmptyView, "MA");
+        renderDocBlock(context, docFeListView, docFeEmptyView, "FE");
+    }
+
+    private static void renderDocBlock(Context context, LinearLayout listView, TextView emptyView, String division) {
+        if (context == null || listView == null) return;
+        listView.removeAllViews();
+
+        boolean isFeBlock = "FE".equals(division);
+        List<String> uploaded = new ArrayList<>();
+        for (String f : uploadedFileNames) {
+            if (isFeFile(f) == isFeBlock) uploaded.add(f);
+        }
+        // File mới chọn (chưa upload) hiển thị ở khối đúng bộ phận tài khoản đang đăng nhập.
+        boolean pendingHere = (isFeBlock == currentUserIsFe);
+        boolean hasAny = !uploaded.isEmpty() || (pendingHere && !selectedFileUris.isEmpty());
+
+        if (!hasAny) {
+            if (emptyView != null) emptyView.setVisibility(View.VISIBLE);
+            listView.setVisibility(View.GONE);
             return;
         }
+        if (emptyView != null) emptyView.setVisibility(View.GONE);
+        listView.setVisibility(View.VISIBLE);
 
-        layoutAttachmentListView.removeAllViews();
-
-        boolean hasUploaded = !uploadedFileNames.isEmpty();
-        boolean hasSelected = !selectedFileUris.isEmpty();
-
-        if (!hasUploaded && !hasSelected) {
-            layoutAttachmentEmptyView.setVisibility(View.VISIBLE);
-            layoutAttachmentListView.setVisibility(View.GONE);
-            return;
+        // Giống web: màn nhập kết quả xóa được file ở CẢ 2 khối, nhưng dùng scope "FE" (bản làm việc)
+        // -> chỉ gỡ khỏi FILE_WO, KHÔNG đụng kho gốc FILE_WO_MA/FILE_WO_FE -> không ảnh hưởng màn Chỉnh sửa WO.
+        for (final String fileName : uploaded) {
+            listView.addView(buildAttachmentRow(context, fileName, true, null, fileName, "FE", true));
         }
-
-        layoutAttachmentEmptyView.setVisibility(View.GONE);
-        layoutAttachmentListView.setVisibility(View.VISIBLE);
-
-        // File đã tải lên server
-        for (final String fileName : new ArrayList<>(uploadedFileNames)) {
-            layoutAttachmentListView.addView(
-                    buildAttachmentRow(context, fileName, true, null, fileName));
-        }
-
-        // File mới chọn, chưa tải lên
-        for (final Uri uri : new ArrayList<>(selectedFileUris)) {
-            String displayName = getFileName(context, uri);
-            layoutAttachmentListView.addView(
-                    buildAttachmentRow(context, displayName, false, uri, null));
+        if (pendingHere) {
+            for (final Uri uri : new ArrayList<>(selectedFileUris)) {
+                listView.addView(buildAttachmentRow(context, getFileName(context, uri), false, uri, null, "FE", true));
+            }
         }
     }
 
@@ -206,7 +257,8 @@ public final class WorkOrderEntryDialogHelper {
      */
     private static View buildAttachmentRow(final Context context, String displayName,
                                            final boolean isUploaded, final Uri localUri,
-                                           final String serverFileName) {
+                                           final String serverFileName, final String scope,
+                                           final boolean canDelete) {
         LinearLayout row = new LinearLayout(context);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
@@ -235,38 +287,41 @@ public final class WorkOrderEntryDialogHelper {
         }
         row.addView(tvName);
 
-        ImageView btnRemove = new ImageView(context);
-        LinearLayout.LayoutParams removeLp = new LinearLayout.LayoutParams(dp(context, 22), dp(context, 22));
-        removeLp.setMarginStart(dp(context, 8));
-        btnRemove.setLayoutParams(removeLp);
-        btnRemove.setPadding(dp(context, 2), dp(context, 2), dp(context, 2), dp(context, 2));
-        btnRemove.setImageResource(R.drawable.close_24);
-        btnRemove.setClickable(true);
-        btnRemove.setFocusable(true);
-        btnRemove.setOnClickListener(v -> {
-            if (isUploaded) {
-                confirmAndDeleteUploadedFile(context, serverFileName);
-            } else {
-                selectedFileUris.remove(localUri);
-                renderAttachmentList(context);
-            }
-        });
-        row.addView(btnRemove);
+        // Nút xóa: file đã upload chỉ hiện khi được phép (đúng bộ phận); file mới chọn luôn gỡ được.
+        if (canDelete) {
+            ImageView btnRemove = new ImageView(context);
+            LinearLayout.LayoutParams removeLp = new LinearLayout.LayoutParams(dp(context, 22), dp(context, 22));
+            removeLp.setMarginStart(dp(context, 8));
+            btnRemove.setLayoutParams(removeLp);
+            btnRemove.setPadding(dp(context, 2), dp(context, 2), dp(context, 2), dp(context, 2));
+            btnRemove.setImageResource(R.drawable.close_24);
+            btnRemove.setClickable(true);
+            btnRemove.setFocusable(true);
+            btnRemove.setOnClickListener(v -> {
+                if (isUploaded) {
+                    confirmAndDeleteUploadedFile(context, serverFileName, scope);
+                } else {
+                    selectedFileUris.remove(localUri);
+                    renderAttachmentList(context);
+                }
+            });
+            row.addView(btnRemove);
+        }
 
         return row;
     }
 
     /** Hỏi xác nhận rồi gọi API xóa file đã tải lên trên server. */
-    private static void confirmAndDeleteUploadedFile(final Context context, final String serverFileName) {
+    private static void confirmAndDeleteUploadedFile(final Context context, final String serverFileName, final String scope) {
         new AlertDialog.Builder(context)
                 .setTitle(i18n("Remove attachment"))
                 .setMessage(i18n("Are you sure you want to remove this file?") + "\n" + serverFileName)
                 .setNegativeButton(i18n("Cancel"), null)
-                .setPositiveButton(i18n("Remove"), (d, w) -> deleteUploadedFile(context, serverFileName))
+                .setPositiveButton(i18n("Remove"), (d, w) -> deleteUploadedFile(context, serverFileName, scope))
                 .show();
     }
 
-    private static void deleteUploadedFile(final Context context, final String serverFileName) {
+    private static void deleteUploadedFile(final Context context, final String serverFileName, final String scope) {
         if (currentTaskId == null || currentTaskId.isEmpty()) {
             Toast.makeText(context, i18n("Work Order code not found for upload"), Toast.LENGTH_SHORT).show();
             return;
@@ -286,7 +341,7 @@ public final class WorkOrderEntryDialogHelper {
         final String finalServerUrl = serverDynamicUrl;
         new Thread(() -> {
             HttpClient.APIReturn result = HttpClient.deleteWorkOrderFile(
-                    context, finalServerUrl, currentTaskId, serverFileName, "FE");
+                    context, finalServerUrl, currentTaskId, serverFileName, scope);
 
             new Handler(Looper.getMainLooper()).post(() -> {
                 progress.dismiss();
@@ -336,8 +391,10 @@ public final class WorkOrderEntryDialogHelper {
         selectedFileUris.clear();
         uploadedFileNames.clear();
         currentTaskId = "";
-        layoutAttachmentEmptyView = null;
-        layoutAttachmentListView = null;
+        docMaEmptyView = null;
+        docMaListView = null;
+        docFeEmptyView = null;
+        docFeListView = null;
         dialogContext = null;
     }
 
@@ -437,8 +494,11 @@ public final class WorkOrderEntryDialogHelper {
 
         View btnChooseFile = dialogView.findViewById(R.id.btn_choose_file);
         View btnUploadFile = dialogView.findViewById(R.id.btn_upload_file);
-        layoutAttachmentEmptyView = dialogView.findViewById(R.id.layout_attachment_empty);
-        layoutAttachmentListView = dialogView.findViewById(R.id.layout_attachment_list);
+        docMaEmptyView = dialogView.findViewById(R.id.tv_doc_ma_empty);
+        docMaListView = dialogView.findViewById(R.id.layout_doc_ma_list);
+        docFeEmptyView = dialogView.findViewById(R.id.tv_doc_fe_empty);
+        docFeListView = dialogView.findViewById(R.id.layout_doc_fe_list);
+        currentUserIsFe = isFeAccount(context);
 
         dialogContext = context;
 //        selectedFileUri = null;
@@ -520,8 +580,8 @@ public final class WorkOrderEntryDialogHelper {
                         finalTaskId,
 //                        selectedFileUri
                         selectedFileUris,
-                        // Màn nhập kết quả WO là của FE -> lưu vào kho tài liệu FE, không phải MA.
-                        "FE"
+                        // Upload vào kho tài liệu đúng bộ phận tài khoản đăng nhập (FE->FE, MA->MA).
+                        currentUserIsFe ? "FE" : "MA"
                 );
 
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -959,10 +1019,13 @@ public final class WorkOrderEntryDialogHelper {
         int statusPosition = 0;
         try {
             if (!statusStr.isEmpty()) {
-                double statusD = Double.parseDouble(statusStr);
-                int statusVal = (int) statusD;
-                if (statusVal >= 0 && statusVal < statusOptions.length) {
-                    statusPosition = statusVal;
+                // DB lưu mã trạng thái thực (0/1/5) -> ánh xạ ngược về vị trí spinner.
+                int statusCode = (int) Double.parseDouble(statusStr);
+                for (int i = 0; i < ENTRY_STATUS_CODES.length; i++) {
+                    if (ENTRY_STATUS_CODES[i] == statusCode) {
+                        statusPosition = i;
+                        break;
+                    }
                 }
             }
         } catch (NumberFormatException e) {
@@ -1045,7 +1108,10 @@ public final class WorkOrderEntryDialogHelper {
             String impact = etImpact.getText().toString().trim();
             String action = etProcessContent.getText().toString().trim();
             String noteVal = etNote.getText().toString().trim();
-            int statusVal = spinnerStatus.getSelectedItemPosition();
+            // Ánh xạ vị trí spinner -> mã trạng thái thực (0/1/5) để không lưu sai "Quá hạn".
+            int statusPos = spinnerStatus.getSelectedItemPosition();
+            int statusVal = (statusPos >= 0 && statusPos < ENTRY_STATUS_CODES.length)
+                    ? ENTRY_STATUS_CODES[statusPos] : 0;
 
             // Daily report: 0 = No (bắt buộc nhập lý do), 1 = Yes
             int dailyReportFlag = rbDailyReportNo.isChecked() ? 0 : 1;

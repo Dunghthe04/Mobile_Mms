@@ -9,8 +9,9 @@
 
     <com.google.android.material.card.MaterialCardView
         android:layout_width="650dp"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_gravity="center"
+        android:layout_marginVertical="24dp"
         app:cardCornerRadius="12dp"
         app:cardElevation="12dp"
         app:strokeColor="#DDDDDD"
@@ -18,7 +19,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
             <!-- HEADER -->
@@ -47,14 +48,53 @@
 
             <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#EEEEEE" />
 
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="32dp">
+                android:paddingHorizontal="32dp"
+                android:paddingTop="32dp"
+                android:paddingBottom="16dp">
 
-                <!-- TABS -->
+                <!-- TABS (chỉ hiện với FE) -->
+                <LinearLayout
+                    android:id="@+id/layout_wo_tabs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone">
 
+                    <TextView
+                        android:id="@+id/btn_tab_info"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_tab_active"
+                        android:gravity="center"
+                        android:text="1. Information"
+                        android:textColor="@color/white"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/btn_tab_material"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_tab_inactive"
+                        android:gravity="center"
+                        android:text="2. Materials"
+                        android:textColor="@color/black"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
                 <ViewFlipper
                     android:id="@+id/view_flipper"
@@ -135,52 +175,106 @@
                                     android:focusable="false"/>
                             </LinearLayout>
 
-                            <!-- Máy -->
+                            <!-- Máy / Assignee (đổi theo Loại WO: Other -> Assignee) -->
                             <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_columnWeight="1"
                                 android:layout_margin="8dp"
                                 android:orientation="vertical">
+
                                 <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:orientation="horizontal"
-                                    android:layout_marginBottom="8dp">
-                                    <TextView
-                                        android:id="@+id/tv_label_machine"
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="Machine"
-                                        android:textStyle="bold"
-                                        android:textColor="#303133"/>
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text=" *"
-                                        android:textColor="#F56C6C"/>
-                                </LinearLayout>
-                                <RelativeLayout
+                                    android:id="@+id/layout_machine"
                                     android:layout_width="match_parent"
-                                    android:layout_height="48dp"
-                                    android:background="@drawable/bg_input_field">
-                                    <AutoCompleteTextView
-                                        android:id="@+id/auto_machine"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical">
+                                    <LinearLayout
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="horizontal"
+                                        android:layout_marginBottom="8dp">
+                                        <TextView
+                                            android:id="@+id/tv_label_machine"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="Machine"
+                                            android:textStyle="bold"
+                                            android:textColor="#303133"/>
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text=" *"
+                                            android:textColor="#F56C6C"/>
+                                    </LinearLayout>
+                                    <RelativeLayout
                                         android:layout_width="match_parent"
-                                        android:layout_height="match_parent"
-                                        android:background="@null"
-                                        android:paddingHorizontal="12dp"
-                                        android:hint="Select an item"
-                                         />
-                                    <ImageView
-                                        android:layout_width="20dp"
-                                        android:layout_height="20dp"
-                                        android:layout_alignParentEnd="true"
-                                        android:layout_centerVertical="true"
-                                        android:layout_marginEnd="12dp"
-                                        android:src="@android:drawable/arrow_down_float"
-                                        app:tint="#C0C4CC"/>
-                                </RelativeLayout>
+                                        android:layout_height="48dp"
+                                        android:background="@drawable/bg_input_field">
+                                        <AutoCompleteTextView
+                                            android:id="@+id/auto_machine"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:background="@null"
+                                            android:paddingHorizontal="12dp"
+                                            android:hint="Select an item"
+                                             />
+                                        <ImageView
+                                            android:layout_width="20dp"
+                                            android:layout_height="20dp"
+                                            android:layout_alignParentEnd="true"
+                                            android:layout_centerVertical="true"
+                                            android:layout_marginEnd="12dp"
+                                            android:src="@android:drawable/arrow_down_float"
+                                            app:tint="#C0C4CC"/>
+                                    </RelativeLayout>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:id="@+id/layout_assignee"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:visibility="gone">
+                                    <LinearLayout
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="horizontal"
+                                        android:layout_marginBottom="8dp">
+                                        <TextView
+                                            android:id="@+id/tv_label_assignee"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text="Assignee"
+                                            android:textStyle="bold"
+                                            android:textColor="#303133"/>
+                                        <TextView
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:text=" *"
+                                            android:textColor="#F56C6C"/>
+                                    </LinearLayout>
+                                    <RelativeLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="48dp"
+                                        android:background="@drawable/bg_input_field">
+                                        <AutoCompleteTextView
+                                            android:id="@+id/auto_assignee"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="match_parent"
+                                            android:background="@null"
+                                            android:paddingHorizontal="12dp"
+                                            android:hint="Select an item"
+                                            android:inputType="none" />
+                                        <ImageView
+                                            android:layout_width="20dp"
+                                            android:layout_height="20dp"
+                                            android:layout_alignParentEnd="true"
+                                            android:layout_centerVertical="true"
+                                            android:layout_marginEnd="12dp"
+                                            android:src="@android:drawable/arrow_down_float"
+                                            app:tint="#C0C4CC"/>
+                                    </RelativeLayout>
+                                </LinearLayout>
                             </LinearLayout>
 
                             <!-- Process -->
@@ -653,28 +747,113 @@
                             </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
+
+                    <!-- SECTION MATERIAL (FE) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <!-- Materials table header -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="4dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/tv_material_header_name"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="2.4"
+                                android:layout_marginEnd="6dp"
+                                android:text="Materials"
+                                android:textColor="#475569"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_material_header_stock"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginEnd="6dp"
+                                android:gravity="center"
+                                android:text="Stock"
+                                android:textColor="#475569"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_material_header_qty"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginEnd="6dp"
+                                android:gravity="center"
+                                android:text="Quantity"
+                                android:textColor="#475569"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/tv_material_header_func"
+                                android:layout_width="64dp"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:text="Function"
+                                android:textColor="#475569"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/layout_material_rows"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical" />
+
+                        <TextView
+                            android:id="@+id/btn_add_material"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_btn_choose_file"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:paddingHorizontal="16dp"
+                            android:paddingVertical="10dp"
+                            android:text="+ Add material"
+                            android:textColor="#01A789"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
                 </ViewFlipper>
 
-                <!-- FOOTER -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    android:orientation="horizontal">
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_add"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="50dp"
-                        android:layout_marginEnd="16dp"
-                        android:backgroundTint="#00A680"
-                        android:text="Add"
-                        android:textAllCaps="false"
-                        android:textSize="16sp"
-                        app:cornerRadius="6dp" />
-                </LinearLayout>
-
             </LinearLayout>
+            </ScrollView>
+
+            <!-- FOOTER -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingHorizontal="32dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="24dp">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_add"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="50dp"
+                    android:backgroundTint="#00A680"
+                    android:text="Add"
+                    android:textAllCaps="false"
+                    android:textSize="16sp"
+                    app:cornerRadius="6dp" />
+            </LinearLayout>
+
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

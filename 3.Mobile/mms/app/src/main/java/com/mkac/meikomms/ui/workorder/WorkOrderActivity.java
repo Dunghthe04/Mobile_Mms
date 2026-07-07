@@ -33,6 +33,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.MenuItem;
@@ -113,6 +114,23 @@ public class WorkOrderActivity extends AppCompatActivity {
     private final List<String> docMaFiles = new ArrayList<>();
     private final List<String> docFeFiles = new ArrayList<>();
 
+    // Phase 3/4 (FE): tab Vật tư + Assignee + hành vi Loại WO = Other
+    private android.widget.ViewFlipper viewFlipper;
+    private View layoutWoTabs, btnTabInfo, btnTabMaterial, layoutMachine, layoutAssignee, btnAddMaterial;
+    private AutoCompleteTextView autoAssignee;
+    private LinearLayout layoutMaterialRows;
+    private final List<String> materialLabels = new ArrayList<>();          // "Id - Name"
+    private final Map<String, String> materialLabelToId = new HashMap<>();  // label -> Item_Id
+    private final Map<String, Double> materialLabelToStock = new HashMap<>(); // label -> tồn kho
+    private final List<MaterialRow> materialRows = new ArrayList<>();
+
+    private static class MaterialRow {
+        AutoCompleteTextView material;
+        EditText stock;
+        EditText qty;
+        View row;
+    }
+
     public static void start(Context context) {
         context.startActivity(new Intent(context, WorkOrderActivity.class));
     }
@@ -142,7 +160,10 @@ public class WorkOrderActivity extends AppCompatActivity {
         }
 
         initConfiguration();
-        isFeUser = isCurrentUserFe();
+        // Nhận diện FE: prefs trực tiếp HOẶC cờ do hub lưu (chỉ dùng làm tín hiệu FE bổ sung,
+        // không hạ FE->MA để tránh hồi quy khi API hub đoán sai).
+        String savedDivision = new PreferenceHandler(this).getString("wo_user_division");
+        isFeUser = isCurrentUserFe() || "FE".equalsIgnoreCase(savedDivision);
         initViews();
         applyI18nFieldTexts();
 
@@ -161,12 +182,11 @@ public class WorkOrderActivity extends AppCompatActivity {
                 bindDataToUI(data);
                 setupEditModeUI();
 
-                // FE: hiển thị đúng Loại WO đã lưu; áp lại quy tắc ẩn/hiện theo bộ phận + Edit.
+                // FE: hiển thị đúng Loại WO đã lưu.
                 if (isFeUser && autoLoaiHinh != null) {
                     int wt = editingData.optInt("WO_TYPE", editingData.optInt("Wo_Type", 3));
                     autoLoaiHinh.setText(woTypeNumberToText(wt), false);
                 }
-                applyDivisionFormRules();
 
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     bindDataToUI(data);
@@ -182,6 +202,10 @@ public class WorkOrderActivity extends AppCompatActivity {
         if (!isEditMode) {
             loadInitialData();
         }
+
+        // Áp quy tắc ẩn/hiện field theo bộ phận + Add/Edit — gọi 1 lần duy nhất sau khi biết isEditMode
+        // (để removeView ẩn field FE thu gọn hẳn, không để lại ô trống trong GridLayout).
+        applyDivisionFormRules();
     }
 
     @Override
@@ -259,6 +283,15 @@ public class WorkOrderActivity extends AppCompatActivity {
         layoutDocMaList = findViewById(R.id.layout_doc_ma_list);
         layoutDocFeBlock = findViewById(R.id.layout_doc_fe_block);
         layoutDocFeList = findViewById(R.id.layout_doc_fe_list);
+        viewFlipper = findViewById(R.id.view_flipper);
+        layoutWoTabs = findViewById(R.id.layout_wo_tabs);
+        btnTabInfo = findViewById(R.id.btn_tab_info);
+        btnTabMaterial = findViewById(R.id.btn_tab_material);
+        layoutMachine = findViewById(R.id.layout_machine);
+        layoutAssignee = findViewById(R.id.layout_assignee);
+        autoAssignee = findViewById(R.id.auto_assignee);
+        layoutMaterialRows = findViewById(R.id.layout_material_rows);
+        btnAddMaterial = findViewById(R.id.btn_add_material);
         View btnChooseFile = findViewById(R.id.btn_choose_file);
         View btnUploadFile = findViewById(R.id.btn_upload_file);
         if (btnChooseFile != null) btnChooseFile.setOnClickListener(v -> openFilePicker());
@@ -313,12 +346,13 @@ public class WorkOrderActivity extends AppCompatActivity {
             setupDropdown(autoLoaiHinh, Arrays.asList("BM", "PM", "CM", "Other"));
             autoLoaiHinh.setText("BM", false);
             applyEditableFieldStyle(autoLoaiHinh);
+            setupFeExtras();
         } else {
             autoLoaiHinh.setText("BM");
             applyReadOnlyFieldStyle(autoLoaiHinh);
         }
-
-        applyDivisionFormRules();
+        // Lưu ý: applyDivisionFormRules() được gọi 1 lần ở cuối onCreate (sau khi biết Add/Edit),
+        // không gọi ở đây để tránh gỡ nhầm view khi màn Sửa.
     }
 
     /**
@@ -327,26 +361,19 @@ public class WorkOrderActivity extends AppCompatActivity {
      *  - Trạng thái MA báo + "Có lock thiết bị": hiện nếu MA hoặc (FE và Edit); FE thì disable.
      */
     private void applyDivisionFormRules() {
+        // Giống web: 3 field này hiện nếu MA, hoặc (FE và đang Sửa). => FE + Thêm: ẩn hẳn.
         boolean showRequestDate = !isFeUser || isEditMode;
-        // Giống web: "Trạng thái MA báo" + "Có lock thiết bị" hiện nếu MA, hoặc (FE và đang Sửa).
-        // => FE + Thêm: ẩn hẳn. FE + Sửa: vẫn hiện nhưng disable.
         boolean showMaBlock = !isFeUser || isEditMode;
 
-        if (layoutRequestDate != null) {
-            layoutRequestDate.setVisibility(showRequestDate ? View.VISIBLE : View.GONE);
-        }
+        setBlockVisible(layoutRequestDate, showRequestDate);
         // FE (kể cả Edit) không được sửa thời gian phát sinh.
         if (isFeUser && edtRequestDate != null) {
             applyReadOnlyFieldStyle(edtRequestDate);
             edtRequestDate.setOnClickListener(null);
         }
 
-        if (layoutMaStatus != null) {
-            layoutMaStatus.setVisibility(showMaBlock ? View.VISIBLE : View.GONE);
-        }
-        if (layoutMesLock != null) {
-            layoutMesLock.setVisibility(showMaBlock ? View.VISIBLE : View.GONE);
-        }
+        setBlockVisible(layoutMaStatus, showMaBlock);
+        setBlockVisible(layoutMesLock, showMaBlock);
         // Trạng thái MA báo + MES lock chỉ MA mới thao tác được.
         if (isFeUser) {
             if (autoMaStatus != null) applyReadOnlyFieldStyle(autoMaStatus);
@@ -355,6 +382,293 @@ public class WorkOrderActivity extends AppCompatActivity {
         }
 
         applyAttachmentMode();
+    }
+
+    /**
+     * Ẩn/hiện 1 block trong GridLayout. GridLayout không thu gọn view GONE nên set GONE
+     * cho cả container LẪN các view con để đảm bảo không hiển thị (dù có thể còn ô trống).
+     */
+    private void setBlockVisible(LinearLayout container, boolean visible) {
+        if (container == null) return;
+        if (visible) {
+            container.setVisibility(View.VISIBLE);
+        } else {
+            // GridLayout không thu gọn view GONE (để lại ô trống) -> gỡ hẳn khỏi layout.
+            // applyDivisionFormRules chỉ chạy 1 lần (sau khi biết Add/Edit) nên không cần thêm lại.
+            if (container.getParent() instanceof android.view.ViewGroup) {
+                ((android.view.ViewGroup) container.getParent()).removeView(container);
+            }
+        }
+    }
+
+    // =========================================================================
+    // FE: tab Vật tư + Assignee + hành vi Loại WO = Other (giống web)
+    // =========================================================================
+    private void setupFeExtras() {
+        if (layoutWoTabs != null) layoutWoTabs.setVisibility(View.VISIBLE);
+        if (btnTabInfo != null) btnTabInfo.setOnClickListener(v -> selectWoTab(true));
+        if (btnTabMaterial != null) btnTabMaterial.setOnClickListener(v -> selectWoTab(false));
+        if (btnAddMaterial != null) btnAddMaterial.setOnClickListener(v -> addMaterialRow(null, "0"));
+
+        // Đổi UI khi Loại WO thay đổi (Other <-> BM/PM/CM).
+        if (autoLoaiHinh != null) {
+            autoLoaiHinh.setOnItemClickListener((p, vv, pos, id) -> applyWoTypeUi());
+            autoLoaiHinh.addTextChangedListener(new android.text.TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+                @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+                @Override public void afterTextChanged(android.text.Editable s) { applyWoTypeUi(); }
+            });
+        }
+
+        loadMaterialList();
+        addMaterialRow(null, "0"); // dòng vật tư đầu tiên
+        applyWoTypeUi();
+    }
+
+    private void selectWoTab(boolean info) {
+        if (viewFlipper != null) viewFlipper.setDisplayedChild(info ? 0 : 1);
+        if (btnTabInfo instanceof TextView) {
+            btnTabInfo.setBackgroundResource(info ? R.drawable.bg_tab_active : R.drawable.bg_tab_inactive);
+            ((TextView) btnTabInfo).setTextColor(info ? Color.WHITE : Color.BLACK);
+        }
+        if (btnTabMaterial instanceof TextView) {
+            btnTabMaterial.setBackgroundResource(!info ? R.drawable.bg_tab_active : R.drawable.bg_tab_inactive);
+            ((TextView) btnTabMaterial).setTextColor(!info ? Color.WHITE : Color.BLACK);
+        }
+    }
+
+    /** Loại WO = Other: ẩn Máy, hiện Assignee, ẩn tab Vật tư (chuyển về tab Info). */
+    private void applyWoTypeUi() {
+        boolean isOther = "Other".equalsIgnoreCase(
+                autoLoaiHinh != null ? autoLoaiHinh.getText().toString().trim() : "");
+        if (layoutMachine != null) layoutMachine.setVisibility(isOther ? View.GONE : View.VISIBLE);
+        if (layoutAssignee != null) layoutAssignee.setVisibility(isOther ? View.VISIBLE : View.GONE);
+        if (btnTabMaterial != null) btnTabMaterial.setVisibility(isOther ? View.GONE : View.VISIBLE);
+        if (isOther) selectWoTab(true);
+    }
+
+    private void loadMaterialList() {
+        final String serverDynamic = getServerDynamicUrl();
+        new Thread(() -> {
+            try {
+                // Giống hệt web getMaterialDataList(): Condition chỉ có Schema_WMS + where.
+                JSONObject cond = new JSONObject();
+                cond.put("Schema_WMS", schemaWms);
+                cond.put("where", "1=1");
+                HttpClient.APIReturn rs = HttpClient.callDynamics(
+                        this, serverDynamic, "mes_mms", "MMS_GET_LIST_MATERIALS_225", cond);
+                final List<String> labels = new ArrayList<>();
+                final Map<String, String> map = new HashMap<>();
+                final Map<String, Double> stockMap = new HashMap<>();
+                if (rs != null && rs.code == 200 && rs.data != null) {
+                    java.util.Set<String> seen = new java.util.HashSet<>();
+                    for (JSONObject m : rs.data) {
+                        if (m == null) continue;
+                        String id = m.optString("Item_Id").trim();
+                        String name = m.optString("Item_Name").trim();
+                        int deleted = m.optInt("Deleted", 0);
+                        if (id.isEmpty() || seen.contains(id) || deleted != 0) continue;
+                        seen.add(id);
+                        String label = id + " - " + name;
+                        labels.add(label);
+                        map.put(label, id);
+                        stockMap.put(label, m.optDouble("Item_Total_Quantity", 0));
+                    }
+                }
+                runOnUiThread(() -> {
+                    materialLabels.clear(); materialLabels.addAll(labels);
+                    materialLabelToId.clear(); materialLabelToId.putAll(map);
+                    materialLabelToStock.clear(); materialLabelToStock.putAll(stockMap);
+                    for (MaterialRow r : materialRows) {
+                        if (r.material != null) setupMaterialDropdown(r.material);
+                    }
+                });
+            } catch (Exception e) {
+                ColorConsole.e(TAG, "loadMaterialList error: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    /**
+     * Gắn dropdown cho ô vật tư. Không dùng setupDropdownNew vì hàm đó set dropDownWidth theo
+     * getWidth() (bằng 0 lúc section Vật tư đang GONE trong ViewFlipper) -> dropdown rộng 0px.
+     */
+    private void setupMaterialDropdown(AutoCompleteTextView view) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line, new ArrayList<>(materialLabels));
+        view.setAdapter(adapter);
+        view.setThreshold(0);
+        view.setDropDownWidth((int) (getResources().getDisplayMetrics().widthPixels * 0.6));
+        view.setOnClickListener(v -> view.showDropDown());
+        view.setOnTouchListener((v, e) -> {
+            if (e.getAction() == android.view.MotionEvent.ACTION_UP) view.showDropDown();
+            return false;
+        });
+        view.setOnFocusChangeListener((v, hasFocus) -> { if (hasFocus) view.showDropDown(); });
+    }
+
+    private void addMaterialRow(String preLabel, String preQty) {
+        if (layoutMaterialRows == null) return;
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        rowLp.setMargins(0, dp(4), 0, dp(4));
+        row.setLayoutParams(rowLp);
+
+        // Ô vật tư: RelativeLayout (nền + mũi tên) bọc AutoCompleteTextView -> giống dropdown các ô khác.
+        RelativeLayout matWrap = new RelativeLayout(this);
+        LinearLayout.LayoutParams matLp = new LinearLayout.LayoutParams(0, dp(44), 2.4f);
+        matLp.setMarginEnd(dp(6));
+        matWrap.setLayoutParams(matLp);
+        matWrap.setBackgroundResource(R.drawable.bg_input_field);
+
+        AutoCompleteTextView mat = new AutoCompleteTextView(this);
+        RelativeLayout.LayoutParams matInnerLp = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+        mat.setLayoutParams(matInnerLp);
+        mat.setBackgroundColor(Color.TRANSPARENT);
+        mat.setPadding(dp(10), 0, dp(28), 0);
+        mat.setHint(i18n("Select an item"));
+        mat.setTextSize(13);
+        mat.setSingleLine(true);
+        // Luôn gắn adapter + listener mở dropdown (kể cả khi list vật tư đang tải, sẽ refresh sau).
+        setupMaterialDropdown(mat);
+        if (preLabel != null && !preLabel.isEmpty()) mat.setText(preLabel, false);
+
+        ImageView matArrow = new ImageView(this);
+        RelativeLayout.LayoutParams arrowLp = new RelativeLayout.LayoutParams(dp(18), dp(18));
+        arrowLp.addRule(RelativeLayout.ALIGN_PARENT_END);
+        arrowLp.addRule(RelativeLayout.CENTER_VERTICAL);
+        arrowLp.setMarginEnd(dp(8));
+        matArrow.setLayoutParams(arrowLp);
+        matArrow.setImageResource(android.R.drawable.arrow_down_float);
+        matArrow.setOnClickListener(v -> mat.showDropDown());
+        matWrap.addView(mat);
+        matWrap.addView(matArrow);
+
+        // Tồn kho (chỉ đọc) — tự điền theo vật tư đã chọn.
+        EditText stock = new EditText(this);
+        LinearLayout.LayoutParams stockLp = new LinearLayout.LayoutParams(0, dp(44), 1f);
+        stockLp.setMarginEnd(dp(6));
+        stock.setLayoutParams(stockLp);
+        stock.setBackgroundResource(R.drawable.bg_input_field_disabled);
+        stock.setPadding(dp(10), 0, dp(10), 0);
+        stock.setHint(i18n("Stock"));
+        stock.setTextSize(13);
+        stock.setEnabled(false);
+        stock.setFocusable(false);
+        stock.setText("0");
+
+        EditText qty = new EditText(this);
+        LinearLayout.LayoutParams qtyLp = new LinearLayout.LayoutParams(0, dp(44), 1f);
+        qtyLp.setMarginEnd(dp(6));
+        qty.setLayoutParams(qtyLp);
+        qty.setBackgroundResource(R.drawable.bg_input_field);
+        qty.setPadding(dp(10), 0, dp(10), 0);
+        qty.setHint("0");
+        qty.setTextSize(13);
+        qty.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        if (preQty != null) qty.setText(preQty);
+
+        // Khi chọn vật tư -> điền tồn kho tương ứng.
+        mat.setOnItemClickListener((parent, vv, pos, id) -> {
+            String lbl = mat.getText().toString().trim();
+            Double s = materialLabelToStock.get(lbl);
+            stock.setText(String.valueOf(s == null ? 0 : s.longValue()));
+        });
+
+        ImageView btnRemove = new ImageView(this);
+        LinearLayout.LayoutParams rmLp = new LinearLayout.LayoutParams(dp(64), dp(28));
+        btnRemove.setLayoutParams(rmLp);
+        btnRemove.setImageResource(R.drawable.close_24);
+        btnRemove.setScaleType(ImageView.ScaleType.CENTER);
+        btnRemove.setPadding(dp(3), dp(3), dp(3), dp(3));
+
+        final MaterialRow holder = new MaterialRow();
+        holder.material = mat; holder.stock = stock; holder.qty = qty; holder.row = row;
+        btnRemove.setOnClickListener(v -> {
+            layoutMaterialRows.removeView(row);
+            materialRows.remove(holder);
+            if (materialRows.isEmpty()) addMaterialRow(null, "0"); // luôn còn ít nhất 1 dòng
+        });
+
+        row.addView(matWrap); row.addView(stock); row.addView(qty); row.addView(btnRemove);
+        layoutMaterialRows.addView(row);
+        materialRows.add(holder);
+    }
+
+    /** Thu thập vật tư -> JSON [{idx, materialId, quantity}] (giống web getMaterialsFromUI). */
+    private String collectMaterialsJson() {
+        org.json.JSONArray arr = new org.json.JSONArray();
+        int idx = 0;
+        for (MaterialRow r : materialRows) {
+            String label = r.material.getText().toString().trim();
+            String qtyStr = r.qty.getText().toString().trim();
+            double q;
+            try { q = qtyStr.isEmpty() ? 0 : Double.parseDouble(qtyStr); } catch (Exception e) { q = 0; }
+            String id = materialLabelToId.get(label);
+            if (id == null || id.isEmpty()) {
+                id = label.contains(" - ") ? label.split(" - ")[0].trim() : label;
+            }
+            if ((id == null || id.isEmpty()) && q <= 0) continue; // bỏ dòng trống
+            try {
+                JSONObject o = new JSONObject();
+                o.put("idx", idx++);
+                o.put("materialId", id == null ? "" : id);
+                o.put("quantity", q);
+                arr.put(o);
+            } catch (Exception ignored) {}
+        }
+        return arr.toString();
+    }
+
+    /** Kiểm tra vật tư giống web: chọn mã + SL>0 + SL<=tồn kho. Trả về true nếu hợp lệ. */
+    private boolean validateMaterials() {
+        for (MaterialRow r : materialRows) {
+            String label = r.material.getText().toString().trim();
+            String qtyStr = r.qty.getText().toString().trim();
+            double q;
+            try { q = qtyStr.isEmpty() ? 0 : Double.parseDouble(qtyStr); } catch (Exception e) { q = 0; }
+            boolean hasId = !label.isEmpty();
+
+            // Dòng trống hoàn toàn -> bỏ qua (giống getMaterialsFromUI).
+            if (!hasId && q <= 0) continue;
+
+            // Nhập số lượng nhưng chưa chọn vật tư.
+            if (!hasId) {
+                Toast.makeText(this, i18n("Please select a material after entering quantity"), Toast.LENGTH_LONG).show();
+                return false;
+            }
+
+            String id = materialLabelToId.get(label);
+            if (id == null || id.isEmpty()) id = label.contains(" - ") ? label.split(" - ")[0].trim() : label;
+
+            // Đã chọn vật tư nhưng số lượng <= 0.
+            if (q <= 0) {
+                Toast.makeText(this, i18n("Material") + " [" + id + "] " + i18n("must have quantity > 0"),
+                        Toast.LENGTH_LONG).show();
+                return false;
+            }
+
+            // Số lượng vượt tồn kho.
+            Double mapStock = materialLabelToStock.get(label);
+            double stock = (mapStock != null) ? mapStock : 0;
+            if (q > stock) {
+                Toast.makeText(this,
+                        i18n("Requested quantity") + " (" + fmtNum(q) + ") "
+                                + i18n("exceeds stock") + " (" + fmtNum(stock) + ")",
+                        Toast.LENGTH_LONG).show();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Bỏ .0 thừa khi hiển thị số lượng/tồn kho. */
+    private String fmtNum(double d) {
+        return (d == Math.floor(d)) ? String.valueOf((long) d) : String.valueOf(d);
     }
 
     /**
@@ -632,6 +946,24 @@ public class WorkOrderActivity extends AppCompatActivity {
         if (tvLabelDocMa != null) tvLabelDocMa.setText(i18n("Tài liệu MA"));
         TextView tvLabelDocFe = findViewById(R.id.tv_label_doc_fe);
         if (tvLabelDocFe != null) tvLabelDocFe.setText(i18n("Tài liệu FE"));
+
+        // Các view chỉ dành cho FE (tab Vật tư, Assignee) — dịch đa ngôn ngữ.
+        TextView tvTabInfo = findViewById(R.id.btn_tab_info);
+        if (tvTabInfo != null) tvTabInfo.setText("1. " + i18n("Information"));
+        TextView tvTabMaterial = findViewById(R.id.btn_tab_material);
+        if (tvTabMaterial != null) tvTabMaterial.setText("2. " + i18n("Materials"));
+        TextView tvBtnAddMaterial = findViewById(R.id.btn_add_material);
+        if (tvBtnAddMaterial != null) tvBtnAddMaterial.setText("+ " + i18n("Add material"));
+        TextView tvMaterialHeaderName = findViewById(R.id.tv_material_header_name);
+        if (tvMaterialHeaderName != null) tvMaterialHeaderName.setText(i18n("Materials"));
+        TextView tvMaterialHeaderStock = findViewById(R.id.tv_material_header_stock);
+        if (tvMaterialHeaderStock != null) tvMaterialHeaderStock.setText(i18n("Stock"));
+        TextView tvMaterialHeaderQty = findViewById(R.id.tv_material_header_qty);
+        if (tvMaterialHeaderQty != null) tvMaterialHeaderQty.setText(i18n("Quantity"));
+        TextView tvMaterialHeaderFunc = findViewById(R.id.tv_material_header_func);
+        if (tvMaterialHeaderFunc != null) tvMaterialHeaderFunc.setText(i18n("Function"));
+        TextView tvLabelAssignee = findViewById(R.id.tv_label_assignee);
+        if (tvLabelAssignee != null) tvLabelAssignee.setText(i18n("Assignee"));
     }
 
     private void loadInitialData() {
@@ -676,6 +1008,8 @@ public class WorkOrderActivity extends AppCompatActivity {
                             list.add(userName + " - " + fullName);
                         }
                         setupDropdownNew(autoRequester, list);
+                        // Assignee (FE, Loại WO = Other) dùng chung danh sách user.
+                        if (autoAssignee != null) setupDropdownNew(autoAssignee, list);
                     }
                     try {
                         PreferenceHandler pref = new PreferenceHandler(this);
@@ -915,15 +1249,31 @@ public class WorkOrderActivity extends AppCompatActivity {
         String maStatusStr = autoMaStatus.getText().toString().trim(); //trạng thái MA báo
         String currentLockStatus = getCurrentLockStatus();
 
+        // FE + Loại WO = Other: không cần Máy, thay bằng Assignee.
+        final boolean isOther = isFeUser && "Other".equalsIgnoreCase(loaiHinh);
+        String assigneeRaw = (isFeUser && autoAssignee != null) ? autoAssignee.getText().toString().trim() : "";
+        final String assigneeId = assigneeRaw.contains(" - ") ? assigneeRaw.split(" - ")[0].trim() : assigneeRaw;
+
         //TODO: validate
-        if (machineRaw.isEmpty() || requesterRaw.isEmpty() || woCode.isEmpty()) {
+        if (requesterRaw.isEmpty() || woCode.isEmpty()) {
             Toast.makeText(this, i18n("Please enter Machine and Requester"), Toast.LENGTH_SHORT).show();
             return;
-
+        }
+        if (!isOther && machineRaw.isEmpty()) {
+            Toast.makeText(this, i18n("Please enter Machine and Requester"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (isOther && assigneeId.isEmpty()) {
+            Toast.makeText(this, i18n("Assignee") + " " + i18n("is required"), Toast.LENGTH_SHORT).show();
+            return;
         }
         // Giống web: Thời gian phát sinh chỉ bắt buộc với MA.
         if (!isFeUser && requestDate.isEmpty()) {
             Toast.makeText(this, i18n("Time arises is required"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // FE (không phải Other): đã nhập số lượng thì phải chọn vật tư.
+        if (isFeUser && !isOther && !validateMaterials()) {
             return;
         }
         if(!validateRequiredFields()){
@@ -940,7 +1290,8 @@ public class WorkOrderActivity extends AppCompatActivity {
         int statusVal = (isOverdue && maReport == 0) ? 5 : maReport;
 
        //TODO: Tách lấy ID từ chuỗi "ID - Name"
-        final String machineId = machineRaw.contains(" - ") ? machineRaw.split(" - ")[0] : machineRaw;
+        final String machineId = isOther ? "OTHER"
+                : (machineRaw.contains(" - ") ? machineRaw.split(" - ")[0] : machineRaw);
         final String requesterUsername = requesterRaw.contains(" - ") ? requesterRaw.split(" - ")[0].trim() : requesterRaw;
         ColorConsole.d(TAG, "ID người yêu cầu: " + requesterUsername);
 
@@ -982,10 +1333,10 @@ public class WorkOrderActivity extends AppCompatActivity {
         new Thread(() -> {
             try{
                 // Chặn tạo WO thứ 2 khi máy đang có WO chưa hoàn thành
-                // (giống web checkActiveWorkOrderForMachine). BM luôn có máy nên luôn kiểm tra.
+                // (giống web checkActiveWorkOrderForMachine). Bỏ qua với Loại WO = Other (không gắn máy).
                 String activeWhere = "mt.MACHINE_ID = '" + machineId + "' AND mt.DELETED = 0 "
                         + "AND NVL(mt.STATUS,0) <> 6 AND NVL(tp.Status_1, 0) NOT IN (1, 6)";
-                HttpClient.APIReturn resActive = HttpClient.getAllWorkOrder(
+                HttpClient.APIReturn resActive = isOther ? null : HttpClient.getAllWorkOrder(
                         this, serverUrl, schemaMms, schemaCore, activeWhere, 0, 1);
                 if (resActive != null && resActive.code == 200
                         && resActive.data != null && !resActive.data.isEmpty()) {
@@ -1012,8 +1363,10 @@ public class WorkOrderActivity extends AppCompatActivity {
 //                woData.put("REQUEST_DATE", formatToTimestamp(requestDate));
                 woData.put("REQUEST_DATE", convertToServerFormat(requestDate));
                 woData.put("DEADLINE", "");
-                woData.put("ASSIGNEE", escapeSql(requesterUsername));
-                woData.put("MATERIAL_JSON", escapeSql("[]"));
+                // Other -> assignee được chọn; ngược lại giữ người yêu cầu.
+                woData.put("ASSIGNEE", escapeSql(isOther ? assigneeId : requesterUsername));
+                // FE (không phải Other) gửi danh sách vật tư thật; còn lại rỗng.
+                woData.put("MATERIAL_JSON", escapeSql((isFeUser && !isOther) ? collectMaterialsJson() : "[]"));
                 woData.put("PHYSICAL_GROUP_NAME", escapeSql(process));
                 woData.put("PASSED_DATE", escapeSql(passedDateVal));
                 woData.put("STATUS", statusVal);
@@ -1024,6 +1377,10 @@ public class WorkOrderActivity extends AppCompatActivity {
                 woData.put("CREATE_BY", escapeSql(loginUserName));
 
                 woData.put("DELETED", 0);
+                // Bắt buộc gửi 2 field này (giống web) để template INSERT không bị thiếu cột
+                // -> tránh dấu phẩy thừa gây ORA-01747. Màn Thêm mặc định: có khai báo daily (1), lý do NULL.
+                woData.put("IS_DAILY_REPORT", 1);
+                woData.put("DAILY_REPORT_REASON", "NULL");
                 ColorConsole.i(TAG, "Add WO data: " + woData.toString());
 
                 HttpClient.APIReturn resWo = HttpClient.addMtWorkOrder(this, serverUrl, woData);
@@ -1117,9 +1474,15 @@ public class WorkOrderActivity extends AppCompatActivity {
                 if (maintainerIdForTask.isEmpty()) {
                     maintainerIdForTask = createByRealId;
                 }
+                // Other: người phụ trách task = Assignee đã chọn (không lấy PIC theo máy).
+                if (isOther && !assigneeId.isEmpty()) {
+                    maintainerIdForTask = assigneeId;
+                }
                 // Task cũng quá hạn nếu thời gian phát sinh < hôm nay (giống web).
                 int taskStatus = isOverdue ? 5 : 0;
-                JSONObject taskData = prepareTaskData(machineId, woCode, reason, maintainerIdForTask, taskStatus);
+                // Task_Type theo Loại WO (giống web): PM=2, CM=3, BM=4, Other=5.
+                int taskType = getWoTypeInt(loaiHinh) + 1;
+                JSONObject taskData = prepareTaskData(machineId, woCode, reason, maintainerIdForTask, taskStatus, taskType);
                 HttpClient.APIReturn resTask = HttpClient.addMtTask(this, serverUrl, taskData);
 
                 if(resTask == null || resTask.code != 200){
@@ -1370,6 +1733,10 @@ public class WorkOrderActivity extends AppCompatActivity {
     }
 
     private JSONObject prepareTaskData(String machineId, String woCode, String reason, String maintainerId, int taskStatus) throws Exception {
+        return prepareTaskData(machineId, woCode, reason, maintainerId, taskStatus, 4);
+    }
+
+    private JSONObject prepareTaskData(String machineId, String woCode, String reason, String maintainerId, int taskStatus, int taskType) throws Exception {
         JSONObject taskData = new JSONObject();
         String dateSuffix = new SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(new Date());
         String taskId = "TASK_" + dateSuffix + "_" + (new Random().nextInt(9000) + 1000);
@@ -1379,7 +1746,7 @@ public class WorkOrderActivity extends AppCompatActivity {
 
         taskData.put("Schema_MMS", schemaMms);
         taskData.put("taskId", escapeSql(taskId));
-        taskData.put("taskType", "4");
+        taskData.put("taskType", String.valueOf(taskType));
         taskData.put("machineId", escapeSql(machineId));
         taskData.put("status", String.valueOf(taskStatus));
         taskData.put("dsa", "TO_TIMESTAMP('" + dsaTime + "', 'YYYY-MM-DD HH24:MI:SS')");
@@ -1450,12 +1817,19 @@ public class WorkOrderActivity extends AppCompatActivity {
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
             Date selectedDate = sdf.parse(selectedDateStr);
-            Date now = new Date();
 
-            long diffInMillis = now.getTime() - selectedDate.getTime();
-            long diffInDays = diffInMillis / (24 * 60 * 60 * 1000);
+            // Tính theo NGÀY LỊCH (bỏ giờ) để khớp với số hiển thị ở danh sách.
+            Calendar c1 = Calendar.getInstance();
+            c1.setTime(selectedDate);
+            c1.set(Calendar.HOUR_OF_DAY, 0); c1.set(Calendar.MINUTE, 0);
+            c1.set(Calendar.SECOND, 0); c1.set(Calendar.MILLISECOND, 0);
 
-            if(diffInDays < 0) diffInDays = 0;
+            Calendar c2 = Calendar.getInstance();
+            c2.set(Calendar.HOUR_OF_DAY, 0); c2.set(Calendar.MINUTE, 0);
+            c2.set(Calendar.SECOND, 0); c2.set(Calendar.MILLISECOND, 0);
+
+            long diffInDays = Math.round((c2.getTimeInMillis() - c1.getTimeInMillis()) / (24.0 * 60 * 60 * 1000));
+            if (diffInDays < 0) diffInDays = 0;
 
             edtPassedDate.setText(String.valueOf(diffInDays));
 
@@ -1719,8 +2093,14 @@ public class WorkOrderActivity extends AppCompatActivity {
                 edtDeadline.setText(formatDateForUI(deadline));
             }
 
-            // PASSED DATE
-            edtPassedDate.setText(safeGet(data, "Passed_Date"));
+            // PASSED DATE: tính số ngày đã trải qua từ Thời gian phát sinh tới hiện tại
+            // (giống màn Thêm). Nếu không parse được thì fallback lấy giá trị đã lưu.
+            String reqDateForPassed = edtRequestDate.getText().toString().trim();
+            if (!reqDateForPassed.isEmpty()) {
+                updatePassedDays(reqDateForPassed);
+            } else {
+                edtPassedDate.setText(safeGet(data, "Passed_Date"));
+            }
 
             // REQUESTER
             String requester = safeGet(data, "REQUEST_USER");

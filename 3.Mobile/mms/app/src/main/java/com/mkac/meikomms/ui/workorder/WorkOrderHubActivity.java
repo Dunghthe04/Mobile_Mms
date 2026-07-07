@@ -200,6 +200,7 @@ public class WorkOrderHubActivity extends AppCompatActivity {
         }
 
         if (isFeUser(userObj)) {
+            handler.setString("wo_user_division", "FE"); // Lưu cờ để WorkOrderActivity dùng chuẩn.
             applyEnterWorkOrderDataState(btnEnterWorkOrderData, true);
             return; // Nếu đã là FE thì mở khóa luôn, kết thúc hàm tại đây.
         }
@@ -244,6 +245,8 @@ public class WorkOrderHubActivity extends AppCompatActivity {
             }
 
             boolean finalAllowed = isFeDivision;
+            // Lưu cờ bộ phận (xác định qua API getUserInfo) để WorkOrderActivity nhận diện FE/MA chuẩn.
+            handler.setString("wo_user_division", isFeDivision ? "FE" : "MA");
             runOnUiThread(() -> applyEnterWorkOrderDataState(btnEnterWorkOrderData, finalAllowed));
         });
     }

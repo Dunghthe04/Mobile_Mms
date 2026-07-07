@@ -1566,7 +1566,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
 
     private boolean canEdit(JSONObject item) {
         if (item == null) return false;
-        if (isDoneStatus(item)) return false;
+        // WO đã thực hiện hoặc đã hủy -> không cho Sửa (giống web).
+        if (isDoneStatus(item) || isCanceledStatus(item)) return false;
 
         if (isCurrentUserFE()) return true;
 
@@ -1578,7 +1579,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
 
     private boolean canDelete(JSONObject item) {
         if (item == null) return false;
-        if (isDoneStatus(item)) return false;
+        // WO đã thực hiện hoặc đã hủy -> không cho Hủy (giống web).
+        if (isDoneStatus(item) || isCanceledStatus(item)) return false;
 
         if (isCurrentUserFE()) return true;
 
@@ -1618,6 +1620,10 @@ public class ListWorkOrderActivity extends AppCompatActivity {
 
     private boolean isDoneStatus(JSONObject item) {
         return "DA_THUC_HIEN".equals(getStatusType(item));
+    }
+
+    private boolean isCanceledStatus(JSONObject item) {
+        return "DA_HUY".equals(getStatusType(item));
     }
 
     private String getCreatorUserId(JSONObject item) {
