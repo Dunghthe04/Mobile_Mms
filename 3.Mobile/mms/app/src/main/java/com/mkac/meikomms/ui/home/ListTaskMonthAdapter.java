@@ -261,8 +261,10 @@ public class ListTaskMonthAdapter extends RecyclerView.Adapter<ListTaskMonthAdap
             Calendar currentCal = Calendar.getInstance(timeZone);
             long currentTime = currentCal.getTimeInMillis() / 1000;
 
-            // So sánh
-            boolean result = unixTimestamp > currentTime;
+            // So sánh theo NGÀY giờ VN (Task_Date_Unix lưu 00:00 UTC = 07:00 VN),
+            // tránh task hôm nay bị coi là "tương lai" trong khoảng 00:00-07:00
+            long offset = 7 * 3600;
+            boolean result = Math.floorDiv(unixTimestamp + offset, 86400L) > Math.floorDiv(currentTime + offset, 86400L);
 
             // Để debug (tùy chọn)
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
