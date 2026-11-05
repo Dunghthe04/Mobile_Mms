@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.mkac.meikomms.R;
 import com.mkac.meikomms.common.ConfigManager;
@@ -41,11 +42,19 @@ public class MaintenanceTabFragment extends Fragment {
     private FragmentMaintenanceTabBinding binding;
     private MaintenancePlanAdapter adapter;
     private final List<MaintenancePlan> planList = new ArrayList<>();
-    private final List<MaintenancePlan> fullPlanList = new ArrayList<>();
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private int currentStatusPosition = 0;
     private String currentDateFilter = "";
     private String currentGroupFilter = "";
+
+    // Phân trang: mỗi lần tải PAGE_SIZE dòng, cuộn gần cuối thì tải tiếp
+    private static final int PAGE_SIZE = 50;
+    private static final int LOAD_MORE_THRESHOLD = 10;
+    private int nextOffset = 0;
+    private boolean hasMore = true;
+    private boolean isLoadingPage = false;
+    private int requestToken = 0;
+    private final java.util.Set<String> seenTaskIds = new java.util.HashSet<>();
 
     private String serverUrl = "";
     private String schemaCore = "";
@@ -131,7 +140,6 @@ public class MaintenanceTabFragment extends Fragment {
     public void reloadDataForMachineId(String machineId) {
         this.machineId = machineId == null ? "" : machineId.trim();
         planList.clear();
-        fullPlanList.clear();
 
         if (adapter != null) {
             adapter.notifyDataSetChanged();
@@ -163,9 +171,11 @@ public class MaintenanceTabFragment extends Fragment {
     }
 
     public void reloadData() {
-        if (!isAdded() || binding == null) return;
+        loadPage(true);
+    }
 
-        binding.swipeRefreshMaintenance.setRefreshing(true);
+    /** WHERE gửi server: gồm cả lọc trạng thái + ngày (lọc phía server để phân trang không bị thiếu dòng). */
+    private String buildWhere() {
         long[] range = resolveRange();
 
         StringBuilder whereBuilder = new StringBuilder();
@@ -208,6 +218,28 @@ public class MaintenanceTabFragment extends Fragment {
         whereBuilder.append("AND (mt.TASK_TYPE != '0' OR (iss.ISSUE_STATUS IS NOT NULL AND iss.ISSUE_STATUS != '3')) ")
                 .append("AND mt.STATUS != 4 AND mt.TASK_TYPE = 1");
 
+        // Lọc trạng thái (trước đây lọc ở client: mặc định hiện Chưa hoàn thành 0, Quá hạn 5, Checksheet NG 3)
+        switch (currentStatusPosition) {
+            case 1: whereBuilder.append(" AND mt.STATUS = 0"); break;
+            case 2: whereBuilder.append(" AND mt.STATUS = 5"); break;
+            case 3: whereBuilder.append(" AND mt.STATUS = 3"); break;
+            default: whereBuilder.append(" AND mt.STATUS IN (0, 5, 3)"); break;
+        }
+
+        // Lọc ngày: cả ngày (theo múi giờ máy) của currentDateFilter dạng yyyy-MM-dd
+        if (!currentDateFilter.isEmpty()) {
+            try {
+                SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                f.setTimeZone(TimeZone.getDefault());
+                Date d = f.parse(currentDateFilter);
+                if (d != null) {
+                    long dayStart = d.getTime() / 1000L;
+                    whereBuilder.append(" AND mt.Task_Date_Unix BETWEEN ").append(dayStart)
+                            .append(" AND ").append(dayStart + 86399L);
+                }
+            } catch (Exception ignored) { }
+        }
+
         if (this.machineId != null && !this.machineId.trim().isEmpty()) {
             String cleanMachineId = this.machineId;
             if (cleanMachineId.contains(" - ")) {
@@ -218,30 +250,47 @@ public class MaintenanceTabFragment extends Fragment {
                     .append("OR LOWER(m.Machine_Name) LIKE LOWER('%").append(escapedMachine).append("%'))");
         }
 
-        android.content.Context appContext = requireContext().getApplicationContext();
+        return whereBuilder.toString();
+    }
+
+    /** Tải 1 trang (reset=true: từ đầu, thay danh sách; false: trang kế tiếp, nối vào cuối). */
+    private void loadPage(boolean reset) {
+        if (!isAdded() || binding == null) return;
+        if (!reset && (isLoadingPage || !hasMore)) return;
+
+        final int token;
+        if (reset) {
+            token = ++requestToken; // bỏ kết quả của các request cũ còn đang chạy
+            nextOffset = 0;
+            hasMore = true;
+            seenTaskIds.clear();
+            binding.swipeRefreshMaintenance.setRefreshing(true);
+        } else {
+            token = requestToken;
+        }
+        isLoadingPage = true;
+
+        final String where = buildWhere();
+        final int offset = nextOffset;
+        final android.content.Context appContext = requireContext().getApplicationContext();
 
         executorService.execute(() -> {
             String mappedGroupForApi = mapGroupToId(currentGroupFilter);
             HttpClient.APIReturn rs = HttpClient.getMaintainTaskList(
-                    appContext, serverUrl, schemaMms, schemaCore, whereBuilder.toString(), 10000, 0, mappedGroupForApi
+                    appContext, serverUrl, schemaMms, schemaCore, where, PAGE_SIZE, offset, mappedGroupForApi
             );
 
-            List<MaintenancePlan> newList = new ArrayList<>();
+            List<MaintenancePlan> pageList = new ArrayList<>();
             String errorMsg = null;
+            int rawCount = 0;
 
             if (rs != null && rs.code == 200 && rs.data != null) {
-                if (!rs.data.isEmpty()) {
-                    Log.e("DEBUG_MAINT_ROW", "First row JSON keys/values: " + rs.data.get(0).toString());
-                }
-                List<String> seenTaskIds = new ArrayList<>();
+                rawCount = rs.data.size();
                 for (JSONObject row : rs.data) {
                     MaintenancePlan plan = parsePlan(row);
-
-                    if (plan.taskId != null && !plan.taskId.isEmpty()) {
-                        if (!seenTaskIds.contains(plan.taskId)) {
-                            seenTaskIds.add(plan.taskId);
-                            newList.add(plan);
-                        }
+                    if (plan.taskId != null && !plan.taskId.isEmpty() && !seenTaskIds.contains(plan.taskId)) {
+                        seenTaskIds.add(plan.taskId);
+                        pageList.add(plan);
                     }
                 }
             } else {
@@ -251,27 +300,31 @@ public class MaintenanceTabFragment extends Fragment {
             if (!isAdded() || binding == null) return;
 
             final String finalError = errorMsg;
+            final int finalRawCount = rawCount;
             requireActivity().runOnUiThread(() -> {
+                if (binding == null || token != requestToken) return;
                 binding.swipeRefreshMaintenance.setRefreshing(false);
+                isLoadingPage = false;
 
                 if (finalError != null) {
                     Toast.makeText(getContext(), finalError, Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                planList.clear();
-                planList.addAll(newList);
+                // Trang đầy -> có thể còn trang sau
+                nextOffset += finalRawCount;
+                hasMore = finalRawCount >= PAGE_SIZE;
 
-                fullPlanList.clear();
-                fullPlanList.addAll(newList);
-
-                applyCombinedFilters();
+                if (reset) planList.clear();
+                int insertAt = planList.size();
+                planList.addAll(pageList);
 
                 if (adapter != null) {
-                    adapter.notifyDataSetChanged();
+                    if (reset) adapter.notifyDataSetChanged();
+                    else adapter.notifyItemRangeInserted(insertAt, pageList.size());
                 }
 
-                if (newList.isEmpty() && !machineId.isEmpty()) {
+                if (planList.isEmpty() && !machineId.isEmpty()) {
                     Toast.makeText(getContext(), i18n("No maintenance plan found for machine") + ": " + machineId, Toast.LENGTH_SHORT).show();
                 }
             });
@@ -299,6 +352,18 @@ public class MaintenanceTabFragment extends Fragment {
             enterWorkOrderLauncher.launch(intent);
         });
         binding.rvMaintenanceTasks.setAdapter(adapter);
+        // Cuộn gần cuối danh sách -> tải trang kế tiếp
+        binding.rvMaintenanceTasks.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                if (dy <= 0) return;
+                LinearLayoutManager lm = (LinearLayoutManager) rv.getLayoutManager();
+                if (lm == null) return;
+                if (lm.findLastVisibleItemPosition() >= planList.size() - LOAD_MORE_THRESHOLD) {
+                    loadPage(false);
+                }
+            }
+        });
     }
 
     private MaintenancePlan parsePlan(JSONObject row) {
@@ -376,7 +441,7 @@ public class MaintenanceTabFragment extends Fragment {
 
     public void filterByStatus(int position) {
         this.currentStatusPosition = position;
-        applyCombinedFilters();
+        reloadData();
     }
 
     public void filterByGroup(String group) {
@@ -400,69 +465,6 @@ public class MaintenanceTabFragment extends Fragment {
 
     public void filterByDate(String dateStr) {
         this.currentDateFilter = dateStr == null ? "" : dateStr.trim();
-        applyCombinedFilters(); // Hàm chạy logic lọc song song cả Ngày UNIX + Trạng thái
-    }
-
-    private void applyCombinedFilters() {
-        if (binding == null || adapter == null) return;
-
-        List<MaintenancePlan> filteredList = new ArrayList<>();
-
-        for (MaintenancePlan plan : fullPlanList) {
-            if (plan == null) continue;
-
-            // 1. Kiểm tra bộ lọc ngày
-            boolean matchesDate = true;
-            if (!currentDateFilter.isEmpty()) {
-                String planDateStr = formatUnixToCompare(plan.taskDateUnix);
-                matchesDate = currentDateFilter.equals(planDateStr);
-            }
-
-            // 2. Kiểm tra bộ lọc trạng thái
-            boolean matchesStatus = false;
-
-            if (currentStatusPosition == 0) {
-                // matchesStatus = true;
-                // Mặc định hiển thị "Chưa hoàn thành" (0), "Quá hạn" (5) và "Checksheet NG" (3)
-                if ("0".equals(plan.status) || "5".equals(plan.status) || "3".equals(plan.status)) {
-                    matchesStatus = true;
-                }
-            } else {
-                String targetStatusCode = "";
-                switch (currentStatusPosition) {
-                    case 1: targetStatusCode = "0"; break; // Chưa hoàn thành
-                    case 2: targetStatusCode = "5"; break; // Quá hạn
-
-//                    case 2: targetStatusCode = "1"; break; // Phê duyệt
-//                    case 3: targetStatusCode = "2"; break; // Checksheet OK
-                    case 3: targetStatusCode = "3"; break; // Checksheet NG
-//                    case 5: targetStatusCode = "5"; break; // Quá hạn
-
-                }
-                matchesStatus = targetStatusCode.equalsIgnoreCase(plan.status);
-            }
-
-            if (matchesDate && matchesStatus) {
-                filteredList.add(plan);
-            }
-        }
-
-        planList.clear();
-        planList.addAll(filteredList);
-        if (adapter != null) {
-            adapter.notifyDataSetChanged();
-        }
-    }
-
-    private static String formatUnixToCompare(long unixValue) {
-        if (unixValue <= 0) return "";
-        try {
-            long normalized = unixValue > 9999999999L ? unixValue : unixValue * 1000L;
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            formatter.setTimeZone(TimeZone.getDefault());
-            return formatter.format(new Date(normalized));
-        } catch (Exception e) {
-            return "";
-        }
+        reloadData(); // lọc ngày + trạng thái ở server rồi tải lại từ trang đầu
     }
 }

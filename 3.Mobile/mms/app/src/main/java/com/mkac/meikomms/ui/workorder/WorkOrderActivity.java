@@ -44,6 +44,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.mkac.meikomms.R;
 import com.mkac.meikomms.common.ColorConsole;
 import com.mkac.meikomms.common.ConfigManager;
+import com.mkac.meikomms.common.Barcode;
 import com.mkac.meikomms.common.HttpClient;
 import com.mkac.meikomms.common.JsonConverter;
 import com.mkac.meikomms.common.LanguageAPIUtils;
@@ -114,22 +115,21 @@ public class WorkOrderActivity extends AppCompatActivity {
     private final List<String> docMaFiles = new ArrayList<>();
     private final List<String> docFeFiles = new ArrayList<>();
 
-    // Phase 3/4 (FE): tab Vật tư + Assignee + hành vi Loại WO = Other
-    private android.widget.ViewFlipper viewFlipper;
-    private View layoutWoTabs, btnTabInfo, btnTabMaterial, layoutMachine, layoutAssignee, btnAddMaterial;
+    // FE: Assignee + hành vi Loại WO = Other. Vật tư không khai báo ở đây nữa: FE khai báo
+    // ở màn nhập kết quả (WorkOrderEntryDialogHelper), giống web.
+    private View layoutMachine, layoutAssignee;
     private AutoCompleteTextView autoAssignee;
-    private LinearLayout layoutMaterialRows;
-    private final List<String> materialLabels = new ArrayList<>();          // "Id - Name"
-    private final Map<String, String> materialLabelToId = new HashMap<>();  // label -> Item_Id
-    private final Map<String, Double> materialLabelToStock = new HashMap<>(); // label -> tồn kho
-    private final List<MaterialRow> materialRows = new ArrayList<>();
 
-    private static class MaterialRow {
-        AutoCompleteTextView material;
-        EditText stock;
-        EditText qty;
-        View row;
-    }
+    // Quét QR chọn máy (Barcode trả mã quét qua extra "barcode")
+    private View btnScanMachine;
+    private final androidx.activity.result.ActivityResultLauncher<Intent> scanMachineLauncher =
+            registerForActivityResult(
+                    new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                            onMachineScanned(result.getData().getStringExtra("barcode"));
+                        }
+                    });
 
     public static void start(Context context) {
         context.startActivity(new Intent(context, WorkOrderActivity.class));
@@ -283,15 +283,9 @@ public class WorkOrderActivity extends AppCompatActivity {
         layoutDocMaList = findViewById(R.id.layout_doc_ma_list);
         layoutDocFeBlock = findViewById(R.id.layout_doc_fe_block);
         layoutDocFeList = findViewById(R.id.layout_doc_fe_list);
-        viewFlipper = findViewById(R.id.view_flipper);
-        layoutWoTabs = findViewById(R.id.layout_wo_tabs);
-        btnTabInfo = findViewById(R.id.btn_tab_info);
-        btnTabMaterial = findViewById(R.id.btn_tab_material);
         layoutMachine = findViewById(R.id.layout_machine);
         layoutAssignee = findViewById(R.id.layout_assignee);
         autoAssignee = findViewById(R.id.auto_assignee);
-        layoutMaterialRows = findViewById(R.id.layout_material_rows);
-        btnAddMaterial = findViewById(R.id.btn_add_material);
         View btnChooseFile = findViewById(R.id.btn_choose_file);
         View btnUploadFile = findViewById(R.id.btn_upload_file);
         if (btnChooseFile != null) btnChooseFile.setOnClickListener(v -> openFilePicker());
@@ -326,17 +320,17 @@ public class WorkOrderActivity extends AppCompatActivity {
                 String mId = safeGet(machine, "Machine_Id").trim();
                 String mName = safeGet(machine, "Machine_Name").trim();
                 if ((mId + " - " + mName).equals(selectedItem)) {
-                    //String processStep = machine.optString("MAIN_PROCESS_STEP", machine.optString("Main_Process_Step"));
-                    String processStep = safeGet(machine, "MAIN_PROCESS_STEP");
-                    if (processStep.isEmpty()) {
-                        processStep = safeGet(machine, "Main_Process_Step");
-                    }
-                    edtProcess.setText(processStep);
-                    selectedProcessId = safeGet(machine, "Main_Process_Step_Code");
+                    applyMachineSelection(machine);
                     break;
                 }
             }
         });
+
+        // Quét QR máy: điền ô Máy + Công đoạn thay vì chọn thủ công (QR chứa mã máy, giống màn Enter data).
+        btnScanMachine = findViewById(R.id.btn_scan_machine);
+        if (btnScanMachine != null) {
+            btnScanMachine.setOnClickListener(v -> scanMachineLauncher.launch(new Intent(this, Barcode.class)));
+        }
 
         setupDropdown(autoMaStatus, getLocalizedMaStatusOptions());
         applyReadOnlyFieldStyle(edtWoCode);
@@ -401,15 +395,52 @@ public class WorkOrderActivity extends AppCompatActivity {
         }
     }
 
+    /** Điền Công đoạn theo máy được chọn (từ dropdown hoặc quét QR). */
+    private void applyMachineSelection(JSONObject machine) {
+        String processStep = safeGet(machine, "MAIN_PROCESS_STEP");
+        if (processStep.isEmpty()) {
+            processStep = safeGet(machine, "Main_Process_Step");
+        }
+        edtProcess.setText(processStep);
+        selectedProcessId = safeGet(machine, "Main_Process_Step_Code");
+    }
+
+    /** Kết quả quét QR máy: tìm máy theo mã rồi điền vào form. */
+    private void onMachineScanned(String rawCode) {
+        String code = rawCode == null ? "" : rawCode.trim();
+        if (code.isEmpty()) {
+            Toast.makeText(this, i18n("Unable to read machine code"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (machineDataList == null || machineDataList.isEmpty()) {
+            Toast.makeText(this, i18n("Machine list is not loaded yet"), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // QR có thể chứa "MãMáy" hoặc "MãMáy - TênMáy"
+        String idPart = code.contains(" - ") ? code.split(" - ")[0].trim() : code;
+        JSONObject found = null;
+        for (JSONObject machine : machineDataList) {
+            String mId = safeGet(machine, "Machine_Id").trim();
+            String mName = safeGet(machine, "Machine_Name").trim();
+            if (mId.equalsIgnoreCase(idPart) || (mId + " - " + mName).equalsIgnoreCase(code)) {
+                found = machine;
+                break;
+            }
+        }
+        if (found == null) {
+            Toast.makeText(this, i18n("Machine not found") + ": " + code, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        autoMachine.setText(safeGet(found, "Machine_Id").trim() + " - " + safeGet(found, "Machine_Name").trim(), false);
+        applyMachineSelection(found);
+    }
+
     // =========================================================================
-    // FE: tab Vật tư + Assignee + hành vi Loại WO = Other (giống web)
+    // FE: Assignee + hành vi Loại WO = Other (giống web)
     // =========================================================================
     private void setupFeExtras() {
-        if (layoutWoTabs != null) layoutWoTabs.setVisibility(View.VISIBLE);
-        if (btnTabInfo != null) btnTabInfo.setOnClickListener(v -> selectWoTab(true));
-        if (btnTabMaterial != null) btnTabMaterial.setOnClickListener(v -> selectWoTab(false));
-        if (btnAddMaterial != null) btnAddMaterial.setOnClickListener(v -> addMaterialRow(null, "0"));
-
         // Đổi UI khi Loại WO thay đổi (Other <-> BM/PM/CM).
         if (autoLoaiHinh != null) {
             autoLoaiHinh.setOnItemClickListener((p, vv, pos, id) -> applyWoTypeUi());
@@ -419,256 +450,15 @@ public class WorkOrderActivity extends AppCompatActivity {
                 @Override public void afterTextChanged(android.text.Editable s) { applyWoTypeUi(); }
             });
         }
-
-        loadMaterialList();
-        addMaterialRow(null, "0"); // dòng vật tư đầu tiên
         applyWoTypeUi();
     }
 
-    private void selectWoTab(boolean info) {
-        if (viewFlipper != null) viewFlipper.setDisplayedChild(info ? 0 : 1);
-        if (btnTabInfo instanceof TextView) {
-            btnTabInfo.setBackgroundResource(info ? R.drawable.bg_tab_active : R.drawable.bg_tab_inactive);
-            ((TextView) btnTabInfo).setTextColor(info ? Color.WHITE : Color.BLACK);
-        }
-        if (btnTabMaterial instanceof TextView) {
-            btnTabMaterial.setBackgroundResource(!info ? R.drawable.bg_tab_active : R.drawable.bg_tab_inactive);
-            ((TextView) btnTabMaterial).setTextColor(!info ? Color.WHITE : Color.BLACK);
-        }
-    }
-
-    /** Loại WO = Other: ẩn Máy, hiện Assignee, ẩn tab Vật tư (chuyển về tab Info). */
+    /** Loại WO = Other: ẩn Máy, hiện Assignee. */
     private void applyWoTypeUi() {
         boolean isOther = "Other".equalsIgnoreCase(
                 autoLoaiHinh != null ? autoLoaiHinh.getText().toString().trim() : "");
         if (layoutMachine != null) layoutMachine.setVisibility(isOther ? View.GONE : View.VISIBLE);
         if (layoutAssignee != null) layoutAssignee.setVisibility(isOther ? View.VISIBLE : View.GONE);
-        if (btnTabMaterial != null) btnTabMaterial.setVisibility(isOther ? View.GONE : View.VISIBLE);
-        if (isOther) selectWoTab(true);
-    }
-
-    private void loadMaterialList() {
-        final String serverDynamic = getServerDynamicUrl();
-        new Thread(() -> {
-            try {
-                // Giống hệt web getMaterialDataList(): Condition chỉ có Schema_WMS + where.
-                JSONObject cond = new JSONObject();
-                cond.put("Schema_WMS", schemaWms);
-                cond.put("where", "1=1");
-                HttpClient.APIReturn rs = HttpClient.callDynamics(
-                        this, serverDynamic, "mes_mms", "MMS_GET_LIST_MATERIALS_225", cond);
-                final List<String> labels = new ArrayList<>();
-                final Map<String, String> map = new HashMap<>();
-                final Map<String, Double> stockMap = new HashMap<>();
-                if (rs != null && rs.code == 200 && rs.data != null) {
-                    java.util.Set<String> seen = new java.util.HashSet<>();
-                    for (JSONObject m : rs.data) {
-                        if (m == null) continue;
-                        String id = m.optString("Item_Id").trim();
-                        String name = m.optString("Item_Name").trim();
-                        int deleted = m.optInt("Deleted", 0);
-                        if (id.isEmpty() || seen.contains(id) || deleted != 0) continue;
-                        seen.add(id);
-                        String label = id + " - " + name;
-                        labels.add(label);
-                        map.put(label, id);
-                        stockMap.put(label, m.optDouble("Item_Total_Quantity", 0));
-                    }
-                }
-                runOnUiThread(() -> {
-                    materialLabels.clear(); materialLabels.addAll(labels);
-                    materialLabelToId.clear(); materialLabelToId.putAll(map);
-                    materialLabelToStock.clear(); materialLabelToStock.putAll(stockMap);
-                    for (MaterialRow r : materialRows) {
-                        if (r.material != null) setupMaterialDropdown(r.material);
-                    }
-                });
-            } catch (Exception e) {
-                ColorConsole.e(TAG, "loadMaterialList error: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    /**
-     * Gắn dropdown cho ô vật tư. Không dùng setupDropdownNew vì hàm đó set dropDownWidth theo
-     * getWidth() (bằng 0 lúc section Vật tư đang GONE trong ViewFlipper) -> dropdown rộng 0px.
-     */
-    private void setupMaterialDropdown(AutoCompleteTextView view) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_dropdown_item_1line, new ArrayList<>(materialLabels));
-        view.setAdapter(adapter);
-        view.setThreshold(0);
-        view.setDropDownWidth((int) (getResources().getDisplayMetrics().widthPixels * 0.6));
-        view.setOnClickListener(v -> view.showDropDown());
-        view.setOnTouchListener((v, e) -> {
-            if (e.getAction() == android.view.MotionEvent.ACTION_UP) view.showDropDown();
-            return false;
-        });
-        view.setOnFocusChangeListener((v, hasFocus) -> { if (hasFocus) view.showDropDown(); });
-    }
-
-    private void addMaterialRow(String preLabel, String preQty) {
-        if (layoutMaterialRows == null) return;
-        LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        rowLp.setMargins(0, dp(4), 0, dp(4));
-        row.setLayoutParams(rowLp);
-
-        // Ô vật tư: RelativeLayout (nền + mũi tên) bọc AutoCompleteTextView -> giống dropdown các ô khác.
-        RelativeLayout matWrap = new RelativeLayout(this);
-        LinearLayout.LayoutParams matLp = new LinearLayout.LayoutParams(0, dp(44), 2.4f);
-        matLp.setMarginEnd(dp(6));
-        matWrap.setLayoutParams(matLp);
-        matWrap.setBackgroundResource(R.drawable.bg_input_field);
-
-        AutoCompleteTextView mat = new AutoCompleteTextView(this);
-        RelativeLayout.LayoutParams matInnerLp = new RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
-        mat.setLayoutParams(matInnerLp);
-        mat.setBackgroundColor(Color.TRANSPARENT);
-        mat.setPadding(dp(10), 0, dp(28), 0);
-        mat.setHint(i18n("Select an item"));
-        mat.setTextSize(13);
-        mat.setSingleLine(true);
-        // Luôn gắn adapter + listener mở dropdown (kể cả khi list vật tư đang tải, sẽ refresh sau).
-        setupMaterialDropdown(mat);
-        if (preLabel != null && !preLabel.isEmpty()) mat.setText(preLabel, false);
-
-        ImageView matArrow = new ImageView(this);
-        RelativeLayout.LayoutParams arrowLp = new RelativeLayout.LayoutParams(dp(18), dp(18));
-        arrowLp.addRule(RelativeLayout.ALIGN_PARENT_END);
-        arrowLp.addRule(RelativeLayout.CENTER_VERTICAL);
-        arrowLp.setMarginEnd(dp(8));
-        matArrow.setLayoutParams(arrowLp);
-        matArrow.setImageResource(android.R.drawable.arrow_down_float);
-        matArrow.setOnClickListener(v -> mat.showDropDown());
-        matWrap.addView(mat);
-        matWrap.addView(matArrow);
-
-        // Tồn kho (chỉ đọc) — tự điền theo vật tư đã chọn.
-        EditText stock = new EditText(this);
-        LinearLayout.LayoutParams stockLp = new LinearLayout.LayoutParams(0, dp(44), 1f);
-        stockLp.setMarginEnd(dp(6));
-        stock.setLayoutParams(stockLp);
-        stock.setBackgroundResource(R.drawable.bg_input_field_disabled);
-        stock.setPadding(dp(10), 0, dp(10), 0);
-        stock.setHint(i18n("Stock"));
-        stock.setTextSize(13);
-        stock.setEnabled(false);
-        stock.setFocusable(false);
-        stock.setText("0");
-
-        EditText qty = new EditText(this);
-        LinearLayout.LayoutParams qtyLp = new LinearLayout.LayoutParams(0, dp(44), 1f);
-        qtyLp.setMarginEnd(dp(6));
-        qty.setLayoutParams(qtyLp);
-        qty.setBackgroundResource(R.drawable.bg_input_field);
-        qty.setPadding(dp(10), 0, dp(10), 0);
-        qty.setHint("0");
-        qty.setTextSize(13);
-        qty.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        if (preQty != null) qty.setText(preQty);
-
-        // Khi chọn vật tư -> điền tồn kho tương ứng.
-        mat.setOnItemClickListener((parent, vv, pos, id) -> {
-            String lbl = mat.getText().toString().trim();
-            Double s = materialLabelToStock.get(lbl);
-            stock.setText(String.valueOf(s == null ? 0 : s.longValue()));
-        });
-
-        ImageView btnRemove = new ImageView(this);
-        LinearLayout.LayoutParams rmLp = new LinearLayout.LayoutParams(dp(64), dp(28));
-        btnRemove.setLayoutParams(rmLp);
-        btnRemove.setImageResource(R.drawable.close_24);
-        btnRemove.setScaleType(ImageView.ScaleType.CENTER);
-        btnRemove.setPadding(dp(3), dp(3), dp(3), dp(3));
-
-        final MaterialRow holder = new MaterialRow();
-        holder.material = mat; holder.stock = stock; holder.qty = qty; holder.row = row;
-        btnRemove.setOnClickListener(v -> {
-            layoutMaterialRows.removeView(row);
-            materialRows.remove(holder);
-            if (materialRows.isEmpty()) addMaterialRow(null, "0"); // luôn còn ít nhất 1 dòng
-        });
-
-        row.addView(matWrap); row.addView(stock); row.addView(qty); row.addView(btnRemove);
-        layoutMaterialRows.addView(row);
-        materialRows.add(holder);
-    }
-
-    /** Thu thập vật tư -> JSON [{idx, materialId, quantity}] (giống web getMaterialsFromUI). */
-    private String collectMaterialsJson() {
-        org.json.JSONArray arr = new org.json.JSONArray();
-        int idx = 0;
-        for (MaterialRow r : materialRows) {
-            String label = r.material.getText().toString().trim();
-            String qtyStr = r.qty.getText().toString().trim();
-            double q;
-            try { q = qtyStr.isEmpty() ? 0 : Double.parseDouble(qtyStr); } catch (Exception e) { q = 0; }
-            String id = materialLabelToId.get(label);
-            if (id == null || id.isEmpty()) {
-                id = label.contains(" - ") ? label.split(" - ")[0].trim() : label;
-            }
-            if ((id == null || id.isEmpty()) && q <= 0) continue; // bỏ dòng trống
-            try {
-                JSONObject o = new JSONObject();
-                o.put("idx", idx++);
-                o.put("materialId", id == null ? "" : id);
-                o.put("quantity", q);
-                arr.put(o);
-            } catch (Exception ignored) {}
-        }
-        return arr.toString();
-    }
-
-    /** Kiểm tra vật tư giống web: chọn mã + SL>0 + SL<=tồn kho. Trả về true nếu hợp lệ. */
-    private boolean validateMaterials() {
-        for (MaterialRow r : materialRows) {
-            String label = r.material.getText().toString().trim();
-            String qtyStr = r.qty.getText().toString().trim();
-            double q;
-            try { q = qtyStr.isEmpty() ? 0 : Double.parseDouble(qtyStr); } catch (Exception e) { q = 0; }
-            boolean hasId = !label.isEmpty();
-
-            // Dòng trống hoàn toàn -> bỏ qua (giống getMaterialsFromUI).
-            if (!hasId && q <= 0) continue;
-
-            // Nhập số lượng nhưng chưa chọn vật tư.
-            if (!hasId) {
-                Toast.makeText(this, i18n("Please select a material after entering quantity"), Toast.LENGTH_LONG).show();
-                return false;
-            }
-
-            String id = materialLabelToId.get(label);
-            if (id == null || id.isEmpty()) id = label.contains(" - ") ? label.split(" - ")[0].trim() : label;
-
-            // Đã chọn vật tư nhưng số lượng <= 0.
-            if (q <= 0) {
-                Toast.makeText(this, i18n("Material") + " [" + id + "] " + i18n("must have quantity > 0"),
-                        Toast.LENGTH_LONG).show();
-                return false;
-            }
-
-            // Số lượng vượt tồn kho.
-            Double mapStock = materialLabelToStock.get(label);
-            double stock = (mapStock != null) ? mapStock : 0;
-            if (q > stock) {
-                Toast.makeText(this,
-                        i18n("Requested quantity") + " (" + fmtNum(q) + ") "
-                                + i18n("exceeds stock") + " (" + fmtNum(stock) + ")",
-                        Toast.LENGTH_LONG).show();
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /** Bỏ .0 thừa khi hiển thị số lượng/tồn kho. */
-    private String fmtNum(double d) {
-        return (d == Math.floor(d)) ? String.valueOf((long) d) : String.valueOf(d);
     }
 
     /**
@@ -947,21 +737,7 @@ public class WorkOrderActivity extends AppCompatActivity {
         TextView tvLabelDocFe = findViewById(R.id.tv_label_doc_fe);
         if (tvLabelDocFe != null) tvLabelDocFe.setText(i18n("Tài liệu FE"));
 
-        // Các view chỉ dành cho FE (tab Vật tư, Assignee) — dịch đa ngôn ngữ.
-        TextView tvTabInfo = findViewById(R.id.btn_tab_info);
-        if (tvTabInfo != null) tvTabInfo.setText("1. " + i18n("Information"));
-        TextView tvTabMaterial = findViewById(R.id.btn_tab_material);
-        if (tvTabMaterial != null) tvTabMaterial.setText("2. " + i18n("Materials"));
-        TextView tvBtnAddMaterial = findViewById(R.id.btn_add_material);
-        if (tvBtnAddMaterial != null) tvBtnAddMaterial.setText("+ " + i18n("Add material"));
-        TextView tvMaterialHeaderName = findViewById(R.id.tv_material_header_name);
-        if (tvMaterialHeaderName != null) tvMaterialHeaderName.setText(i18n("Materials"));
-        TextView tvMaterialHeaderStock = findViewById(R.id.tv_material_header_stock);
-        if (tvMaterialHeaderStock != null) tvMaterialHeaderStock.setText(i18n("Stock"));
-        TextView tvMaterialHeaderQty = findViewById(R.id.tv_material_header_qty);
-        if (tvMaterialHeaderQty != null) tvMaterialHeaderQty.setText(i18n("Quantity"));
-        TextView tvMaterialHeaderFunc = findViewById(R.id.tv_material_header_func);
-        if (tvMaterialHeaderFunc != null) tvMaterialHeaderFunc.setText(i18n("Function"));
+        // View chỉ dành cho FE (Assignee) — dịch đa ngôn ngữ.
         TextView tvLabelAssignee = findViewById(R.id.tv_label_assignee);
         if (tvLabelAssignee != null) tvLabelAssignee.setText(i18n("Assignee"));
     }
@@ -1272,10 +1048,6 @@ public class WorkOrderActivity extends AppCompatActivity {
             Toast.makeText(this, i18n("Time arises is required"), Toast.LENGTH_SHORT).show();
             return;
         }
-        // FE (không phải Other): đã nhập số lượng thì phải chọn vật tư.
-        if (isFeUser && !isOther && !validateMaterials()) {
-            return;
-        }
         if(!validateRequiredFields()){
             return;
         }
@@ -1365,8 +1137,8 @@ public class WorkOrderActivity extends AppCompatActivity {
                 woData.put("DEADLINE", "");
                 // Other -> assignee được chọn; ngược lại giữ người yêu cầu.
                 woData.put("ASSIGNEE", escapeSql(isOther ? assigneeId : requesterUsername));
-                // FE (không phải Other) gửi danh sách vật tư thật; còn lại rỗng.
-                woData.put("MATERIAL_JSON", escapeSql((isFeUser && !isOther) ? collectMaterialsJson() : "[]"));
+                // Vật tư do FE khai báo sau ở màn nhập kết quả -> khi tạo WO luôn để rỗng.
+                woData.put("MATERIAL_JSON", "[]");
                 woData.put("PHYSICAL_GROUP_NAME", escapeSql(process));
                 woData.put("PASSED_DATE", escapeSql(passedDateVal));
                 woData.put("STATUS", statusVal);
@@ -2250,6 +2022,7 @@ public class WorkOrderActivity extends AppCompatActivity {
     private void setupEditModeUI() {
         applyReadOnlyFieldStyle(edtWoCode);
         applyReadOnlyFieldStyle(autoMachine);
+        if (btnScanMachine != null) btnScanMachine.setVisibility(View.GONE);
         applyReadOnlyFieldStyle(autoRequester);
         applyReadOnlyFieldStyle(autoMaStatus);
         applyReadOnlyFieldStyle(edtProcess);

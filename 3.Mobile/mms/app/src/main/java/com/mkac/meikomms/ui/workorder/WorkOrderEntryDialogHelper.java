@@ -634,6 +634,28 @@ public final class WorkOrderEntryDialogHelper {
             btnCreateWmsRequest.setAlpha(0.35f);
         }
 
+        // FE khai báo vật tư ở màn nhập kết quả (popup tạo WO không còn tab vật tư), giống web.
+        // WO đã hoàn thành / đã tạo yêu cầu xuất kho / tài khoản MA -> chỉ xem bảng vật tư bên dưới.
+        final MaterialEditor materialEditor;
+        if (currentUserIsFe && !isAlreadyCreated && !isWoCompleted(workOrder)) {
+            LinearLayout materialEditorHost = dialogView.findViewById(R.id.layout_material_editor);
+            materialEditorHost.setVisibility(View.VISIBLE);
+            materialEditor = new MaterialEditor(context, materialEditorHost);
+
+            String savedMaterials = safeGet(workOrder, "Material_Info");
+            if (savedMaterials.isEmpty()) savedMaterials = safeGet(workOrder, "MATERIAL_INFO");
+            JSONArray savedMaterialArray = null;
+            try {
+                if (!savedMaterials.isEmpty()) savedMaterialArray = new JSONArray(savedMaterials);
+            } catch (Exception ignored) {}
+            materialEditor.fill(savedMaterialArray);
+            materialEditor.loadMaterialList(
+                    cfgOrDefault(context, "server_dynamic_url", "http://192.86.0.225:9101/api/dynamics"),
+                    cfgOrDefault(context, "schema_wms", "MES_WMS_MKHC"));
+        } else {
+            materialEditor = null;
+        }
+
         btnCreateWmsRequest.setOnClickListener(v -> {
             PreferenceHandler prefHandler = new PreferenceHandler(context);
             JSONObject userProfile = prefHandler.getJsonObject("user");
@@ -675,6 +697,16 @@ public final class WorkOrderEntryDialogHelper {
             List<JSONObject> addMaterialsList = new ArrayList<>();
             String materialInfoStr = safeGet(workOrder, "Material_Info");
             if (materialInfoStr.isEmpty()) materialInfoStr = safeGet(workOrder, "MATERIAL_INFO");
+
+            // Vật tư lấy từ bảng FE đang khai báo; lưu MATERIAL_INFO trước khi tạo phiếu để khớp với WO.
+            final boolean saveMaterialFirst = materialEditor != null && !materialEditor.isLocked();
+            JSONArray editorMaterials = null;
+            if (saveMaterialFirst) {
+                editorMaterials = materialEditor.collectValidated();
+                if (editorMaterials == null) return;
+                materialInfoStr = editorMaterials.toString();
+            }
+            final JSONArray finalEditorMaterials = editorMaterials;
 
             if (materialInfoStr.isEmpty() || "[]".equals(materialInfoStr)) {
                 Toast.makeText(context, i18n("No materials available to create warehouse request"), Toast.LENGTH_SHORT).show();
@@ -758,7 +790,26 @@ public final class WorkOrderEntryDialogHelper {
             if (tempTaskId.isEmpty()) tempTaskId = safeGet(workOrder, "Task_ID");
             final String finalTaskIdVal = tempTaskId.isEmpty() ? woCodeVal : tempTaskId;
 
+            final String matDynamicUrl = cfgOrDefault(context, "server_dynamic_url", "http://192.86.0.225:9101/api/dynamics");
+            final String matSchemaMms = cfgOrDefault(context, "schema_mms", "MES_MMS_MKHC");
+
             new Thread(() -> {
+                if (saveMaterialFirst) {
+                    HttpClient.APIReturn rsMat = HttpClient.updateWoMaterialInfo(
+                            context, matDynamicUrl, matSchemaMms, finalWoCodeVal, finalEditorMaterials);
+                    if (rsMat == null || rsMat.code != 200) {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            wmsProgress.dismiss();
+                            String errMat = (rsMat != null) ? rsMat.message : i18n("No response from server");
+                            Toast.makeText(context, i18n("Save failed") + ": " + errMat, Toast.LENGTH_LONG).show();
+                            btnCreateWmsRequest.setEnabled(true);
+                            btnCreateWmsRequest.setClickable(true);
+                            btnCreateWmsRequest.setAlpha(1.0f);
+                        });
+                        return;
+                    }
+                }
+
                 HttpClient.APIReturn result = HttpClient.save_request_material(
                         context, finalRequestDateUnix, "FE", finalRequestNote, finalMaterials,
                         finalServerUrl, finalUsername, finalRequestPurpose, finalMachineId
@@ -790,6 +841,8 @@ public final class WorkOrderEntryDialogHelper {
                         btnCreateWmsRequest.setClickable(false);
                         btnCreateWmsRequest.setAlpha(0.35f);
                         prefHandler.setBoolean("wms_request_created_" + finalWoCodeVal, true);
+                        // Đã có phiếu xuất kho -> khoá bảng vật tư, nút Lưu không ghi vật tư nữa.
+                        if (materialEditor != null) materialEditor.lock();
                     } else {
                         String errMsg = (result != null) ? result.message : i18n("No response from server");
                         Toast.makeText(context, i18n("Error creating warehouse release request") + ": " + errMsg, Toast.LENGTH_LONG).show();
@@ -808,7 +861,11 @@ public final class WorkOrderEntryDialogHelper {
         String materialInfoStr = safeGet(workOrder, "Material_Info");
         if (materialInfoStr.isEmpty()) materialInfoStr = safeGet(workOrder, "MATERIAL_INFO");
 
-        if (materialInfoStr.isEmpty() || "[]".equals(materialInfoStr)) {
+        if (materialEditor != null) {
+            // FE đang khai báo vật tư bằng bảng chỉnh sửa -> ẩn bảng chỉ xem.
+            tableMaterials.setVisibility(View.GONE);
+            tvNoMaterials.setVisibility(View.GONE);
+        } else if (materialInfoStr.isEmpty() || "[]".equals(materialInfoStr)) {
             tableMaterials.setVisibility(View.GONE);
             tvNoMaterials.setVisibility(View.VISIBLE);
         } else {
@@ -1072,6 +1129,69 @@ public final class WorkOrderEntryDialogHelper {
         etStart.setOnClickListener(v -> pickDateTime(context, etStart));
         etEnd.setOnClickListener(v -> pickDateTime(context, etEnd));
 
+        // ===== Luồng mới: FE lưu -> "Chờ MA xác nhận" -> MA xác nhận (giống web) =====
+        final boolean maMode = !currentUserIsFe;
+        final boolean woCompleted = isWoCompleted(workOrder);
+        final boolean fieldsLocked = maMode || woCompleted; // MA / WO đã hoàn thành: các trường FE chỉ xem
+
+        // Trạng thái: FE không tự chọn nữa -> hiện nhãn (Hoàn thành / Chờ MA xác nhận) như web
+        spinnerStatus.setVisibility(View.GONE);
+        TextView tvStatusBadge = dialogView.findViewById(R.id.tv_status_badge);
+        if (woCompleted) {
+            tvStatusBadge.setText(i18n("Completed"));
+            tvStatusBadge.setTextColor(Color.parseColor("#1E40AF"));
+        } else {
+            tvStatusBadge.setText(i18n("Chờ MA xác nhận"));
+            tvStatusBadge.setTextColor(Color.parseColor("#B45309"));
+        }
+
+        if (fieldsLocked) {
+            for (View locked : new View[]{etStart, etEnd, etCurrentStatus, spinnerCause, etCause, etImpact,
+                    etProcessContent, etNote, etDailyReportReason}) {
+                locked.setEnabled(false);
+            }
+            for (int i = 0; i < rgDailyReport.getChildCount(); i++) {
+                rgDailyReport.getChildAt(i).setEnabled(false);
+            }
+        }
+        if (maMode) {
+            btnCreateWmsRequest.setVisibility(View.GONE); // MA không tạo yêu cầu xuất kho
+        }
+
+        // Khối MA xác nhận: MA thấy để nhập; FE chỉ thấy khi MA đã xác nhận
+        final String savedMaConfirm = getCI(workOrder, "MA_CONFIRM");
+        final View layoutMaConfirm = dialogView.findViewById(R.id.layout_ma_confirm);
+        final RadioGroup rgMaConfirm = dialogView.findViewById(R.id.rg_ma_confirm);
+        final RadioGroup rgMa5s3c = dialogView.findViewById(R.id.rg_ma_5s3c);
+        final RadioGroup rgMaOperation = dialogView.findViewById(R.id.rg_ma_operation);
+        final EditText etMaPanelQty = dialogView.findViewById(R.id.et_ma_panel_qty);
+        if (maMode || !savedMaConfirm.isEmpty()) {
+            layoutMaConfirm.setVisibility(View.VISIBLE);
+            if ("Y".equalsIgnoreCase(savedMaConfirm)) rgMaConfirm.check(R.id.rb_ma_confirm_yes);
+            else if ("N".equalsIgnoreCase(savedMaConfirm)) rgMaConfirm.check(R.id.rb_ma_confirm_no);
+            String saved5s3c = getCI(workOrder, "MA_5S3C");
+            if ("OK".equalsIgnoreCase(saved5s3c)) rgMa5s3c.check(R.id.rb_ma_5s3c_ok);
+            else if ("NG".equalsIgnoreCase(saved5s3c)) rgMa5s3c.check(R.id.rb_ma_5s3c_ng);
+            String savedOperation = getCI(workOrder, "MA_OPERATION");
+            if ("OK".equalsIgnoreCase(savedOperation)) rgMaOperation.check(R.id.rb_ma_operation_ok);
+            else if ("NG".equalsIgnoreCase(savedOperation)) rgMaOperation.check(R.id.rb_ma_operation_ng);
+            etMaPanelQty.setText(getCI(workOrder, "MA_TEST_PANEL_QTY"));
+
+            boolean maEditable = maMode && !woCompleted;
+            for (RadioGroup group : new RadioGroup[]{rgMaConfirm, rgMa5s3c, rgMaOperation}) {
+                for (int i = 0; i < group.getChildCount(); i++) group.getChildAt(i).setEnabled(maEditable);
+            }
+            etMaPanelQty.setEnabled(maEditable);
+        }
+
+        // Nút Lưu: MA -> "Xác nhận"; WO đã hoàn thành -> ẩn (chỉ xem)
+        View btnSaveView = dialogView.findViewById(R.id.btn_dialog_save);
+        if (woCompleted) {
+            btnSaveView.setVisibility(View.GONE);
+        } else if (maMode && btnSaveView instanceof TextView) {
+            ((TextView) btnSaveView).setText(i18n("Xác nhận"));
+        }
+
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(dialogView)
                 .create();
@@ -1093,6 +1213,13 @@ public final class WorkOrderEntryDialogHelper {
                 return;
             }
 
+            // Tài khoản MA: không nhập kết quả mà xác nhận (giống web)
+            if (maMode) {
+                submitMaConfirm(context, dialog, workOrder, taskId, listener,
+                        rgMaConfirm, rgMa5s3c, rgMaOperation, etMaPanelQty);
+                return;
+            }
+
             String startTimeSecStr = convertDateTimeToUnix(etStart.getText().toString().trim());
             String endTimeSecStr = convertDateTimeToUnix(etEnd.getText().toString().trim());
             String currentSit = etCurrentStatus.getText().toString().trim();
@@ -1108,10 +1235,8 @@ public final class WorkOrderEntryDialogHelper {
             String impact = etImpact.getText().toString().trim();
             String action = etProcessContent.getText().toString().trim();
             String noteVal = etNote.getText().toString().trim();
-            // Ánh xạ vị trí spinner -> mã trạng thái thực (0/1/5) để không lưu sai "Quá hạn".
-            int statusPos = spinnerStatus.getSelectedItemPosition();
-            int statusVal = (statusPos >= 0 && statusPos < ENTRY_STATUS_CODES.length)
-                    ? ENTRY_STATUS_CODES[statusPos] : 0;
+            // FE nhập kết quả xong -> chuyển sang "Chờ MA xác nhận" (2), giống web; MA xác nhận mới hoàn thành (1).
+            int statusVal = 2;
 
             // Daily report: 0 = No (bắt buộc nhập lý do), 1 = Yes
             int dailyReportFlag = rbDailyReportNo.isChecked() ? 0 : 1;
@@ -1123,6 +1248,14 @@ public final class WorkOrderEntryDialogHelper {
                         Toast.LENGTH_LONG).show();
                 return;
             }
+
+            // FE khai báo vật tư ở đây (nếu chưa tạo phiếu xuất kho): kiểm tra trước, lưu ngay trước khi lưu kết quả.
+            final JSONArray materialsToSave = (materialEditor != null && !materialEditor.isLocked())
+                    ? materialEditor.collectValidated() : null;
+            if (materialEditor != null && !materialEditor.isLocked() && materialsToSave == null) {
+                return;
+            }
+            final String materialWoCode = currentTaskId;
 
             long actualTaskDateUnixVal = 0;
             try { actualTaskDateUnixVal = Long.parseLong(startTimeSecStr); } catch (NumberFormatException e) {}
@@ -1165,15 +1298,37 @@ public final class WorkOrderEntryDialogHelper {
             progressDialog.show();
 
             final String finalServerDynamic = serverDynamic;
+            final String finalSchemaMms = schemaMms;
             new Thread(() -> {
+                if (materialsToSave != null) {
+                    HttpClient.APIReturn rsMat = HttpClient.updateWoMaterialInfo(
+                            context, finalServerDynamic, finalSchemaMms, materialWoCode, materialsToSave);
+                    if (rsMat == null || rsMat.code != 200) {
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            progressDialog.dismiss();
+                            String errMat = (rsMat != null) ? rsMat.message : i18n("No response from server");
+                            Toast.makeText(context, i18n("Save failed") + ": " + errMat, Toast.LENGTH_LONG).show();
+                        });
+                        return;
+                    }
+                }
+
                 HttpClient.APIReturn result = HttpClient.callDynamics(
                         context, finalServerDynamic, "mes_mms", "MES_TASK_UPDATE_WORK_ORDER_OTHER", conditionObj
                 );
+
+                // Báo cho chủ nhiệm / trưởng ca MA biết WO đang chờ xác nhận (backend lấy người nhận từ DB)
+                final boolean mailOk = (result != null && result.code == 200)
+                        ? sendFeSubmitMail(context, workOrder, materialWoCode, currentSit, action, noteVal)
+                        : true;
 
                 new Handler(Looper.getMainLooper()).post(() -> {
                     progressDialog.dismiss();
                     if (result != null && result.code == 200) {
                         Toast.makeText(context, i18n("Data saved successfully"), Toast.LENGTH_SHORT).show();
+                        if (!mailOk) {
+                            Toast.makeText(context, i18n("Lưu thành công nhưng gửi mail thông báo cho MA thất bại"), Toast.LENGTH_LONG).show();
+                        }
                         dialog.dismiss();
                         clearState();
                         if (listener != null) {
@@ -1195,6 +1350,173 @@ public final class WorkOrderEntryDialogHelper {
                     (int) (context.getResources().getDisplayMetrics().widthPixels * 0.92),
                     (int) (context.getResources().getDisplayMetrics().heightPixels * 0.9));
         }
+    }
+
+    /** Lấy giá trị theo key không phân biệt hoa/thường (cột MA_* từ gateway có thể là Ma_Confirm / MA_CONFIRM). */
+    private static String getCI(JSONObject obj, String key) {
+        if (obj == null) return "";
+        java.util.Iterator<String> it = obj.keys();
+        while (it.hasNext()) {
+            String k = it.next();
+            if (k.equalsIgnoreCase(key)) {
+                String v = obj.optString(k, "").trim();
+                return "null".equalsIgnoreCase(v) ? "" : v;
+            }
+        }
+        return "";
+    }
+
+    private static String resolveServerUrl(Context context) {
+        String url = new PreferenceHandler(context).getString("server_url");
+        if (url == null || url.isEmpty()) url = new ConfigManager(context).getProperty("server_url");
+        if (url == null || url.isEmpty()) url = "http://192.86.0.225:9103";
+        return url;
+    }
+
+    /** FE lưu xong -> gửi mail FE_SUBMIT (backend tự lấy chủ nhiệm / trưởng ca MA). Trả về false nếu gửi lỗi. */
+    private static boolean sendFeSubmitMail(Context context, JSONObject wo, String woCode,
+                                            String currentSituation, String actionTaken, String note) {
+        try {
+            PreferenceHandler ph = new PreferenceHandler(context);
+            JSONObject user = ph.getJsonObject("user");
+            String userId = user != null ? user.optString("userId", "").trim() : "";
+            String fullName = user != null ? user.optString("fullName", "").trim() : "";
+            String requestUser = userId.isEmpty() ? fullName : (fullName.isEmpty() ? userId : userId + "-" + fullName);
+
+            String machineId = firstNonEmpty(getCI(wo, "MACHINE_ID"));
+            String machineName = getCI(wo, "MACHINE_NAME");
+            String machineLabel = machineName.isEmpty() ? machineId : machineId + " - " + machineName;
+            String woType;
+            switch (wo.optInt("Wo_Type", wo.optInt("WO_TYPE", 3))) {
+                case 1: woType = "PM"; break;
+                case 2: woType = "CM"; break;
+                case 3: woType = "BM"; break;
+                default: woType = "OTHER"; break;
+            }
+            String processStep = firstNonEmpty(getCI(wo, "MAIN_PROCESS_STEP"), getCI(wo, "PHYSICAL_GROUP_NAME"));
+
+            JSONObject payload = new JSONObject();
+            payload.put("Action", "FE_SUBMIT");
+            payload.put("WoCode", woCode);
+            payload.put("WoType", woType);
+            payload.put("MachineId", machineId);
+            payload.put("MachineLabel", machineLabel);
+            payload.put("ProcessStep", processStep);
+            payload.put("RequestDate", getCI(wo, "REQUEST_DATE"));
+            payload.put("RequestReason", getCI(wo, "REQUEST_REASON"));
+            payload.put("RequestUser", requestUser);
+            payload.put("CreatorEmail", firstNonEmpty(getCI(wo, "CREATOR_EMAIL"), user != null ? user.optString("email", "") : ""));
+            payload.put("DivisionName", "FE");
+            payload.put("IsLock", wo.optInt("Is_Locked", wo.optInt("IS_LOCKED", 0)));
+            payload.put("CreateBy", getCI(wo, "CREATE_BY"));
+            payload.put("CurrentSituation", currentSituation);
+            payload.put("ActionTaken", actionTaken);
+            payload.put("Note", note);
+
+            HttpClient.APIReturn rs = HttpClient.sendWoMailNotification(context, resolveServerUrl(context), payload);
+            return rs != null && rs.code == 200;
+        } catch (Exception e) {
+            android.util.Log.e("WO_MAIL", "sendFeSubmitMail error", e);
+            return false;
+        }
+    }
+
+    private static String firstNonEmpty(String... values) {
+        for (String v : values) if (v != null && !v.trim().isEmpty()) return v.trim();
+        return "";
+    }
+
+    /**
+     * MA xác nhận WO (giống web): Xác nhận=Y + 5S3C=OK + Hoạt động=OK -> hoàn thành (1), ngược lại trả về Chưa thực hiện (0).
+     * Hoàn thành thì tính lại khoá máy qua backend (checkAndResetMachineStatus bên web).
+     */
+    private static void submitMaConfirm(Context context, AlertDialog dialog, JSONObject workOrder, String taskId,
+                                        OnSaveListener listener, RadioGroup rgConfirm, RadioGroup rg5s3c,
+                                        RadioGroup rgOperation, EditText etPanelQty) {
+        if (rgConfirm.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(context, i18n("MA xác nhận") + " " + i18n("is required"), Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (rg5s3c.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(context, "5S3C " + i18n("is required"), Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (rgOperation.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(context, i18n("Hoạt động") + " " + i18n("is required"), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        final String maConfirm = rgConfirm.getCheckedRadioButtonId() == R.id.rb_ma_confirm_yes ? "Y" : "N";
+        final String ma5s3c = rg5s3c.getCheckedRadioButtonId() == R.id.rb_ma_5s3c_ok ? "OK" : "NG";
+        final String maOperation = rgOperation.getCheckedRadioButtonId() == R.id.rb_ma_operation_ok ? "OK" : "NG";
+        final String panelQty = etPanelQty.getText().toString().trim();
+        final int newStatus = ("Y".equals(maConfirm) && "OK".equals(ma5s3c) && "OK".equals(maOperation)) ? 1 : 0;
+
+        String woCode = getCI(workOrder, "WO_CODE");
+        final String finalWoCode = woCode.isEmpty() ? currentTaskId : woCode;
+        final String machineId = getCI(workOrder, "MACHINE_ID");
+        final String confirmBy = new PreferenceHandler(context).getString("Userlogin");
+        final String dynamicUrl = cfgOrDefault(context, "server_dynamic_url", "http://192.86.0.225:9101/api/dynamics");
+        final String schemaMms = cfgOrDefault(context, "schema_mms", "MES_MMS_MKHC");
+        final String schemaCore = cfgOrDefault(context, "schema_core", "MES_CORE_MKHC");
+        final String serverUrl = resolveServerUrl(context);
+
+        ProgressDialog progress = new ProgressDialog(context);
+        progress.setMessage(i18n("Saving..."));
+        progress.setCancelable(false);
+        progress.show();
+
+        new Thread(() -> {
+            HttpClient.APIReturn rs = HttpClient.confirmWorkOrderMa(context, dynamicUrl, schemaMms, schemaCore,
+                    finalWoCode, taskId, maConfirm, ma5s3c, maOperation, panelQty, confirmBy, newStatus);
+
+            new Handler(Looper.getMainLooper()).post(() -> {
+                progress.dismiss();
+                if (rs == null || rs.code != 200) {
+                    String err = (rs != null) ? rs.message : i18n("No response from server");
+                    Toast.makeText(context, i18n("Save failed") + ": " + err, Toast.LENGTH_LONG).show();
+                    return;
+                }
+                if (newStatus == 1) {
+                    Toast.makeText(context, i18n("Xác nhận hoàn thành work order thành công"), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(context, i18n("Đã từ chối nghiệm thu, chuyển trạng thái về Chưa thực hiện"), Toast.LENGTH_LONG).show();
+                }
+                dialog.dismiss();
+                clearState();
+                if (listener != null) listener.onSave(workOrder);
+            });
+
+            // Hoàn thành -> tính lại khoá máy qua backend (xét cả WO lẫn checksheet quá hạn)
+            if (newStatus == 1 && !machineId.isEmpty()) {
+                try {
+                    Thread.sleep(1500);
+                    HttpClient.recomputeMachineLock(context, serverUrl, machineId);
+                } catch (Exception e) {
+                    android.util.Log.e("WO_RECOMPUTE", "recomputeMachineLock error", e);
+                }
+            }
+        }).start();
+    }
+
+    /** Đọc config.properties, rỗng thì dùng giá trị mặc định. */
+    private static String cfgOrDefault(Context context, String key, String defaultValue) {
+        String v = new ConfigManager(context).getProperty(key);
+        return (v == null || v.isEmpty()) ? defaultValue : v;
+    }
+
+    /** WO đã hoàn thành (Status_1 = 1) -> chỉ xem, giống isCompleted bên web. */
+    private static boolean isWoCompleted(JSONObject workOrder) {
+        for (String key : new String[]{"Status_1", "STATUS_1", "STATUS", "Status"}) {
+            String v = safeGet(workOrder, key);
+            if (v.isEmpty()) continue;
+            try {
+                return (int) Double.parseDouble(v) == 1;
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return false;
     }
 
     private static void pickDateTime(Context context, EditText target) {

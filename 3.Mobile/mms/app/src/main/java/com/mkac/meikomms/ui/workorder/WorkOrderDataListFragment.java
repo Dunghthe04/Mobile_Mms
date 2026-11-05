@@ -64,7 +64,8 @@ public class WorkOrderDataListFragment extends Fragment {
     private static final String[] FILTER_STATUS_KEYS = {
             "All",
             "Incomplete",
-            "Overdue"
+            "Overdue",
+            "Chờ MA xác nhận"
             /*,
             "Completed",
             "Canceled"
@@ -431,6 +432,11 @@ public class WorkOrderDataListFragment extends Fragment {
                     status1Display = i18n("Completed"); // đã thực hiện
                     status1BgColor = "#D1FAE5";
                     status1TextColor = "#047857";
+                    break;
+                case "2":
+                    status1Display = i18n("Chờ MA xác nhận"); // FE đã nhập, chờ MA xác nhận
+                    status1BgColor = "#EDE9FE";
+                    status1TextColor = "#6D28D9";
                     break;
                 case "6":
                     status1Display = i18n("Canceled"); // đã hủy
@@ -834,8 +840,8 @@ public class WorkOrderDataListFragment extends Fragment {
             boolean matchesStatus = false;
             switch (currentStatusPosition) {
                 case 0:
-                    // Mặc định "Tất cả" hiển thị Chưa hoàn thành (0) và Quá hạn (5)
-                    if (status1.isEmpty() || "0".equals(status1) || "5".equals(status1)) {
+                    // Mặc định "Tất cả" hiển thị Chưa hoàn thành (0), Quá hạn (5) và Chờ MA xác nhận (2)
+                    if (status1.isEmpty() || "0".equals(status1) || "5".equals(status1) || "2".equals(status1)) {
                         matchesStatus = true;
                     }
                     break;
@@ -846,6 +852,11 @@ public class WorkOrderDataListFragment extends Fragment {
                     break;
                 case 2:
                     if ("5".equals(status1)) {
+                        matchesStatus = true;
+                    }
+                    break;
+                case 3:
+                    if ("2".equals(status1)) {
                         matchesStatus = true;
                     }
                     break;

@@ -229,6 +229,24 @@ public class LanguageAPIUtils
     // ============================================================
     private static final String english =
             "{\n" +
+                    // ── Keys bổ sung: luồng Chờ MA xác nhận / nhóm MA / QR / vật tư ──
+                    "  \"No work orders waiting for confirmation\": \"No work orders waiting for confirmation\",\n" +
+                    "  \"Chờ MA xác nhận\": \"Waiting for MA confirmation\",\n" +
+                    "  \"Nhóm MA\": \"MA Team\",\n" +
+                    "  \"Confirm\": \"Confirm\",\n" +
+                    "  \"Xác nhận\": \"Confirm\",\n" +
+                    "  \"MA xác nhận\": \"MA confirmation\",\n" +
+                    "  \"Xác nhận của MA\": \"MA confirmation\",\n" +
+                    "  \"5S3C\": \"5S3C\",\n" +
+                    "  \"Hoạt động\": \"Operation\",\n" +
+                    "  \"Số panel chạy thử\": \"Test panel quantity\",\n" +
+                    "  \"NG\": \"NG\",\n" +
+                    "  \"Xác nhận hoàn thành work order thành công\": \"Work order completed and confirmed successfully\",\n" +
+                    "  \"Đã từ chối nghiệm thu, chuyển trạng thái về Chưa thực hiện\": \"Acceptance rejected, status returned to Incomplete\",\n" +
+                    "  \"Lưu thành công nhưng gửi mail thông báo cho MA thất bại\": \"Saved successfully but failed to send notification mail to MA\",\n" +
+                    "  \"Machine not found\": \"Machine not found\",\n" +
+                    "  \"Machine list is not loaded yet\": \"Machine list is not loaded yet\",\n" +
+                    "  \"Unable to load all MA teams\": \"Unable to load all MA teams\",\n" +
                     // ── Keys mới bổ sung cho WorkOrderEntryDialog ──────────────
                     "  \"Occurrence Time\": \"Occurrence Time\",\n" +
                     "  \"The photo will be uploaded automatically after you press Add\": \"The photo will be uploaded automatically after you press Add\",\n" +
@@ -520,6 +538,25 @@ public class LanguageAPIUtils
     // ============================================================
     private static final String vietnamese =
             "{\n" +
+                    // ── Keys bổ sung: luồng Chờ MA xác nhận / nhóm MA / QR / vật tư ──
+                    "  \"No work orders waiting for confirmation\": \"Không có Work Order nào đang chờ xác nhận\",\n" +
+                    "  \"Chờ MA xác nhận\": \"Chờ MA xác nhận\",\n" +
+                    "  \"Nhóm MA\": \"Nhóm MA\",\n" +
+                    "  \"All\": \"Tất cả\",\n" +
+                    "  \"Confirm\": \"Xác nhận\",\n" +
+                    "  \"Xác nhận\": \"Xác nhận\",\n" +
+                    "  \"MA xác nhận\": \"MA xác nhận\",\n" +
+                    "  \"Xác nhận của MA\": \"Xác nhận của MA\",\n" +
+                    "  \"5S3C\": \"5S3C\",\n" +
+                    "  \"Hoạt động\": \"Hoạt động\",\n" +
+                    "  \"Số panel chạy thử\": \"Số panel chạy thử\",\n" +
+                    "  \"NG\": \"NG\",\n" +
+                    "  \"Xác nhận hoàn thành work order thành công\": \"Xác nhận hoàn thành work order thành công\",\n" +
+                    "  \"Đã từ chối nghiệm thu, chuyển trạng thái về Chưa thực hiện\": \"Đã từ chối nghiệm thu, chuyển trạng thái về Chưa thực hiện\",\n" +
+                    "  \"Lưu thành công nhưng gửi mail thông báo cho MA thất bại\": \"Lưu thành công nhưng gửi mail thông báo cho MA thất bại\",\n" +
+                    "  \"Machine not found\": \"Không tìm thấy máy\",\n" +
+                    "  \"Machine list is not loaded yet\": \"Danh sách máy chưa tải xong\",\n" +
+                    "  \"Unable to load all MA teams\": \"Không tải được danh sách tất cả nhóm MA\",\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"Thời gian phát sinh\",\n" +
                     "  \"The photo will be uploaded automatically after you press Add\": \"Ảnh sẽ được tự động tải lên sau khi bấm Thêm\",\n" +
@@ -776,6 +813,24 @@ public class LanguageAPIUtils
     // ============================================================
     private static final String japanese =
             "{\n" +
+                    // ── Keys bổ sung: luồng Chờ MA xác nhận / nhóm MA / QR / vật tư ──
+                    "  \"No work orders waiting for confirmation\": \"確認待ちのワークオーダーはありません\",\n" +
+                    "  \"Chờ MA xác nhận\": \"MA確認待ち\",\n" +
+                    "  \"Nhóm MA\": \"MAチーム\",\n" +
+                    "  \"Confirm\": \"確認\",\n" +
+                    "  \"Xác nhận\": \"確認\",\n" +
+                    "  \"MA xác nhận\": \"MA確認\",\n" +
+                    "  \"Xác nhận của MA\": \"MAの確認\",\n" +
+                    "  \"5S3C\": \"5S3C\",\n" +
+                    "  \"Hoạt động\": \"稼働\",\n" +
+                    "  \"Số panel chạy thử\": \"テストパネル数\",\n" +
+                    "  \"NG\": \"NG\",\n" +
+                    "  \"Xác nhận hoàn thành work order thành công\": \"ワークオーダーの完了を確認しました\",\n" +
+                    "  \"Đã từ chối nghiệm thu, chuyển trạng thái về Chưa thực hiện\": \"検収を却下し、ステータスを未完了に戻しました\",\n" +
+                    "  \"Lưu thành công nhưng gửi mail thông báo cho MA thất bại\": \"保存しましたがMAへの通知メール送信に失敗しました\",\n" +
+                    "  \"Machine not found\": \"機械が見つかりません\",\n" +
+                    "  \"Machine list is not loaded yet\": \"機械リストがまだ読み込まれていません\",\n" +
+                    "  \"Unable to load all MA teams\": \"すべてのMAチームを読み込めません\",\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"発生時間\",\n" +
                     "  \"The photo will be uploaded automatically after you press Add\": \"追加ボタンを押すと写真が自動的にアップロードされます\",\n" +
@@ -1033,6 +1088,24 @@ public class LanguageAPIUtils
     // ============================================================
     private static final String chinese =
             "{\n" +
+                    // ── Keys bổ sung: luồng Chờ MA xác nhận / nhóm MA / QR / vật tư ──
+                    "  \"No work orders waiting for confirmation\": \"没有等待确认的工单\",\n" +
+                    "  \"Chờ MA xác nhận\": \"等待MA确认\",\n" +
+                    "  \"Nhóm MA\": \"MA组\",\n" +
+                    "  \"Confirm\": \"确认\",\n" +
+                    "  \"Xác nhận\": \"确认\",\n" +
+                    "  \"MA xác nhận\": \"MA确认\",\n" +
+                    "  \"Xác nhận của MA\": \"MA确认\",\n" +
+                    "  \"5S3C\": \"5S3C\",\n" +
+                    "  \"Hoạt động\": \"运行\",\n" +
+                    "  \"Số panel chạy thử\": \"试跑面板数\",\n" +
+                    "  \"NG\": \"NG\",\n" +
+                    "  \"Xác nhận hoàn thành work order thành công\": \"已确认工单完成\",\n" +
+                    "  \"Đã từ chối nghiệm thu, chuyển trạng thái về Chưa thực hiện\": \"已拒绝验收，状态退回未完成\",\n" +
+                    "  \"Lưu thành công nhưng gửi mail thông báo cho MA thất bại\": \"保存成功，但向MA发送通知邮件失败\",\n" +
+                    "  \"Machine not found\": \"未找到设备\",\n" +
+                    "  \"Machine list is not loaded yet\": \"设备列表尚未加载\",\n" +
+                    "  \"Unable to load all MA teams\": \"无法加载所有MA组\",\n" +
                     // ── Keys mới bổ sung ────────────────────────────────────────
                     "  \"Occurrence Time\": \"发生时间\",\n" +
                     "  \"The photo will be uploaded automatically after you press Add\": \"点击添加后照片将自动上传\",\n" +

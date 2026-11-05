@@ -247,7 +247,8 @@ public class WorkOrderHubActivity extends AppCompatActivity {
             boolean finalAllowed = isFeDivision;
             // Lưu cờ bộ phận (xác định qua API getUserInfo) để WorkOrderActivity nhận diện FE/MA chuẩn.
             handler.setString("wo_user_division", isFeDivision ? "FE" : "MA");
-            runOnUiThread(() -> applyEnterWorkOrderDataState(btnEnterWorkOrderData, finalAllowed));
+            // MA cũng cần vào màn Enter data để xác nhận WO (status 2) -> luôn mở; FE/MA khác nhau ở dialog.
+            runOnUiThread(() -> applyEnterWorkOrderDataState(btnEnterWorkOrderData, true));
         });
     }
 

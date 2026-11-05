@@ -330,6 +330,15 @@
                         android:layout_height="48dp"
                         android:layout_weight="1"
                         android:background="@drawable/border_bg_grey" />
+                    <TextView
+                        android:id="@+id/tv_status_badge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/border_bg_grey"
+                        android:paddingHorizontal="14dp"
+                        android:paddingVertical="8dp"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <!-- Daily Report Declaration -->
@@ -417,6 +426,177 @@
                         android:padding="12dp"
                         android:textColor="@color/black"
                         android:textSize="15sp" />
+                </LinearLayout>
+
+                <!-- Xác nhận của MA (hiện với MA, hoặc khi WO đã có kết quả xác nhận) -->
+                <LinearLayout
+                    android:id="@+id/layout_ma_confirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="8dp"
+                        android:background="#E0E0E0" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:text="Xác nhận của MA"
+                        android:textColor="#00A7B5"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="150dp"
+                            android:layout_height="wrap_content"
+                            android:text="MA xác nhận"
+                            android:textColor="@color/black"
+                            android:textSize="13sp" />
+
+                        <RadioGroup
+                            android:id="@+id/rg_ma_confirm"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
+
+                            <RadioButton
+                                android:id="@+id/rb_ma_confirm_yes"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Yes"
+                                android:textColor="@color/black"
+                                android:textSize="13sp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_ma_confirm_no"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="24dp"
+                                android:text="No"
+                                android:textColor="@color/black"
+                                android:textSize="13sp" />
+                        </RadioGroup>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="150dp"
+                            android:layout_height="wrap_content"
+                            android:text="5S3C"
+                            android:textColor="@color/black"
+                            android:textSize="13sp" />
+
+                        <RadioGroup
+                            android:id="@+id/rg_ma_5s3c"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
+
+                            <RadioButton
+                                android:id="@+id/rb_ma_5s3c_ok"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="OK"
+                                android:textColor="@color/black"
+                                android:textSize="13sp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_ma_5s3c_ng"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="24dp"
+                                android:text="NG"
+                                android:textColor="@color/black"
+                                android:textSize="13sp" />
+                        </RadioGroup>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="150dp"
+                            android:layout_height="wrap_content"
+                            android:text="Hoạt động"
+                            android:textColor="@color/black"
+                            android:textSize="13sp" />
+
+                        <RadioGroup
+                            android:id="@+id/rg_ma_operation"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="horizontal">
+
+                            <RadioButton
+                                android:id="@+id/rb_ma_operation_ok"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="OK"
+                                android:textColor="@color/black"
+                                android:textSize="13sp" />
+
+                            <RadioButton
+                                android:id="@+id/rb_ma_operation_ng"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="24dp"
+                                android:text="NG"
+                                android:textColor="@color/black"
+                                android:textSize="13sp" />
+                        </RadioGroup>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="150dp"
+                            android:layout_height="wrap_content"
+                            android:text="Số panel chạy thử"
+                            android:textColor="@color/black"
+                            android:textSize="13sp" />
+
+                        <EditText
+                            android:id="@+id/et_ma_panel_qty"
+                            android:layout_width="0dp"
+                            android:layout_height="40dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/border_bg_grey"
+                            android:inputType="number"
+                            android:padding="10dp"
+                            android:textColor="@color/black"
+                            android:textSize="13sp" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <!-- Chọn file & Tải lên buttons -->
@@ -681,6 +861,14 @@
                             android:padding="6dp" />
                     </TableRow>
                 </TableLayout>
+
+                <!-- FE khai báo vật tư ở màn nhập kết quả (dựng bằng MaterialEditor) -->
+                <LinearLayout
+                    android:id="@+id/layout_material_editor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone" />
 
                 <!-- No materials fallback -->
                 <TextView

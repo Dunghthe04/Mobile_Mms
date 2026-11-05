@@ -1512,6 +1512,88 @@ public class HttpClient
         }
     }
 
+    //TODO: FE khai báo vật tư ở màn nhập kết quả WO — chỉ cập nhật MATERIAL_INFO (giống web)
+    public static APIReturn updateWoMaterialInfo(Context context, String server_url, String Schema_MMS, String woCode, JSONArray materials){
+        try{
+            JSONObject condition = new JSONObject();
+            condition.put("Schema_MMS", Schema_MMS);
+            condition.put("WO_CODE", woCode.replace("'", "''"));
+            condition.put("MATERIAL_INFO", materials.toString().replace("'", "''"));
+            return callDynamics(context, server_url, "mes_mms", "MES_MMS_UPDATE_WO_MATERIAL_INFO", condition);
+        }catch (Exception e){
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    // Gateway báo lỗi 402 nếu giá trị chứa '$' -> thay bằng '＄' (full-width) giống web escapeGatewayReplaceValue
+    private static String escGateway(String v) {
+        return (v == null ? "" : v).replace("'", "''").replace("$", "\uFF04");
+    }
+
+    //TODO: MA xác nhận Work Order (giống web woReportAjaxConfirmWorkOrderMa)
+    public static APIReturn confirmWorkOrderMa(Context context, String server_url, String Schema_MMS, String Schema_Core,
+                                               String woCode, String taskId, String maConfirm, String ma5s3c,
+                                               String maOperation, String panelQty, String confirmBy, int status){
+        try{
+            JSONObject condition = new JSONObject();
+            condition.put("Schema_MMS", Schema_MMS);
+            condition.put("Schema_Core", Schema_Core);
+            condition.put("WO_CODE", escGateway(woCode));
+            condition.put("TASK_ID", taskId);
+            condition.put("MA_CONFIRM", maConfirm);
+            condition.put("MA_5S3C", ma5s3c);
+            condition.put("MA_OPERATION", maOperation);
+            condition.put("MA_TEST_PANEL_QTY", escGateway(panelQty));
+            condition.put("MA_CONFIRM_BY", escGateway(confirmBy));
+            condition.put("STATUS", status);
+            return callDynamics(context, server_url, "mes_mms", "MES_MMS_CONFIRM_WORK_ORDER_MA", condition);
+        }catch (Exception e){
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    //TODO: tất cả nhóm MA (ô lọc nhóm ở màn Work Order) — DbScripts/16
+    public static APIReturn getAllMaTeams(Context context, String server_url, String Schema_MMS){
+        try{
+            JSONObject condition = new JSONObject();
+            condition.put("Schema_MMS", Schema_MMS);
+            return callDynamics(context, server_url, "mes_mms", "MMS_GET_ALL_MA_TEAM", condition);
+        }catch (Exception e){
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    //TODO: các nhóm MA mà user thuộc (mặc định của ô lọc nhóm) — action có sẵn, giống web
+    public static APIReturn getMyMaTeams(Context context, String server_url, String Schema_MMS, String userId){
+        try{
+            JSONObject condition = new JSONObject();
+            condition.put("USER_ID", "'" + (userId == null ? "" : userId.replace("'", "''")) + "'");
+            condition.put("Schema_Mms", Schema_MMS);
+            return callDynamics(context, server_url, "mes_mms", "MMS_GET_MA_TEAM", condition);
+        }catch (Exception e){
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
+    //TODO: tính lại khoá máy qua backend (xét cả Work Order LẪN checksheet quá hạn) — giống web checkAndResetMachineStatus
+    public static APIReturn recomputeMachineLock(Context context, String serverurl, String machineId){
+        try{
+            String finalBaseUrl = serverurl;
+            if(finalBaseUrl.contains("://")){
+                String protocol = finalBaseUrl.split("://")[0];
+                String addressWithPort = finalBaseUrl.split("://")[1];
+                if(addressWithPort.contains(":")){
+                    finalBaseUrl = protocol + "://" + addressWithPort.split(":")[0];
+                }
+            }
+            JSONObject payload = new JSONObject();
+            payload.put("Machine_Id", machineId);
+            return callPostRaw(context, finalBaseUrl + ":9101/api/v1/mms/interlock/recompute", payload);
+        }catch (Exception e){
+            return new APIReturn(400, "Exception|| " + e.getMessage(), null);
+        }
+    }
+
     //TODO: xóa Work Order
     public static APIReturn deleteMtWorkOrder(Context context, String server_url, JSONObject data){
         try{
@@ -1677,7 +1759,7 @@ public class HttpClient
         }
     }
 
-    // TODO: Lấy danh sách task bảo dưỡng định kỳ chi tiết (ActionName: MMS_GET_MAINTAIN_TASK_225)
+    // TODO: Lấy danh sách task bảo dưỡng định kỳ chi tiết (ActionName: MMS_GET_MAINTAIN_TASK_225_APP — bản phân trang riêng cho mobile, xem DbScripts/15)
     public static APIReturn getMaintainTaskList(Context context, String server_url, String schemaMms, String schemaCore,
                                                 String whereClause, int limit, int offset, String feTeamId) {
         try {
@@ -1689,7 +1771,7 @@ public class HttpClient
             conditionObj.put("offset", offset);
             conditionObj.put("feTeamId", feTeamId == null ? "" : feTeamId.trim());
 
-            return callDynamics(context, server_url, "mes_mms", "MMS_GET_MAINTAIN_TASK_225", conditionObj);
+            return callDynamics(context, server_url, "mes_mms", "MMS_GET_MAINTAIN_TASK_225_APP", conditionObj);
         } catch (Exception e) {
             return new APIReturn(400, "Exception|| " + e.getMessage(), null);
         }

@@ -94,9 +94,23 @@ public class ListWorkOrderActivity extends AppCompatActivity {
     private TextView tvStartDate, tvEndDate, tvCountdown;
     private TextView btnFilterDay, btnFilterWeek, btnFilterMonth;
     private TextView btnResetFilter;
-    private CheckBox cbChuaThucHien, cbQuaHan, cbDaThucHien, cbDaHuy;
-    private TextView tvCountChua, tvCountQuaHan, tvCountDaThucHien, tvCountDaHuy;
-    private TextView tvProgressChua, tvProgressQuaHan, tvProgressDaThucHien, tvProgressDaHuy;
+    // Lọc theo NHÓM MA (chỉ account MA): nhóm của 1 WO = nhóm MA của người tạo WO (CREATE_BY).
+    // Mặc định = nhóm của mình; bỏ chọn hết = xem tất cả; chọn nhóm khác để xem nhóm đó.
+    // Chuông nhắc (chỉ account MA): các WO đang "Chờ MA xác nhận" (mọi nhóm), cập nhật theo chu kỳ tải lại của màn hình
+    private View layoutBell;
+    private TextView tvBellBadge;
+    private final List<JSONObject> bellItems = new ArrayList<>();
+    private TextView tvTeamFilter;
+    private final List<String> teamIds = new ArrayList<>();
+    private final List<String> teamNames = new ArrayList<>();
+    private final Set<String> selectedTeamIds = new HashSet<>();
+    private boolean teamsLoaded = false;
+    private boolean teamsComplete = false; // true = lấy được ĐỦ mọi nhóm (MMS_GET_ALL_MA_TEAM); false = chỉ nhóm của mình (dự phòng)
+    private boolean teamsLoading = false;
+    private String pendingDsa = null;
+    private CheckBox cbChuaThucHien, cbChoMa, cbQuaHan, cbDaThucHien, cbDaHuy;
+    private TextView tvCountChua, tvCountChoMa, tvCountQuaHan, tvCountDaThucHien, tvCountDaHuy;
+    private TextView tvProgressChua, tvProgressChoMa, tvProgressQuaHan, tvProgressDaThucHien, tvProgressDaHuy;
     private TextView tvUsernameDisplay;
     private RecyclerView rvWorkOrder;
     private LinearLayout headerFixedContainer;
@@ -346,16 +360,26 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         cbQuaHan = findViewById(R.id.cb_qua_han);
         cbDaThucHien = findViewById(R.id.cb_da_thuc_hien);
         cbDaHuy = findViewById(R.id.cb_da_huy);
+        cbChoMa = findViewById(R.id.cb_cho_ma);
+        tvTeamFilter = findViewById(R.id.tv_team_filter);
+        layoutBell = findViewById(R.id.layout_bell);
+        tvBellBadge = findViewById(R.id.tv_bell_badge);
+        if (layoutBell != null) {
+            layoutBell.setVisibility(isCurrentUserMA() ? View.VISIBLE : View.GONE);
+            layoutBell.setOnClickListener(v -> showBellDialog());
+        }
 
         tvCountChua = findViewById(R.id.tv_count_chua_thuc_hien);
         tvCountQuaHan = findViewById(R.id.tv_count_qua_han);
         tvCountDaThucHien = findViewById(R.id.tv_count_da_thuc_hien);
         tvCountDaHuy = findViewById(R.id.tv_count_da_huy);
+        tvCountChoMa = findViewById(R.id.tv_count_cho_ma);
 
         tvProgressChua = findViewById(R.id.tv_progress_chua_thuc_hien);
         tvProgressQuaHan = findViewById(R.id.tv_progress_qua_han);
         tvProgressDaThucHien = findViewById(R.id.tv_progress_da_thuc_hien);
         tvProgressDaHuy = findViewById(R.id.tv_progress_da_huy);
+        tvProgressChoMa = findViewById(R.id.tv_progress_cho_ma);
 
         tvUsernameDisplay = findViewById(R.id.tv_username_display);
         displayUserInfo();
@@ -412,6 +436,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         if (findViewById(R.id.ln_chua_thuc_hien) != null) findViewById(R.id.ln_chua_thuc_hien).setOnClickListener(v -> { if(cbChuaThucHien != null) cbChuaThucHien.toggle(); statusToggle.onClick(v); });
         if (findViewById(R.id.ln_qua_han) != null) findViewById(R.id.ln_qua_han).setOnClickListener(v -> { if(cbQuaHan != null) cbQuaHan.toggle(); statusToggle.onClick(v); });
         if (findViewById(R.id.ln_da_thuc_hien) != null) findViewById(R.id.ln_da_thuc_hien).setOnClickListener(v -> { if(cbDaThucHien != null) cbDaThucHien.toggle(); statusToggle.onClick(v); });
+        if (tvTeamFilter != null) tvTeamFilter.setOnClickListener(v -> showTeamPicker());
+        if (findViewById(R.id.ln_cho_ma) != null) findViewById(R.id.ln_cho_ma).setOnClickListener(v -> { if(cbChoMa != null) cbChoMa.toggle(); statusToggle.onClick(v); });
         if (findViewById(R.id.ln_da_huy) != null) findViewById(R.id.ln_da_huy).setOnClickListener(v -> { if(cbDaHuy != null) cbDaHuy.toggle(); statusToggle.onClick(v); });
 
         if (findViewById(R.id.btn_add_wo) != null) {
@@ -528,6 +554,7 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         if (cbQuaHan != null) cbQuaHan.setChecked(true);
         if (cbDaThucHien != null) cbDaThucHien.setChecked(true);
         if (cbDaHuy != null) cbDaHuy.setChecked(true);
+        if (cbChoMa != null) cbChoMa.setChecked(true);
         updateSelectedStatuses();
     }
 
@@ -539,10 +566,18 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         if (cbQuaHan != null && cbQuaHan.isChecked()) selectedStatuses.add("QUA_HAN");
         if (cbDaThucHien != null && cbDaThucHien.isChecked()) selectedStatuses.add("DA_THUC_HIEN");
         if (cbDaHuy != null && cbDaHuy.isChecked()) selectedStatuses.add("DA_HUY");
+        if (cbChoMa != null && cbChoMa.isChecked()) selectedStatuses.add("CHO_MA_XAC_NHAN");
     }
 
 
     private void loadData(String dsaCondition) {
+        // Account MA: nạp danh sách nhóm (và nhóm mặc định) trước lần tải đầu tiên
+        if (isCurrentUserMA() && !teamsLoaded) {
+            pendingDsa = dsaCondition;
+            if (!teamsLoading) loadMaTeams();
+            return;
+        }
+        refreshBell();
         PreferenceHandler handler = new PreferenceHandler(this);
         JSONObject userObj = handler.getJsonObject("user");
 
@@ -562,13 +597,22 @@ public class ListWorkOrderActivity extends AppCompatActivity {
 
         if (isDestroyed) return;
 
+        // Account MA: lọc theo nhóm đang chọn (mặc định nhóm của mình). Chỉ lọc danh sách hiển thị;
+        // checkAndResetMachineStatus vẫn cần toàn bộ WO của máy nên không dùng bộ lọc này.
+        String listCondition = dsaCondition;
+        String teamWhere = buildTeamWhere();
+        if (!teamWhere.isEmpty()) {
+            listCondition = "(" + dsaCondition + ") AND " + teamWhere;
+        }
+        final String finalListCondition = listCondition;
+
         new Thread(() -> {
             HttpClient.APIReturn apiReturn = HttpClient.getAllWorkOrder(
                     getApplicationContext(),
                     serverDynamic,
                     schemaData,
                     schemaCore,
-                    dsaCondition,
+                    finalListCondition,
                     0,
                     100
             );
@@ -614,6 +658,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
         switch (status1) {
             case 1:
                 return "DA_THUC_HIEN";
+            case 2:
+                return "CHO_MA_XAC_NHAN";
             case 5:
                 return "QUA_HAN";
             case 6:
@@ -645,42 +691,63 @@ public class ListWorkOrderActivity extends AppCompatActivity {
     }
 
     private void updateSummary(List<JSONObject> list) {
-        int cChua = 0, cQua = 0, cXong = 0, cDaHuy = 0;
+        int cChua = 0, cChoMa = 0, cQua = 0, cXong = 0, cDaHuy = 0;
         for (JSONObject obj : list) {
             if (obj == null) continue;
             String type = getStatusType(obj);
             if (type.equals("CHUA_THUC_HIEN")) cChua++;
+            else if (type.equals("CHO_MA_XAC_NHAN")) cChoMa++;
             else if (type.equals("QUA_HAN")) cQua++;
             else if (type.equals("DA_THUC_HIEN")) cXong++;
             else if (type.equals("DA_HUY")) cDaHuy++;
         }
 
         if (tvCountChua != null) tvCountChua.setText(i18n("Incomplete") + ": " + cChua);
+        if (tvCountChoMa != null) tvCountChoMa.setText(i18n("Chờ MA xác nhận") + ": " + cChoMa);
         if (tvCountQuaHan != null) tvCountQuaHan.setText(i18n("Overdue") + ": " + cQua);
         if (tvCountDaThucHien != null) tvCountDaThucHien.setText(i18n("Completed") + ": " + cXong);
         if (tvCountDaHuy != null) tvCountDaHuy.setText(i18n("Canceled") + ": " + cDaHuy);
 
         int total = list.size();
-        updateProgressPart(tvProgressChua, cChua, total);
-        updateProgressPart(tvProgressQuaHan, cQua, total);
-        updateProgressPart(tvProgressDaThucHien, cXong, total);
-        updateProgressPart(tvProgressDaHuy, cDaHuy, total);
+        updateProgressBar(
+                new TextView[]{tvProgressChua, tvProgressChoMa, tvProgressQuaHan, tvProgressDaThucHien, tvProgressDaHuy},
+                new int[]{cChua, cChoMa, cQua, cXong, cDaHuy},
+                total);
     }
 
-    private void updateProgressPart(TextView tv, int count, int total) {
-        if (tv == null) return;
-        if (total == 0) { tv.setVisibility(View.GONE); return; }
-        float percent = (count * 100f) / total;
-
-        ViewGroup.LayoutParams params = tv.getLayoutParams();
-        if (params instanceof LinearLayout.LayoutParams) {
-            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) params;
-            lp.weight = percent > 0 ? percent : 0.001f;
-            tv.setLayoutParams(lp);
+    /**
+     * Thanh tiến độ trạng thái: mỗi đoạn có dữ liệu được chia chiều rộng theo tỉ lệ nhưng không nhỏ hơn
+     * MIN_SHARE, để đoạn nhỏ (vd 1%, 4%) vẫn đủ chỗ hiện số, không bị đoạn lớn che mất.
+     */
+    private void updateProgressBar(TextView[] bars, int[] counts, int total) {
+        final float MIN_SHARE = 9f;
+        float[] weights = new float[bars.length];
+        float weightSum = 0f;
+        for (int i = 0; i < bars.length; i++) {
+            if (total > 0 && counts[i] > 0) {
+                weights[i] = Math.max(counts[i] * 100f / total, MIN_SHARE);
+                weightSum += weights[i];
+            }
         }
 
-        tv.setText(percent > 0 ? String.format(Locale.getDefault(), "%.0f%%", percent) : "");
-        tv.setVisibility(percent > 0 ? View.VISIBLE : View.GONE);
+        for (int i = 0; i < bars.length; i++) {
+            TextView tv = bars[i];
+            if (tv == null) continue;
+            if (i == 0 && tv.getParent() instanceof LinearLayout && weightSum > 0) {
+                ((LinearLayout) tv.getParent()).setWeightSum(weightSum);
+            }
+            if (weights[i] <= 0) { tv.setVisibility(View.GONE); continue; }
+
+            ViewGroup.LayoutParams params = tv.getLayoutParams();
+            if (params instanceof LinearLayout.LayoutParams) {
+                ((LinearLayout.LayoutParams) params).weight = weights[i];
+                tv.setLayoutParams(params);
+            }
+            float percent = counts[i] * 100f / total;
+            tv.setText(percent < 1f ? "<1%" : String.format(Locale.getDefault(), "%.0f%%", percent));
+            tv.setSingleLine(true);
+            tv.setVisibility(View.VISIBLE);
+        }
     }
 
     private void performFilter(int daysBack) {
@@ -942,6 +1009,8 @@ public class ListWorkOrderActivity extends AppCompatActivity {
                 if (i == 8) {
                     if ("CHUA_THUC_HIEN".equals(dto.typeCode)) {
                         holder.cells[i].setTextColor(Color.parseColor("#A9A9A9"));
+                    } else if ("CHO_MA_XAC_NHAN".equals(dto.typeCode)) {
+                        holder.cells[i].setTextColor(Color.parseColor("#8B5CF6"));
                     } else if ("QUA_HAN".equals(dto.typeCode)) {
                         holder.cells[i].setTextColor(Color.parseColor("#FF9800"));
                     } else if ("DA_THUC_HIEN".equals(dto.typeCode)) {
@@ -1015,7 +1084,9 @@ public class ListWorkOrderActivity extends AppCompatActivity {
             holder.tvMaStatus.setText(i18n("MA status") + ": " + dto.maStatus);
 
             int statusColor = Color.parseColor("#9CA3AF");
-            if ("QUA_HAN".equals(dto.typeCode)) {
+            if ("CHO_MA_XAC_NHAN".equals(dto.typeCode)) {
+                statusColor = Color.parseColor("#7C3AED");
+            } else if ("QUA_HAN".equals(dto.typeCode)) {
                 statusColor = Color.parseColor("#F59E0B");
             } else if ("DA_THUC_HIEN".equals(dto.typeCode)) {
                 statusColor = Color.parseColor("#2563EB");
@@ -1511,6 +1582,7 @@ public class ListWorkOrderActivity extends AppCompatActivity {
             case "DA_THUC_HIEN": return i18n("Completed");
             case "QUA_HAN": return i18n("Overdue");
             case "DA_HUY": return i18n("Canceled");
+            case "CHO_MA_XAC_NHAN": return i18n("Chờ MA xác nhận");
             case "CHUA_THUC_HIEN": return i18n("Incomplete");
             default: return "";
         }
@@ -1845,61 +1917,211 @@ public class ListWorkOrderActivity extends AppCompatActivity {
     }
 
     private void checkAndResetMachineStatus(String machineId) {
+        // Đồng bộ trạng thái khoá QUA BACKEND (giống web): xét cả Work Order lẫn checksheet quá hạn,
+        // nên không mở khoá nhầm máy còn bị khoá do checksheet quá hạn.
+        if (machineId == null || machineId.trim().isEmpty()) return;
         new Thread(() -> {
             try {
-                // Wait 1.5s for DB stabilization as done on web
-                Thread.sleep(1500);
-
-                String checkWhere = "mt.MACHINE_ID = '" + machineId + "' AND mt.WO_TYPE = 3";
-                HttpClient.APIReturn res = HttpClient.getAllWorkOrder(
-                        getApplicationContext(),
-                        serverDynamic,
-                        schemaData,
-                        schemaCore,
-                        checkWhere,
-                        0,
-                        9999
-                );
-
-                if (res != null && res.code == 200 && res.data != null) {
-                    List<JSONObject> activeTasks = new ArrayList<>();
-                    for (int i = 0; i < res.data.size(); i++) {
-                        JSONObject t = res.data.get(i);
-                        String tMachineId = safeGet(t, "MACHINE_ID");
-                        if (tMachineId.isEmpty()) tMachineId = safeGet(t, "Machine_Id");
-                        if (!tMachineId.trim().equalsIgnoreCase(machineId.trim())) continue;
-
-                        int s = t.optInt("Status_1", t.optInt("STATUS_1", t.optInt("Issue_Status", 0)));
-                        if (s != 1 && s != 6) {
-                            activeTasks.add(t);
-                        }
-                    }
-
-                    int remainingBM = activeTasks.size();
-                    if (remainingBM > 0) {
-                        boolean hasLock = false;
-                        for (JSONObject t : activeTasks) {
-                            int lockedVal = t.optInt("IS_LOCKED", t.optInt("Is_Locked", 0));
-                            if (lockedVal == 2) {
-                                hasLock = true;
-                                break;
-                            }
-                        }
-                        int targetStatus = hasLock ? 2 : 1;
-                        if (targetStatus == 1) {
-                            HttpClient.updateMachineStatus(getApplicationContext(), serverDynamic, schemaCore, machineId, 0);
-                            HttpClient.updateMachineStatus(getApplicationContext(), serverDynamic, schemaCore, machineId, 1);
-                        } else {
-                            HttpClient.updateMachineStatus(getApplicationContext(), serverDynamic, schemaCore, machineId, targetStatus);
-                        }
-                    } else {
-                        HttpClient.updateMachineStatus(getApplicationContext(), serverDynamic, schemaCore, machineId, 0);
-                    }
+                Thread.sleep(1500); // đợi DB ổn định sau khi WO thay đổi
+                HttpClient.APIReturn rs = HttpClient.recomputeMachineLock(getApplicationContext(), server_url, machineId.trim());
+                if (rs == null || rs.code != 200) {
+                    Log.e(TAG, "recomputeMachineLock failed: " + (rs != null ? rs.message : "null"));
                 }
             } catch (Exception e) {
                 Log.e(TAG, "checkAndResetMachineStatus error", e);
             }
         }).start();
+    }
+
+    /** Đếm WO đang chờ MA xác nhận (status 2), KHÔNG lọc theo nhóm: mọi MA đều xác nhận được nên mọi MA đều được nhắc. */
+    private void refreshBell() {
+        if (!isCurrentUserMA() || isDestroyed || isFinishing()) return;
+        new Thread(() -> {
+            HttpClient.APIReturn rs = HttpClient.getAllWorkOrder(
+                    getApplicationContext(), serverDynamic, schemaData, schemaCore,
+                    "tp.STATUS_1 = 2 AND NVL(mt.STATUS, 0) <> 6", 0, 200);
+            if (rs == null || rs.code != 200 || rs.data == null) return;
+            final List<JSONObject> items = new ArrayList<>(rs.data);
+            runOnUiThread(() -> {
+                if (isDestroyed || isFinishing()) return;
+                bellItems.clear();
+                bellItems.addAll(items);
+                updateBellBadge();
+            });
+        }).start();
+    }
+
+    private void updateBellBadge() {
+        if (tvBellBadge == null) return;
+        int n = bellItems.size();
+        tvBellBadge.setText(n > 99 ? "99+" : String.valueOf(n));
+        tvBellBadge.setVisibility(n > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    /** Bấm chuông: danh sách WO chờ xác nhận; bấm 1 dòng mở thẳng form xác nhận của WO đó. */
+    private void showBellDialog() {
+        final String title = i18n("Chờ MA xác nhận") + " (" + bellItems.size() + ")";
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this).setTitle(title);
+        if (bellItems.isEmpty()) {
+            builder.setMessage(i18n("No work orders waiting for confirmation"));
+        } else {
+            final List<String> lines = new ArrayList<>();
+            for (JSONObject item : bellItems) {
+                String code = safeGet(item, "WO_CODE");
+                if (code.isEmpty()) code = safeGet(item, "Wo_Code");
+                String machineId = safeGet(item, "MACHINE_ID");
+                String machineName = safeGet(item, "MACHINE_NAME");
+                String machine = machineName.isEmpty() ? machineId : machineId + " - " + machineName;
+                String creator = safeGet(item, "CREATE_FULL_NAME");
+                if (creator.isEmpty()) creator = safeGet(item, "CREATE_BY");
+                lines.add(code + (machine.isEmpty() ? "" : "  |  " + machine)
+                        + "\n" + i18n("Creator") + ": " + creator);
+            }
+            builder.setAdapter(new android.widget.ArrayAdapter<>(this, android.R.layout.simple_list_item_1, lines),
+                    (d, which) -> {
+                        JSONObject item = bellItems.get(which);
+                        WorkOrderEntryDialogHelper.show(this, item, data -> {
+                            loadData(currentDSACondition);
+                            refreshBell();
+                        });
+                    });
+        }
+        builder.setNegativeButton(i18n("Close"), null).show();
+    }
+
+    private void loadMaTeams() {
+        teamsLoading = true;
+        new Thread(() -> {
+            final List<String> ids = new ArrayList<>();
+            final List<String> names = new ArrayList<>();
+            final List<String> mine = new ArrayList<>();
+            boolean complete = false;
+            String allMsg = "";
+            try {
+                HttpClient.APIReturn all = HttpClient.getAllMaTeams(getApplicationContext(), serverDynamic, schemaData);
+                if (all != null && all.code == 200 && all.data != null) {
+                    for (JSONObject o : all.data) {
+                        String id = safeGet(o, "TEAM_ID");
+                        if (id.isEmpty()) id = safeGet(o, "Team_Id");
+                        String name = safeGet(o, "TEAM_NAME");
+                        if (name.isEmpty()) name = safeGet(o, "Team_Name");
+                        if (!id.trim().isEmpty()) { ids.add(id.trim()); names.add(name.trim().isEmpty() ? id.trim() : name.trim()); }
+                    }
+                }
+                HttpClient.APIReturn my = HttpClient.getMyMaTeams(getApplicationContext(), serverDynamic, schemaData, currentUserId);
+                final List<String> mineNames = new ArrayList<>();
+                if (my != null && my.code == 200 && my.data != null) {
+                    for (JSONObject o : my.data) {
+                        String id = safeGet(o, "TEAM_ID");
+                        if (id.isEmpty()) id = safeGet(o, "Team_Id");
+                        String name = safeGet(o, "TEAM_NAME");
+                        if (name.isEmpty()) name = safeGet(o, "Team_Name");
+                        if (!id.trim().isEmpty()) { mine.add(id.trim()); mineNames.add(name.trim().isEmpty() ? id.trim() : name.trim()); }
+                    }
+                }
+                complete = !ids.isEmpty();
+                // Gateway trả "QUERY: <sql> || <lỗi Oracle>" -> chỉ giữ phần lỗi (sau "||") để toast không bị cắt mất
+                String rawMsg = all == null ? "null" : (all.code + " " + all.message);
+                int sep = rawMsg.lastIndexOf("||");
+                allMsg = sep >= 0 ? rawMsg.substring(sep + 2).trim() : rawMsg;
+                Log.d(TAG, "MMS_GET_ALL_MA_TEAM raw: " + rawMsg);
+                // Dự phòng: chưa có action MMS_GET_ALL_MA_TEAM (DbScripts/16) -> chỉ cho chọn trong các nhóm của mình
+                if (ids.isEmpty() && !mine.isEmpty()) {
+                    ids.addAll(mine);
+                    names.addAll(mineNames);
+                }
+                Log.d(TAG, "MA teams: all=" + ids.size() + ", mine=" + mine.size() + ", user=" + currentUserId + ", allApi=" + allMsg);
+            } catch (Exception e) {
+                Log.e(TAG, "loadMaTeams error", e);
+            }
+            final boolean finalComplete = complete;
+            final String finalAllMsg = allMsg;
+            runOnUiThread(() -> {
+                if (isDestroyed || isFinishing()) return;
+                teamsComplete = finalComplete;
+                if (!finalComplete) {
+                    Toast.makeText(this, i18n("Unable to load all MA teams") + " (MMS_GET_ALL_MA_TEAM): " + finalAllMsg, Toast.LENGTH_LONG).show();
+                }
+                teamIds.clear(); teamIds.addAll(ids);
+                teamNames.clear(); teamNames.addAll(names);
+                selectedTeamIds.clear(); selectedTeamIds.addAll(mine);
+                teamsLoaded = true;
+                teamsLoading = false;
+                if (tvTeamFilter != null) tvTeamFilter.setVisibility(teamIds.isEmpty() ? View.GONE : View.VISIBLE);
+                updateTeamFilterLabel();
+                String dsa = pendingDsa != null ? pendingDsa : currentDSACondition;
+                pendingDsa = null;
+                loadData(dsa);
+            });
+        }).start();
+    }
+
+    /** WHERE theo nhóm (alias mt = MT_WORK_ORDER). Rỗng nếu không phải MA / không chọn nhóm nào (= xem tất cả). */
+    private String buildTeamWhere() {
+        if (!isCurrentUserMA() || selectedTeamIds.isEmpty()) return "";
+        StringBuilder in = new StringBuilder();
+        for (String id : selectedTeamIds) {
+            if (in.length() > 0) in.append(",");
+            in.append("'").append(id.replace("'", "''")).append("'");
+        }
+        return "EXISTS (SELECT 1 FROM " + schemaData + ".MA_TEAM_MEMBER wtm WHERE NVL(wtm.DELETED,0) = 0 AND wtm.TEAM_ID IN (" + in + ") "
+                + "AND (UPPER(wtm.USER_ID) = UPPER(mt.CREATE_BY) OR wtm.USER_ID IN (SELECT TO_CHAR(wu.ID) FROM "
+                + schemaCore + ".USERS wu WHERE UPPER(wu.USER_NAME) = UPPER(mt.CREATE_BY))))";
+    }
+
+    private void updateTeamFilterLabel() {
+        if (tvTeamFilter == null) return;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < teamIds.size(); i++) {
+            if (selectedTeamIds.contains(teamIds.get(i))) {
+                if (sb.length() > 0) sb.append(", ");
+                sb.append(teamNames.get(i));
+            }
+        }
+        boolean showAll = selectedTeamIds.isEmpty(); // rỗng = không lọc nhóm
+        tvTeamFilter.setText(i18n("Nhóm MA") + ": " + (showAll ? i18n("All") : sb.toString()));
+    }
+
+    private void showTeamPicker() {
+        if (teamIds.isEmpty()) return;
+        final int n = teamIds.size();
+
+        // Mục 0 = "Tất cả" (bỏ lọc nhóm); mục 1..n = từng nhóm.
+        final String[] items = new String[n + 1];
+        items[0] = i18n("All");
+        for (int i = 0; i < n; i++) items[i + 1] = teamNames.get(i);
+
+        final boolean[] checked = new boolean[n + 1];
+        boolean allSelected = selectedTeamIds.isEmpty(); // rỗng = đang xem tất cả
+        checked[0] = allSelected;
+        for (int i = 0; i < n; i++) checked[i + 1] = allSelected || selectedTeamIds.contains(teamIds.get(i));
+
+        new android.app.AlertDialog.Builder(this)
+                .setTitle(i18n("Nhóm MA"))
+                .setMultiChoiceItems(items, checked, (d, which, isChecked) -> {
+                    android.widget.ListView lv = ((android.app.AlertDialog) d).getListView();
+                    if (which == 0) {
+                        // Tick "Tất cả" -> tick hết; bỏ "Tất cả" -> bỏ hết
+                        for (int i = 0; i <= n; i++) { checked[i] = isChecked; lv.setItemChecked(i, isChecked); }
+                    } else {
+                        checked[which] = isChecked;
+                        boolean all = true;
+                        for (int i = 1; i <= n; i++) if (!checked[i]) { all = false; break; }
+                        all = all && teamsComplete; // chỉ coi là "Tất cả" khi danh sách là đủ mọi nhóm
+                        checked[0] = all;
+                        lv.setItemChecked(0, all);
+                    }
+                })
+                .setPositiveButton(i18n("Confirm"), (d, w) -> {
+                    selectedTeamIds.clear();
+                    if (!checked[0]) { // "Tất cả" = không lọc nhóm (selectedTeamIds rỗng)
+                        for (int i = 0; i < n; i++) if (checked[i + 1]) selectedTeamIds.add(teamIds.get(i));
+                    }
+                    updateTeamFilterLabel();
+                    loadData(currentDSACondition);
+                })
+                .setNegativeButton(i18n("Cancel"), null)
+                .show();
     }
 
     private void showLogoutConfirmation() {
