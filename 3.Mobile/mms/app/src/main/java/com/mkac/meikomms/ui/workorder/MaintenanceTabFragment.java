@@ -60,6 +60,8 @@ public class MaintenanceTabFragment extends Fragment {
     private String schemaCore = "";
     private String schemaMms = "";
     private String machineId = "";
+    // Bộ phận của tài khoản: FE chỉ thấy hạng mục FE, MA chỉ thấy hạng mục MA (và nhóm lọc là nhóm MA)
+    private boolean isMaAccount = false;
     private final ActivityResultLauncher<Intent> enterWorkOrderLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -131,6 +133,7 @@ public class MaintenanceTabFragment extends Fragment {
         if (getContext() == null) return;
         PreferenceHandler handler = new PreferenceHandler(requireContext());
         ConfigManager configManager = new ConfigManager(requireContext());
+        isMaAccount = !WorkOrderEntryDialogHelper.isFeAccount(requireContext());
 
         serverUrl = pickFirst(handler.getString("server_url"), configManager.getProperty("server_url"));
         schemaCore = pickFirst(handler.getString("schema_core"), configManager.getProperty("schema_core"));
@@ -181,13 +184,14 @@ public class MaintenanceTabFragment extends Fragment {
         StringBuilder whereBuilder = new StringBuilder();
         whereBuilder.append("1=1 AND (mt.Task_Date_Unix BETWEEN ").append(range[0]).append(" AND ").append(range[1]).append(") ");
         
+        final String teamMemberTable = isMaAccount ? "MA_TEAM_MEMBER" : "FE_TEAM_MEMBER";
         if (currentGroupFilter != null && !currentGroupFilter.trim().isEmpty() && !"ALL".equalsIgnoreCase(currentGroupFilter.trim())) {
             String mappedGroup = mapGroupToId(currentGroupFilter);
             whereBuilder.append("AND (")
                     .append("  ( ")
                     .append("    mt.TASK_TYPE IN (0,1,2,3,4,5) ")
                     .append("    AND EXISTS (")
-                    .append("      SELECT 1 FROM ").append(schemaMms).append(".FE_TEAM_MEMBER fm ")
+                    .append("      SELECT 1 FROM ").append(schemaMms).append(".").append(teamMemberTable).append(" fm ")
                     .append("      LEFT JOIN ").append(schemaCore).append(".USERS ux ON (fm.USER_ID = ux.USER_NAME OR fm.USER_ID = TO_CHAR(ux.ID)) ")
                     .append("      WHERE fm.TEAM_ID = '").append(mappedGroup.replace("'", "''")).append("' ")
                     .append("        AND fm.DELETED = 0 ")
@@ -205,7 +209,7 @@ public class MaintenanceTabFragment extends Fragment {
                     .append("    AND mt.ACTUAL_MAINTANER_ID IS NULL ")
                     .append("    AND mt.APPROVE_MAINTANER_ID IS NULL ")
                     .append("    AND EXISTS ( ")
-                    .append("      SELECT 1 FROM ").append(schemaMms).append(".FE_TEAM_MEMBER fm0 ")
+                    .append("      SELECT 1 FROM ").append(schemaMms).append(".").append(teamMemberTable).append(" fm0 ")
                     .append("      WHERE fm0.TEAM_ID = '").append(mappedGroup.replace("'", "''")).append("' ")
                     .append("        AND fm0.DELETED = 0 ")
                     .append("    ) ")
@@ -214,6 +218,12 @@ public class MaintenanceTabFragment extends Fragment {
         } else {
             whereBuilder.append("AND (mc.DEPARTMENT = 'FE' OR mt.TASK_TYPE = 1) ");
         }
+
+        // Chỉ hiện hạng mục đúng BỘ PHẬN của tài khoản (trước đây FE thấy cả hạng mục MA vì TASK_TYPE = 1 áp cho mọi bộ phận).
+        // FE: hạng mục FE (chưa gán bộ phận coi là FE như cũ); MA: chỉ hạng mục MA.
+        whereBuilder.append(isMaAccount
+                ? "AND UPPER(TRIM(mc.DEPARTMENT)) = 'MA' "
+                : "AND NVL(UPPER(TRIM(mc.DEPARTMENT)), 'FE') = 'FE' ");
 
         whereBuilder.append("AND (mt.TASK_TYPE != '0' OR (iss.ISSUE_STATUS IS NOT NULL AND iss.ISSUE_STATUS != '3')) ")
                 .append("AND mt.STATUS != 4 AND mt.TASK_TYPE = 1");
@@ -405,7 +415,12 @@ public class MaintenanceTabFragment extends Fragment {
 //    }
     private long[] resolveRange() {
         long pastUnix = 0L;
-        long presentUnix = System.currentTimeMillis() / 1000L;
+        // Task_Date_Unix của ngày D = 00:00 UTC của ngày D (giờ VN coi như UTC), tức 07:00 giờ VN.
+        // Cắt ở giờ thật hiện tại thì từ 00:00 đến 07:00 kế hoạch HÔM NAY bị coi là "tương lai" và mất.
+        // -> cắt ở hết ngày hôm nay theo múi giờ máy (cộng offset múi giờ vào giờ hiện tại rồi lấy cuối ngày).
+        long nowUnix = System.currentTimeMillis() / 1000L;
+        long offsetSec = java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 1000L;
+        long presentUnix = ((nowUnix + offsetSec) / 86400L) * 86400L + 86399L;
         return new long[]{pastUnix, presentUnix};
     }
 

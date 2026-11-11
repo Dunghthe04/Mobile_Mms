@@ -89,6 +89,11 @@ public class WorkOrderDataActivity extends AppCompatActivity {
         initConfiguration();
         new Thread(() -> {
             try {
+                // Tài khoản MA: ô nhóm là các nhóm MA (MA1..MA4), mặc định nhóm của mình
+                if (!WorkOrderEntryDialogHelper.isFeAccount(this)) {
+                    loadMaTeamsForMaintenance(finalUserName);
+                    return;
+                }
                 // 1. Fetch all teams first
                 JSONObject allCondition = new JSONObject();
                 allCondition.put("USER_ID", "'admin'");
@@ -192,6 +197,56 @@ public class WorkOrderDataActivity extends AppCompatActivity {
                 });
             }
         }).start();
+    }
+
+    /** Nhóm MA cho tab Bảo dưỡng của tài khoản MA: tất cả nhóm (nếu lấy được) + nhóm mặc định = nhóm của mình. */
+    private void loadMaTeamsForMaintenance(String userName) {
+        final List<FeTeam> teams = new ArrayList<>();
+        teams.add(new FeTeam("", i18n("All")));
+        final List<FeTeam> mine = new ArrayList<>();
+        try {
+            HttpClient.APIReturn all = HttpClient.getAllMaTeams(this, serverUrl, schemaMms);
+            if (all != null && all.code == 200 && all.data != null) {
+                for (JSONObject o : all.data) {
+                    String id = o.optString("TEAM_ID", o.optString("Team_Id", "")).trim();
+                    String name = o.optString("TEAM_NAME", o.optString("Team_Name", "")).trim();
+                    if (!id.isEmpty()) teams.add(new FeTeam(id, name.isEmpty() ? id : name));
+                }
+            }
+            HttpClient.APIReturn my = HttpClient.getMyMaTeams(this, serverUrl, schemaMms, userName);
+            if (my != null && my.code == 200 && my.data != null) {
+                for (JSONObject o : my.data) {
+                    String id = o.optString("TEAM_ID", o.optString("Team_Id", "")).trim();
+                    String name = o.optString("TEAM_NAME", o.optString("Team_Name", "")).trim();
+                    if (!id.isEmpty()) mine.add(new FeTeam(id, name.isEmpty() ? id : name));
+                }
+            }
+        } catch (Exception e) {
+            Log.e("WorkOrderDataActivity", "Error loading MA teams", e);
+        }
+        // Dự phòng: chưa lấy được danh sách mọi nhóm (DbScripts/16) -> chỉ các nhóm của mình
+        if (teams.size() <= 1) teams.addAll(mine);
+
+        // Mặc định: nếu thuộc đúng 1 nhóm thì chọn nhóm đó, ngược lại "All" (gộp các nhóm mình thuộc không áp dụng -> xem tất cả MA)
+        int matched = 0;
+        if (mine.size() == 1) {
+            for (int i = 0; i < teams.size(); i++) {
+                if (teams.get(i).teamId.equalsIgnoreCase(mine.get(0).teamId)) { matched = i; break; }
+            }
+        }
+        final int finalIndex = matched;
+        final String finalTeamId = teams.get(matched).teamId;
+        runOnUiThread(() -> {
+            dynamicMaintGroups.clear();
+            dynamicMaintGroups.addAll(teams);
+            selectedGroupIndex = finalIndex;
+            if (currentSelectedTab == 1) {
+                populateMaintSpinners();
+            }
+            if (maintenanceTabFragment != null && maintenanceTabFragment.isAdded()) {
+                maintenanceTabFragment.filterByGroup(finalTeamId);
+            }
+        });
     }
 
     private TextView btnTabWorkOrder;

@@ -191,7 +191,7 @@ public final class WorkOrderEntryDialogHelper {
     }
 
     /** Bộ phận của tài khoản đăng nhập (ưu tiên cờ hub lưu; fallback đọc prefs). Mặc định FE. */
-    private static boolean isFeAccount(Context ctx) {
+    static boolean isFeAccount(Context ctx) {
         try {
             PreferenceHandler ph = new PreferenceHandler(ctx);
             String saved = ph.getString("wo_user_division");
